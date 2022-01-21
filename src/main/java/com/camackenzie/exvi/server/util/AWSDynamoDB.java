@@ -9,7 +9,9 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.google.gson.Gson;
 import java.util.HashMap;
 
 /**
@@ -21,6 +23,7 @@ public class AWSDynamoDB {
     private final AmazonDynamoDB awsDynamoDB;
     private final DynamoDB docClient;
     private final HashMap<String, Table> tableNameMap;
+    private final Gson gson = new Gson();
 
     public AWSDynamoDB() {
         this.awsDynamoDB = AmazonDynamoDBClientBuilder
@@ -54,6 +57,15 @@ public class AWSDynamoDB {
 
     public AmazonDynamoDB getAwsDynamoDB() {
         return this.awsDynamoDB;
+    }
+
+    public <T> void putObjectInTable(String table, T object) {
+        Table t = this.getTable(table);
+        this.putObjectInTable(t, object);
+    }
+
+    public <T> void putObjectInTable(Table table, T object) {
+        table.putItem(Item.fromJSON(this.gson.toJson(object)));
     }
 
 }
