@@ -10,6 +10,7 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.VerificationRequest;
 import com.camackenzie.exvi.core.api.VerificationResult;
+import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.AWSEmailClient;
 import com.camackenzie.exvi.server.util.AWSSMSClient;
@@ -50,7 +51,7 @@ public class VerificationAction
 
             if (codeSent) {
                 dynamoDB.putObjectInTable(userTable,
-                        new VerificationCodeDatabaseEntry(in, code));
+                        new VerificationDatabaseEntry(in, code));
                 return new VerificationResult(0, "Verification code sent");
             } else {
                 return new VerificationResult(4, "Verification code could not be sent");
@@ -161,19 +162,6 @@ public class VerificationAction
             this.getLogger().log("SNS CLIENT WARNING: " + e.toString());
         }
         return false;
-    }
-
-    public class VerificationCodeDatabaseEntry extends VerificationRequest {
-
-        public String verificationCode;
-        public long verificationCodeUTC;
-
-        public VerificationCodeDatabaseEntry(VerificationRequest uvd, String code) {
-            super(uvd.getUsername(), uvd.getEmail(), uvd.getPhone());
-            this.verificationCode = code;
-            this.verificationCodeUTC = System.currentTimeMillis();
-        }
-
     }
 
 }

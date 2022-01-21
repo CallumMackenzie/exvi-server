@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.camackenzie</groupId>
     <artifactId>exvi-server</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <packaging>jar</packaging>
     
     <properties>
@@ -17,7 +17,7 @@
         <dependency>
             <groupId>com.camackenzie</groupId>
             <artifactId>exvi-core</artifactId>
-            <version>[0.0.1,)</version>
+            <version>[0.0.4,)</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
@@ -84,6 +84,24 @@
             <artifactId>aws-java-sdk-ses</artifactId>
             <version>1.12.1</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.6.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.6.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.6.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
