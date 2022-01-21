@@ -12,6 +12,14 @@
         <maven.compiler.target>11</maven.compiler.target> 
     </properties>
     
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Callum Mackenzie Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/callummackenzie/exvi-server</url>
+        </repository>
+    </distributionManagement>
+    
     <!--Scope is provided to account for lambda layers-->
     <dependencies>
         <dependency>
