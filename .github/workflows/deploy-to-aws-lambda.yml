@@ -23,18 +23,14 @@ jobs:
       - name: Build with Maven
         run: mvn -B package --file pom.xml
           
-      - name: Zip output jar
+      - name: Set up output zip structure
         run: |
-          ls
-          cd target
-          ls
           mkdir java
-          ls
           mkdir java/lib
-          mv -f *.jar java/lib/
-          ls
+          mv -f target/*.jar java/lib/
           
-      - uses: vimtor/action-zip@v1
+      - name: Zip output
+        uses: vimtor/action-zip@v1
         with:
           files: java/
           dest: exvi-server.zip
