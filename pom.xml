@@ -162,6 +162,7 @@
                 <build.scope>provided</build.scope>
             </properties>
             <build>
+                <finalName>sign-up-lambda</finalName>
                 <plugins>
                     <plugin>
                         <artifactId>maven-jar-plugin</artifactId>
@@ -190,6 +191,7 @@
                 <build.scope>provided</build.scope>
             </properties>
             <build>
+                <finalName>verification-lambda</finalName>
                 <plugins>
                     <plugin>
                         <artifactId>maven-jar-plugin</artifactId>

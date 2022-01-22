@@ -32,7 +32,7 @@ jobs:
       - name: Zip output
         uses: vimtor/action-zip@v1
         with:
-          files: java/
+          files: java
           dest: exvi-deps.zip
           
       - name: Publish zipped dependencies to AWS Lambda layer
@@ -69,7 +69,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_region: ${{ secrets.AWS_REGION }}
           function_name: ExviUserVerification
-          source: target/*.jar
+          source: target/verification-lambda.jar
           
   update_sign_up_lambda:
     name: Update sign up lambda
@@ -95,5 +95,5 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_region: ${{ secrets.AWS_REGION }}
           function_name: ExviSignUp
-          source: target/*.jar
+          source: target/sign-up-lambda.jar
           
