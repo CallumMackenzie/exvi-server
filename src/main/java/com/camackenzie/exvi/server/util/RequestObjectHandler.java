@@ -24,10 +24,9 @@ public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandler
     @Override
     public void handleRequestWrapped(BufferedReader bf, PrintWriter pw, Context ctx)
             throws IOException {
+        this.getLogger().log("handleRequestWrapped");
         APIRequest<IN> request = gson.fromJson(bf, APIRequest.class);
         APIResult<OUT> response = this.handleObjectRequest(request, ctx);
-        this.getLogger().log("REQUEST: " + gson.toJson(request) + "\n");
-        this.getLogger().log("RESULT: " + gson.toJson(response) + "\n");
         pw.write(gson.toJson(response));
     }
 
