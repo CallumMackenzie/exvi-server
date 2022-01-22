@@ -44,7 +44,7 @@ public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandler
             requestBody = this.gson.fromJson(jsonElem, this.inClass);
         }
         if (requestBody == null) {
-            pw.write(gson.toJson(new APIResult(400, "Cannot parse request body.",
+            pw.write(this.gson.toJson(new APIResult(400, "Cannot parse request body.",
                     new HashMap<>())));
             return;
         }
@@ -54,7 +54,10 @@ public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandler
                 requestRaw.getHeaders());
 
         APIResult<OUT> response = this.handleObjectRequest(req, ctx);
-        pw.write(gson.toJson(response));
+        APIResult<String> strResponse = new APIResult<>(response.getStatusCode(),
+                this.gson.toJson(response.getBody()),
+                response.getHeaders());
+        pw.write(this.gson.toJson(strResponse));
     }
 
     public abstract APIResult<OUT> handleObjectRequest(APIRequest<IN> in, Context context);
