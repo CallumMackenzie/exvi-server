@@ -28,11 +28,11 @@ jobs:
           cd target
           mkdir java
           mkdir java/lib
-          mv -f *.jar java/lib
+          mv -f *.jar java/lib/
           
       - uses: vimtor/action-zip@v1
         with:
-          files: java/lib/*
+          files: java/
           dest: exvi-server.zip
           
       - name: Publish zipped dependency to AWS Lambda layer
