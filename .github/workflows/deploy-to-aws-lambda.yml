@@ -25,8 +25,11 @@ jobs:
           
       - name: Zip output jar
         run: |
+          ls
           cd target
+          ls
           mkdir java
+          ls
           mkdir java/lib
           mv -f *.jar java/lib/
           ls
