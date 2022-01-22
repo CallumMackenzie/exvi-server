@@ -7,7 +7,7 @@ on:
 
 jobs:
   update_dependencies:
-    name: deploy lambda dependencies
+    name: Deploy lambda dependencies to layer
     runs-on: ubuntu-latest
 
     steps:
@@ -70,7 +70,6 @@ jobs:
           aws_region: ${{ secrets.AWS_REGION }}
           function_name: ExviUserVerification
           source: target/*.jar
-          runtime: java11
           
   update_sign_up_lambda:
     name: Update sign up lambda
@@ -97,5 +96,4 @@ jobs:
           aws_region: ${{ secrets.AWS_REGION }}
           function_name: ExviSignUp
           source: target/*.jar
-          runtime: java11
           
