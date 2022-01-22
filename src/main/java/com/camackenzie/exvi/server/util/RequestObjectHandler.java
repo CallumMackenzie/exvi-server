@@ -17,19 +17,21 @@ import java.io.PrintWriter;
  *
  * @author callum
  */
-public abstract class RequestObjectHandler<REQUEST, RESULT> extends RequestStreamHandlerWrapper {
+public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandlerWrapper {
 
     private final Gson gson = new Gson();
 
     @Override
     public void handleRequestWrapped(BufferedReader bf, PrintWriter pw, Context ctx)
             throws IOException {
-        APIRequest<REQUEST> request = gson.fromJson(bf, APIRequest.class);
-        APIResult<RESULT> response = this.handleObjectRequest(request, ctx);
+        APIRequest<IN> request = gson.fromJson(bf, APIRequest.class);
+        APIResult<OUT> response = this.handleObjectRequest(request, ctx);
+        this.getLogger().log("REQUEST: " + gson.toJson(request) + "\n");
+        this.getLogger().log("RESULT: " + gson.toJson(response) + "\n");
         pw.write(gson.toJson(response));
     }
 
-    public abstract APIResult<RESULT> handleObjectRequest(APIRequest<REQUEST> in, Context context);
+    public abstract APIResult<OUT> handleObjectRequest(APIRequest<IN> in, Context context);
 
     public final Gson getGson() {
         return this.gson;
