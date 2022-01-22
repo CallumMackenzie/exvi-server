@@ -33,7 +33,7 @@ jobs:
           cd target
           mkdir java
           mkdir java/lib
-          mv -f exvi-server.jar java/lib
+          mv -f *.jar java/lib
           
       - uses: vimtor/action-zip@v1
         with:
