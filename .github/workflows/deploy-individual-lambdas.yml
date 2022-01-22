@@ -77,6 +77,11 @@ jobs:
 
       - name: Build dependencies only with Maven
         run: mvn -B package --file pom.xml -P fat-jar-no-lambdas
+        
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
           
       - name: Set up output zip structure
         run: |
