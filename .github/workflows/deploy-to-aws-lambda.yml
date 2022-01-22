@@ -25,14 +25,15 @@ jobs:
           
       - name: Set up output zip structure
         run: |
-          mkdir java
-          mkdir java/lib
-          mv -f target/*.jar java/lib/
+          mkdir zip
+          mkdir zip/java
+          mkdir zip/java/lib
+          mv -f target/*.jar zip/java/lib/
           
       - name: Zip output
         uses: vimtor/action-zip@v1
         with:
-          files: java
+          files: zip
           dest: exvi-deps.zip
           
       - name: Publish zipped dependencies to AWS Lambda layer
