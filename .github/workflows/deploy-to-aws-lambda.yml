@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy_zip:
-    name: deploy lambda function
+  update_dependencies:
+    name: deploy lambda dependencies
     runs-on: ubuntu-latest
 
     steps:
@@ -20,8 +20,8 @@ jobs:
           server-id: github
           settings-path: ${{ github.workspace }} 
 
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
+      - name: Build dependencies only with Maven
+        run: mvn -B package --file pom.xml -P only-deps
           
       - name: Set up output zip structure
         run: |
@@ -33,14 +33,42 @@ jobs:
         uses: vimtor/action-zip@v1
         with:
           files: java/
-          dest: exvi-server.zip
+          dest: exvi-deps.zip
           
-      - name: Publish zipped dependency to AWS Lambda layer
+      - name: Publish zipped dependencies to AWS Lambda layer
         uses: taotao2345/aws-lambda-publishlayer@v1.0.0
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
-          layer_name: ExviServer
-          zip_file: exvi-server.zip
+          layer_name: ExviDependencies
+          zip_file: exvi-deps.zip
+          
+  update_lambdas:
+    name: Update user verification lambda
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          server-id: github
+          settings-path: ${{ github.workspace }} 
+          
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml -P user-verification
+        
+      - name: AWS Lambda Deploy
+        uses: appleboy/lambda-action@v0.1.5
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          function_name: ExviUserVerification
+          source: target/*.jar
+          runtime: java11
+          
