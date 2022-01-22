@@ -75,10 +75,7 @@ jobs:
           distribution: 'temurin'
           server-id: github
           settings-path: ${{ github.workspace }} 
-
-      - name: Build dependencies only with Maven
-        run: mvn -B package --file pom.xml -P fat-jar-no-lambdas
-        
+          
       - name: Cache Maven Dependencies
         uses: actions/cache@v1
         with:
@@ -86,6 +83,9 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+
+      - name: Build dependencies only with Maven
+        run: mvn -B package --file pom.xml -P fat-jar-no-lambdas
           
       - name: Set up output zip structure
         run: |
@@ -111,7 +111,7 @@ jobs:
           zip_file: exvi-deps.zip
       
       - name: Update lambda layers to latest version
-        uses: callummackenzie/latest-lambda-layer-action@v0.8
+        uses: callummackenzie/latest-lambda-layer-action@v0.9
         with:
           aws_region: ${{ secrets.AWS_REGION }}
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
