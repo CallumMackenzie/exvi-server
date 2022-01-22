@@ -52,7 +52,6 @@ public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandler
         APIRequest<IN> req = new APIRequest(requestRaw.getEndpoint(),
                 requestBody,
                 requestRaw.getHeaders());
-
         APIResult<OUT> response = this.handleObjectRequest(req, ctx);
         APIResult<String> strResponse = new APIResult<>(response.getStatusCode(),
                 this.gson.toJson(response.getBody()),
