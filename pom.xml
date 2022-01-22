@@ -203,7 +203,7 @@
                                 </goals>
                                 <configuration>
                                     <includes>
-                                        <include>com/camackenzie/exvi/server/lambdas/Verification.class</include>
+                                        <include>com/camackenzie/exvi/server/lambdas/VerificationAction.class</include>
                                     </includes>
                                 </configuration>
                             </execution>
