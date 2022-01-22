@@ -29,6 +29,7 @@ jobs:
           mkdir java
           mkdir java/lib
           mv -f *.jar java/lib/
+          ls
           
       - uses: vimtor/action-zip@v1
         with:
