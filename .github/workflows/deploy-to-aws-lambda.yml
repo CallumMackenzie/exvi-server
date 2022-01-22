@@ -69,7 +69,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_region: ${{ secrets.AWS_REGION }}
           function_name: ExviUserVerification
-          source: target/verification-lambda.jar
+          zip_file: target/verification-lambda.jar
           
   update_sign_up_lambda:
     name: Update sign up lambda
@@ -95,5 +95,5 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_region: ${{ secrets.AWS_REGION }}
           function_name: ExviSignUp
-          source: target/sign-up-lambda.jar
+          zip_file: target/sign-up-lambda.jar
           
