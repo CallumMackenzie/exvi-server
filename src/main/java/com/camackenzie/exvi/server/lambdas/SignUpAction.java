@@ -23,6 +23,10 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
 
     private static final long VERIFICATION_CODE_EXPIRY = 60 * 60 * 1000;
 
+    public SignUpAction() {
+        super(AccountCreationRequest.class);
+    }
+    
     @Override
     public AccountAccessKeyResult handleBodyRequest(AccountCreationRequest in, Context context) {
 

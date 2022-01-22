@@ -9,6 +9,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.internal.LinkedTreeMap;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -19,14 +21,24 @@ import java.io.PrintWriter;
  */
 public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandlerWrapper {
 
+    private final Class<IN> inClass;
     private final Gson gson = new Gson();
+
+    public RequestObjectHandler(Class<IN> inClass) {
+        this.inClass = inClass;
+    }
 
     @Override
     public void handleRequestWrapped(BufferedReader bf, PrintWriter pw, Context ctx)
             throws IOException {
-        this.getLogger().log("handleRequestWrapped");
-        APIRequest<IN> request = gson.fromJson(bf, APIRequest.class);
-        APIResult<OUT> response = this.handleObjectRequest(request, ctx);
+        APIRequest<LinkedTreeMap> requestRaw = gson.fromJson(bf, APIRequest.class);
+        JsonElement jsonElem = gson.toJsonTree(requestRaw.getBody());
+
+        APIRequest<IN> req = new APIRequest(requestRaw.getEndpoint(),
+                this.gson.fromJson(jsonElem, this.inClass),
+                requestRaw.getHeaders());
+
+        APIResult<OUT> response = this.handleObjectRequest(req, ctx);
         pw.write(gson.toJson(response));
     }
 

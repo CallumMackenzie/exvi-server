@@ -26,6 +26,10 @@ import software.amazon.awssdk.services.sns.model.SnsException;
 public class VerificationAction
         extends RequestBodyHandler<VerificationRequest, VerificationResult> {
 
+    public VerificationAction() {
+        super(VerificationRequest.class);
+    }
+
     @Override
     public VerificationResult handleBodyRequest(VerificationRequest in, Context context) {
         AWSDynamoDB dynamoDB = new AWSDynamoDB();

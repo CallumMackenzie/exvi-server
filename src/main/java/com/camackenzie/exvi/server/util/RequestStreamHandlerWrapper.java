@@ -32,8 +32,6 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
         PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, Charset.forName("UTF-8"))));
         this.logger = ctx.getLogger();
 
-        this.logger.log("handleRequest");
-
         this.handleRequestWrapped(reader, writer, ctx);
 
         if (writer.checkError()) {

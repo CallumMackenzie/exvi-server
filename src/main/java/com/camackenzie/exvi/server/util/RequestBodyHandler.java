@@ -16,9 +16,12 @@ import java.util.HashMap;
  */
 public abstract class RequestBodyHandler<IN, OUT> extends RequestObjectHandler<IN, OUT> {
 
+    public RequestBodyHandler(Class<IN> inClass) {
+        super(inClass);
+    }
+    
     @Override
     public APIResult<OUT> handleObjectRequest(APIRequest<IN> in, Context context) {
-        this.getLogger().log("handleObjectRequest");
         return new APIResult<OUT>(200,
                 this.handleBodyRequest(in.getBody(), context),
                 new HashMap<>()).withJsonHeader();
