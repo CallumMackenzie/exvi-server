@@ -65,7 +65,7 @@
             </properties>
         </profile>
         <profile>
-            <id>only-deps</id>
+            <id>dependencies-only</id>
             <properties>
                 <build.scope>compile</build.scope>
             </properties>
@@ -110,7 +110,54 @@
             </build>
         </profile>
         <profile>
-            <id>user-verification</id>
+            <id>fat-jar-no-lambdas</id>
+            <properties>
+                <build.scope>compile</build.scope>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-assembly</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-compile</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <configuration>
+                                    <excludes>
+                                        <exclude>com/camackenzie/exvi/server/lambdas</exclude>
+                                    </excludes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>verification-lambda</id>
             <properties>
                 <build.scope>provided</build.scope>
             </properties>
@@ -121,9 +168,29 @@
                         <artifactId>maven-compiler-plugin</artifactId>
                         <version>2.0.2</version>
                         <configuration>
-                            <excludes>
-                                <exclude>${exvi.global.excludes}</exclude>
-                            </excludes>
+                            <includes>
+                                <include>com/camackenzie/exvi/server/lambdas/VerifiationAction.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>sign-up-lambda</id>
+            <properties>
+                <build.scope>provided</build.scope>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <includes>
+                                <include>com/camackenzie/exvi/server/lambdas/SignUpAction.java</include>
+                            </includes>
                         </configuration>
                     </plugin>
                 </plugins>

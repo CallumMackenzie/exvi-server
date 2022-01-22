@@ -21,7 +21,7 @@ jobs:
           settings-path: ${{ github.workspace }} 
 
       - name: Build dependencies only with Maven
-        run: mvn -B package --file pom.xml -P only-deps
+        run: mvn -B package --file pom.xml -P fat-jar-no-lambdas
           
       - name: Set up output zip structure
         run: |
@@ -42,7 +42,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
-          layer_name: ExviDependencies
+          layer_name: ExviServer
           zip_file: exvi-deps.zip
           
   update_lambdas:
@@ -60,7 +60,7 @@ jobs:
           settings-path: ${{ github.workspace }} 
           
       - name: Build with Maven
-        run: mvn -B package --file pom.xml -P user-verification
+        run: mvn -B package --file pom.xml -P verification-lambda
         
       - name: AWS Lambda Deploy
         uses: appleboy/lambda-action@v0.1.5
