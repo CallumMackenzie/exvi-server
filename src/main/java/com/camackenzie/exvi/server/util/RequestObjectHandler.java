@@ -14,6 +14,7 @@ import com.google.gson.internal.LinkedTreeMap;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 
 /**
  *
@@ -34,8 +35,22 @@ public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandler
         APIRequest<LinkedTreeMap> requestRaw = gson.fromJson(bf, APIRequest.class);
         JsonElement jsonElem = gson.toJsonTree(requestRaw.getBody());
 
+        IN requestBody = null;
+        if (jsonElem.isJsonPrimitive()) {
+            if (jsonElem.getAsJsonPrimitive().isString()) {
+                requestBody = this.gson.fromJson(jsonElem.getAsString(), this.inClass);
+            }
+        } else if (jsonElem.isJsonObject()) {
+            requestBody = this.gson.fromJson(jsonElem, this.inClass);
+        }
+        if (requestBody == null) {
+            pw.write(gson.toJson(new APIResult(400, "Cannot parse request body.",
+                    new HashMap<>())));
+            return;
+        }
+
         APIRequest<IN> req = new APIRequest(requestRaw.getEndpoint(),
-                this.gson.fromJson(jsonElem, this.inClass),
+                requestBody,
                 requestRaw.getHeaders());
 
         APIResult<OUT> response = this.handleObjectRequest(req, ctx);
