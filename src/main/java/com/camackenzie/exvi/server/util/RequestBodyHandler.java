@@ -18,7 +18,8 @@ public abstract class RequestBodyHandler<IN, OUT> extends RequestObjectHandler<I
 
     @Override
     public APIResult<OUT> handleObjectRequest(APIRequest<IN> in, Context context) {
-        return new APIResult(200, in.getBody(), new HashMap<>()).withJsonHeader();
+        return new APIResult(200, this.handleBodyRequest(in.getBody(),
+                context), new HashMap<>()).withJsonHeader();
     }
 
     public abstract OUT handleBodyRequest(IN in, Context context);

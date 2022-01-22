@@ -115,6 +115,7 @@
                 <build.scope>compile</build.scope>
             </properties>
             <build>
+                <finalName>exvi-server-no-lambdas</finalName>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
