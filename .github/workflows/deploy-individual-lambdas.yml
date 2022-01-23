@@ -1,4 +1,4 @@
-name: Deploy AWS Lambda Functions
+name: Deploy to AWS Lambda
 
 on:
   release:
@@ -10,8 +10,8 @@ on:
 
 jobs:
           
-  update_aws:
-    name: Deploy to AWS
+  update_aws_lambsa:
+    name: Deploy to AWS Lambda
     runs-on: ubuntu-latest
 
     steps:
