@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.google.gson.Gson;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 
 /**
  *
@@ -18,14 +19,21 @@ public abstract class DatabaseEntry<T extends DatabaseEntry> {
 
     private static final Gson gson = new Gson();
 
-    public static boolean matchesOuterItemAttributes(Item item,
+    public static boolean matchesItem(Item item,
             Class<? extends DatabaseEntry> cls) {
         if (item == null) {
             return false;
         }
         int nFields = item.asMap().size();
-        Field[] fields = cls.getDeclaredFields();
-        if (fields.length != nFields) {
+        ArrayList<Field> fields = new ArrayList<>();
+        Class superClass = cls;
+        while (superClass != null) {
+            for (var f : superClass.getDeclaredFields()) {
+                fields.add(f);
+            }
+            superClass = superClass.getSuperclass();
+        }
+        if (fields.size() != nFields) {
             return false;
         }
         for (var field : fields) {
@@ -38,7 +46,7 @@ public abstract class DatabaseEntry<T extends DatabaseEntry> {
 
     public static <T extends DatabaseEntry> T fromItem(Item item,
             Class<T> cls) {
-        if (DatabaseEntry.matchesOuterItemAttributes(item, cls)) {
+        if (DatabaseEntry.matchesItem(item, cls)) {
             return gson.fromJson(item.toJSON(), cls);
         }
         return null;

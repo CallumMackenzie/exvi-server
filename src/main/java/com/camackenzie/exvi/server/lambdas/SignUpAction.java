@@ -36,15 +36,15 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         VerificationDatabaseEntry dbEntry = DatabaseEntry.fromItem(
                 userTable.getItem("username", in.getUsername()),
                 VerificationDatabaseEntry.class);
-
-        // Account needs verification
-        if (dbEntry == null) {
+        
+        if (dbEntry != null) {
             if (this.verificationCodeValid(in.getVerificationCode(),
                     dbEntry.getVerificationCode(),
                     dbEntry.getVerificationCodeUTC()
             )) {
                 // Verification code is correct
                 this.registerAccountData(database, in, dbEntry);
+                // TODO: generate access key
                 return new AccountAccessKeyResult("Account created.", "");
             } else {
                 // Verification code is incorrect
