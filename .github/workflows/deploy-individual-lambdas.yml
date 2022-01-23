@@ -11,7 +11,7 @@ on:
 jobs:
           
   update_aws:
-    name: Deploy lambda dependencies to layer
+    name: Deploy to AWS
     runs-on: ubuntu-latest
 
     steps:
