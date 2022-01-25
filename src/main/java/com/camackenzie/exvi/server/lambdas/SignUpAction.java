@@ -45,13 +45,13 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
                 // Verification code is correct
                 this.registerAccountData(database, in, dbEntry);
                 // TODO: generate access key
-                return new AccountAccessKeyResult("Account created.", "");
+                return new AccountAccessKeyResult("Account created", "");
             } else {
                 // Verification code is incorrect
                 return new AccountAccessKeyResult(2, "Verification code is incorrect or expired");
             }
         } else {
-            return new AccountAccessKeyResult(1, "User does not have verification data.");
+            return new AccountAccessKeyResult(1, "User does not have verification data");
         }
     }
 

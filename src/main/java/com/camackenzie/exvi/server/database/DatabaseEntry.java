@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.google.gson.Gson;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
 /**
@@ -24,13 +25,20 @@ public abstract class DatabaseEntry<T extends DatabaseEntry> {
         if (item == null) {
             return false;
         }
+        int nFields = item.asMap().size();
         ArrayList<Field> fields = new ArrayList<>();
         Class superClass = cls;
         while (superClass != null) {
             for (var f : superClass.getDeclaredFields()) {
-                fields.add(f);
+                if (!Modifier.isStatic(f.getModifiers())
+                        && !Modifier.isTransient(f.getModifiers())) {
+                    fields.add(f);
+                }
             }
             superClass = superClass.getSuperclass();
+        }
+        if (nFields != fields.size()) {
+            return false;
         }
         for (var field : fields) {
             if (!item.hasAttribute(field.getName())) {
