@@ -24,7 +24,6 @@ public abstract class DatabaseEntry<T extends DatabaseEntry> {
         if (item == null) {
             return false;
         }
-        int nFields = item.asMap().size();
         ArrayList<Field> fields = new ArrayList<>();
         Class superClass = cls;
         while (superClass != null) {
@@ -32,9 +31,6 @@ public abstract class DatabaseEntry<T extends DatabaseEntry> {
                 fields.add(f);
             }
             superClass = superClass.getSuperclass();
-        }
-        if (fields.size() != nFields) {
-            return false;
         }
         for (var field : fields) {
             if (!item.hasAttribute(field.getName())) {
