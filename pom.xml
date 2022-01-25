@@ -279,7 +279,7 @@
         <dependency>
             <groupId>com.github.CallumMackenzie</groupId>
             <artifactId>exvi-core</artifactId>
-            <version>e949a9e77786e3b2532c398f168f6f16deed614c</version>
+            <version>246429461d4654d46cf6996fccd0feefcfe087f5</version>
             <scope>${build.scope}</scope>
         </dependency>
         <dependency>
