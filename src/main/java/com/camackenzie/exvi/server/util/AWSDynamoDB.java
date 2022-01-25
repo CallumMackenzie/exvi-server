@@ -11,6 +11,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.camackenzie.exvi.server.database.DatabaseEntry;
 import com.google.gson.Gson;
 import java.util.HashMap;
 
@@ -59,13 +60,36 @@ public class AWSDynamoDB {
         return this.awsDynamoDB;
     }
 
-    public <T> void putObjectInTable(String table, T object) {
+    public <T extends DatabaseEntry> void putObjectInTable(String table, T object) {
         Table t = this.getTable(table);
         this.putObjectInTable(t, object);
     }
 
-    public <T> void putObjectInTable(Table table, T object) {
+    public <T extends DatabaseEntry> void putObjectInTable(Table table, T object) {
         table.putItem(Item.fromJSON(this.gson.toJson(object)));
+    }
+
+    public <T extends DatabaseEntry> T getObjectFromTable(Table table, String hashKey,
+            String value, Class<T> cls) {
+        return gson.fromJson(table.getItem(hashKey, value).toJSON(), cls);
+    }
+
+    public <T extends DatabaseEntry> T getObjectFromTable(String table, String hashKey,
+            String value, Class<T> cls) {
+        return this.getObjectFromTable(this.getTable(table), hashKey, value, cls);
+    }
+
+    public <T extends DatabaseEntry> T getObjectFromTableOr(Table table, String hashKey,
+            String value, Class<T> cls, T def) {
+        Item item = table.getItem(hashKey, value);
+        if (DatabaseEntry.matchesItem(item, cls)) {
+            return gson.fromJson(item.toJSON(), cls);
+        }
+        return def;
+    }
+
+    public void deleteObjectFromTable(Table table, String hashKey, String value) {
+        table.deleteItem(hashKey, value);
     }
 
 }

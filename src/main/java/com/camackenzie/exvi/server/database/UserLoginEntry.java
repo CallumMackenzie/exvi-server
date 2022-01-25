@@ -16,6 +16,7 @@ public class UserLoginEntry extends DatabaseEntry {
     private String email;
     private String passwordHash;
     private String salt;
+    private String[] accessKeys;
 
     public UserLoginEntry(String username,
             String phone,
@@ -29,9 +30,32 @@ public class UserLoginEntry extends DatabaseEntry {
         this.salt = salt;
     }
 
-    /**
-     * @return the username
-     */
+    public String[] getAccessKeys() {
+        return this.accessKeys;
+    }
+
+    public void addAccessKey(String key) {
+        String[] newKeys = new String[this.accessKeys.length + 1];
+        newKeys[0] = key;
+        System.arraycopy(this.accessKeys, 0, newKeys, 1, this.accessKeys.length);
+        this.accessKeys = newKeys;
+    }
+
+//    public void removeAccessKey(String key) {
+//        int toRemove = -1;
+//        for (int i = 0; i < this.accessKeys.length; ++i) {
+//            if (this.accessKeys[i].equals(key)) {
+//                toRemove = i;
+//                break;
+//            }
+//        }
+//        if (toRemove != -1) {
+//            String[] newKeys = new String[this.accessKeys.length - 1];
+//            System.arraycopy(this.accessKeys, 0, newKeys, 0, toRemove);
+//            System.arraycopy(this.accessKeys, toRemove + 1, newKeys, toRemove + 1, this.accessKeys.length - toRemove);
+//        }
+//    }
+    
     public String getUsername() {
         return username;
     }

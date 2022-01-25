@@ -26,7 +26,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
     public SignUpAction() {
         super(AccountCreationRequest.class);
     }
-    
+
     @Override
     public AccountAccessKeyResult handleBodyRequest(AccountCreationRequest in, Context context) {
 
@@ -36,7 +36,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         VerificationDatabaseEntry dbEntry = DatabaseEntry.fromItem(
                 userTable.getItem("username", in.getUsername()),
                 VerificationDatabaseEntry.class);
-        
+
         if (dbEntry != null) {
             if (this.verificationCodeValid(in.getVerificationCode(),
                     dbEntry.getVerificationCode(),

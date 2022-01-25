@@ -215,13 +215,71 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>retrieve-salt-lambda</id>
+            <properties>
+                <build.scope>provided</build.scope>
+            </properties>
+            <build>
+                <finalName>retrieve-salt-lambda</finalName>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>2.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>default-jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <includes>
+                                        <include>com/camackenzie/exvi/server/lambdas/RetrieveSaltAction.class</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>login-lambda</id>
+            <properties>
+                <build.scope>provided</build.scope>
+            </properties>
+            <build>
+                <finalName>login-lambda</finalName>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>2.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>default-jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <includes>
+                                        <include>com/camackenzie/exvi/server/lambdas/LoginAction.class</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
     
     <dependencies>
         <dependency>
             <groupId>com.github.CallumMackenzie</groupId>
             <artifactId>exvi-core</artifactId>
-            <version>ef2edd77e62793eb3814851de545cbc845453f46</version>
+            <version>e949a9e77786e3b2532c398f168f6f16deed614c</version>
             <scope>${build.scope}</scope>
         </dependency>
         <dependency>
