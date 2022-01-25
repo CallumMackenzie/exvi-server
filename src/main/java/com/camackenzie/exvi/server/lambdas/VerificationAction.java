@@ -75,6 +75,8 @@ public class VerificationAction
                     Item userItem = userTable.getItem("username", phoneUser);
                     return !userItem.hasAttribute("verificationCode");
                 }
+            } else {
+                return true;
             }
         } catch (Exception e) {
             this.getLogger().log("Phone validation error: " + e);
@@ -95,6 +97,8 @@ public class VerificationAction
                     Item userItem = userTable.getItem("username", emailUser);
                     return !userItem.hasAttribute("verificationCode");
                 }
+            } else {
+                return true;
             }
         } catch (Exception e) {
             this.getLogger().log("Email validation error: " + e);
