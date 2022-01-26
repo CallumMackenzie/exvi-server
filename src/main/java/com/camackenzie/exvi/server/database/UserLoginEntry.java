@@ -35,10 +35,14 @@ public class UserLoginEntry extends DatabaseEntry {
     }
 
     public void addAccessKey(String key) {
-        String[] newKeys = new String[this.accessKeys.length + 1];
-        newKeys[0] = key;
-        System.arraycopy(this.accessKeys, 0, newKeys, 1, this.accessKeys.length);
-        this.accessKeys = newKeys;
+        if (this.accessKeys == null) {
+            this.accessKeys = new String[]{key};
+        } else {
+            String[] newKeys = new String[this.accessKeys.length + 1];
+            newKeys[0] = key;
+            System.arraycopy(this.accessKeys, 0, newKeys, 1, this.accessKeys.length);
+            this.accessKeys = newKeys;
+        }
     }
 
 //    public void removeAccessKey(String key) {
@@ -55,7 +59,6 @@ public class UserLoginEntry extends DatabaseEntry {
 //            System.arraycopy(this.accessKeys, toRemove + 1, newKeys, toRemove + 1, this.accessKeys.length - toRemove);
 //        }
 //    }
-    
     public String getUsername() {
         return username;
     }

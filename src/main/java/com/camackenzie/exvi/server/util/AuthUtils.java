@@ -17,7 +17,9 @@ public class AuthUtils {
 
     public static String generateAccessKey(AWSDynamoDB database, String username) {
         String accessKey = CryptographyUtils.generateSalt(1024);
-        UserLoginEntry entry = database.getObjectFromTable("exvi-user-login", "username", username,
+        UserLoginEntry entry = database.getObjectFromTable("exvi-user-login",
+                "username",
+                username,
                 UserLoginEntry.class);
         entry.addAccessKey(accessKey);
         database.deleteObjectFromTable("exvi-user-login", "username", username);

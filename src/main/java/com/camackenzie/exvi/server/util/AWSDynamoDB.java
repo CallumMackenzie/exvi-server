@@ -71,7 +71,7 @@ public class AWSDynamoDB {
 
     public <T extends DatabaseEntry> T getObjectFromTable(Table table, String hashKey,
             String value, Class<T> cls) {
-        return gson.fromJson(table.getItem(hashKey, value).toJSON(), cls);
+        return DatabaseEntry.fromItem(table.getItem(hashKey, value), cls);
     }
 
     public <T extends DatabaseEntry> T getObjectFromTable(String table, String hashKey,
@@ -81,11 +81,11 @@ public class AWSDynamoDB {
 
     public <T extends DatabaseEntry> T getObjectFromTableOr(Table table, String hashKey,
             String value, Class<T> cls, T def) {
-        Item item = table.getItem(hashKey, value);
-        if (DatabaseEntry.matchesItem(item, cls)) {
-            return gson.fromJson(item.toJSON(), cls);
+        T ret = this.getObjectFromTable(table, hashKey, value, cls);
+        if (ret == null) {
+            return def;
         }
-        return def;
+        return ret;
     }
 
     public void deleteObjectFromTable(Table table, String hashKey, String value) {

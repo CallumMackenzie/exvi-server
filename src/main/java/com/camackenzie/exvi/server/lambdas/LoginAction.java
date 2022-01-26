@@ -10,8 +10,6 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
 import com.camackenzie.exvi.core.api.LoginRequest;
-import com.camackenzie.exvi.core.util.CryptographyUtils;
-import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.AuthUtils;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
@@ -36,9 +34,9 @@ public class LoginAction
 
         // Ensure user can be logged in
         if (userItem == null) {
-            return new AccountAccessKeyResult(1, "User not found");
+            return new AccountAccessKeyResult(1, "Invalid credentials");
         } else if (!userItem.hasAttribute("passwordHash")) {
-            return new AccountAccessKeyResult(2, "User does not have account data");
+            return new AccountAccessKeyResult(1, "Invalid credentials");
         }
 
         // Retreive user data
@@ -47,7 +45,7 @@ public class LoginAction
 
         // Check if input password matches database
         if (!databasePasswordHash.equals(passwordHashDecrypted)) {
-            return new AccountAccessKeyResult(3, "Incorrect password");
+            return new AccountAccessKeyResult(1, "Invalid credentials");
         }
 
         // Generate & store access key
