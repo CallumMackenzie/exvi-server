@@ -13,6 +13,7 @@ import com.camackenzie.exvi.core.api.AccountSaltResult;
 import com.camackenzie.exvi.core.api.RetrieveSaltRequest;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
+import java.nio.charset.StandardCharsets;
 
 /**
  *
@@ -37,7 +38,8 @@ public class RetrieveSaltAction
             return new AccountSaltResult(2, "No valid user login entry");
         } else {
             return new AccountSaltResult("Success",
-                    CryptographyUtils.bytesToBase64String(item.getString("salt").getBytes()));
+                    CryptographyUtils.bytesToBase64String(item.getString("salt")
+                            .getBytes(StandardCharsets.UTF_8)));
         }
     }
 

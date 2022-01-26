@@ -44,8 +44,8 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
             )) {
                 // Verification code is correct
                 this.registerAccountData(database, in, dbEntry);
-                // TODO: generate access key
-                return new AccountAccessKeyResult("Account created", "");
+                String accessKey = AuthUtils.generateAccessKey(database, in.getUsername());
+                return new AccountAccessKeyResult("Account created", accessKey);
             } else {
                 // Verification code is incorrect
                 return new AccountAccessKeyResult(2, "Verification code is incorrect or expired");
@@ -59,7 +59,8 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
             VerificationDatabaseEntry entry) {
         Table userTable = database.getTable("exvi-user-login");
         String salt = CryptographyUtils.generateSalt(32),
-                passwordHash = CryptographyUtils.hashSHA256(salt + ac.getPassword());
+                passwordHash = CryptographyUtils.hashSHA256(salt
+                        + AuthUtils.decryptPasswordHash(ac.getPassword()));
         userTable.deleteItem("username", entry.getUsername());
         database.putObjectInTable(userTable, new UserLoginEntry(ac.getUsername(),
                 entry.getPhone(),

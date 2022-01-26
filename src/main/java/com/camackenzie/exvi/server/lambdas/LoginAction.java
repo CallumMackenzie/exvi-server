@@ -5,7 +5,6 @@
  */
 package com.camackenzie.exvi.server.lambdas;
 
-import com.amazonaws.services.dynamodbv2.document.AttributeUpdate;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
@@ -14,6 +13,7 @@ import com.camackenzie.exvi.core.api.LoginRequest;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
+import com.camackenzie.exvi.server.util.AuthUtils;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 
 /**
@@ -42,7 +42,7 @@ public class LoginAction
         }
 
         // Retreive user data
-        String passwordHashDecrypted = new String(CryptographyUtils.bytesFromBase64String(in.getPasswordHash()));
+        String passwordHashDecrypted = AuthUtils.decryptPasswordHash(in.getPasswordHash());
         String databasePasswordHash = userItem.getString("passwordHash");
 
         // Check if input password matches database
@@ -51,12 +51,7 @@ public class LoginAction
         }
 
         // Generate & store access key
-        String accessKey = CryptographyUtils.generateSalt(1024);
-        UserLoginEntry entry = database.getObjectFromTable(userTable, "username", in.getUsername(),
-                UserLoginEntry.class);
-        entry.addAccessKey(accessKey);
-        database.deleteObjectFromTable(userTable, "username", in.getUsername());
-        database.putObjectInTable(userTable, entry);
+        String accessKey = AuthUtils.generateAccessKey(database, in.getUsername());
 
         // Return access key
         return new AccountAccessKeyResult("Success", accessKey);

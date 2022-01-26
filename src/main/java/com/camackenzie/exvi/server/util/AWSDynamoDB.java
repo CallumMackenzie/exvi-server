@@ -61,7 +61,7 @@ public class AWSDynamoDB {
     }
 
     public <T extends DatabaseEntry> void putObjectInTable(String table, T object) {
-        Table t = this.getTable(table);
+        Table t = this.cacheTable(table);
         this.putObjectInTable(t, object);
     }
 
@@ -76,7 +76,7 @@ public class AWSDynamoDB {
 
     public <T extends DatabaseEntry> T getObjectFromTable(String table, String hashKey,
             String value, Class<T> cls) {
-        return this.getObjectFromTable(this.getTable(table), hashKey, value, cls);
+        return this.getObjectFromTable(this.cacheTable(table), hashKey, value, cls);
     }
 
     public <T extends DatabaseEntry> T getObjectFromTableOr(Table table, String hashKey,
@@ -90,6 +90,10 @@ public class AWSDynamoDB {
 
     public void deleteObjectFromTable(Table table, String hashKey, String value) {
         table.deleteItem(hashKey, value);
+    }
+
+    public void deleteObjectFromTable(String table, String hashKey, String value) {
+        this.cacheTable(table).deleteItem(hashKey, value);
     }
 
 }
