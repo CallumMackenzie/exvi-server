@@ -10,6 +10,7 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
 import com.camackenzie.exvi.core.api.LoginRequest;
+import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.AuthUtils;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
@@ -30,22 +31,21 @@ public class LoginAction
 
         AWSDynamoDB database = new AWSDynamoDB();
         Table userTable = database.cacheTable("exvi-user-login");
-        Item userItem = userTable.getItem("username", in.getUsername());
+        UserLoginEntry entry = database.getObjectFromTable("exvi-user-login",
+                "username", in.getUsername(), UserLoginEntry.class);
 
         // Ensure user can be logged in
-        if (userItem == null) {
-            return new AccountAccessKeyResult(1, "Invalid credentials");
-        } else if (!userItem.hasAttribute("passwordHash")) {
+        if (entry == null) {
             return new AccountAccessKeyResult(1, "Invalid credentials");
         }
 
         // Retreive user data
         String passwordHashDecrypted = AuthUtils.decryptPasswordHash(in.getPasswordHash());
-        String databasePasswordHash = userItem.getString("passwordHash");
+        String databasePasswordHash = entry.getPasswordHash();
 
         // Check if input password matches database
         if (!databasePasswordHash.equals(passwordHashDecrypted)) {
-            return new AccountAccessKeyResult(1, "Invalid credentials");
+            return new AccountAccessKeyResult(2, "Invalid credentials");
         }
 
         // Generate & store access key
