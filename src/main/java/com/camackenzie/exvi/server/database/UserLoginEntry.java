@@ -28,6 +28,7 @@ public class UserLoginEntry extends DatabaseEntry {
         this.email = email;
         this.passwordHash = passwordHash;
         this.salt = salt;
+        this.accessKeys = new String[0];
     }
 
     public String[] getAccessKeys() {
