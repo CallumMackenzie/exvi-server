@@ -21,6 +21,11 @@ public class AuthUtils {
                 "username",
                 username,
                 UserLoginEntry.class);
+
+        if (entry.getAccessKeys().length >= 4) {
+            return entry.getAccessKeys()[0];
+        }
+
         entry.addAccessKey(accessKey);
         database.deleteObjectFromTable("exvi-user-login", "username", username);
         database.putObjectInTable("exvi-user-login", entry);
