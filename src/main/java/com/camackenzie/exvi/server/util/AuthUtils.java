@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 public class AuthUtils {
 
     public static String generateAccessKey(AWSDynamoDB database, String username) {
-        String accessKey = CryptographyUtils.generateSalt(1024);
+        String accessKey = CryptographyUtils.generateSalt(256);
         UserLoginEntry entry = database.getObjectFromTable("exvi-user-login",
                 "username",
                 username,
