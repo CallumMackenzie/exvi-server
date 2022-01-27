@@ -14,6 +14,7 @@ import com.camackenzie.exvi.server.database.DatabaseEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
 import com.camackenzie.exvi.core.api.AccountCreationRequest;
+import com.camackenzie.exvi.server.database.UserDataEntry;
 
 /**
  *
@@ -68,6 +69,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
                 passwordHash,
                 salt
         ));
+        database.putObjectInTable("exvi-user-data", new UserDataEntry(ac.getUsername()));
     }
 
     private boolean verificationCodeValid(String inputCode, String actualCode, long creation) {
