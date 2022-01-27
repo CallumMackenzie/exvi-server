@@ -5,9 +5,6 @@
  */
 package com.camackenzie.exvi.server.lambdas;
 
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.GenericDataRequest;
 import com.camackenzie.exvi.core.api.GenericDataResult;
@@ -16,9 +13,9 @@ import com.camackenzie.exvi.core.api.WorkoutListResult;
 import com.camackenzie.exvi.core.api.WorkoutPutRequest;
 import com.camackenzie.exvi.core.model.Workout;
 import com.camackenzie.exvi.server.database.UserDataEntry;
+import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
-import java.util.ArrayList;
 
 /**
  *
@@ -36,6 +33,9 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         AWSDynamoDB database = new AWSDynamoDB();
 
         try {
+            UserLoginEntry.ensureAccessKeyValid(database, in.getUsername(), in.getAccessKey());
+            UserDataEntry.ensureUserHasData(database, in.getUsername());
+
             Class inClass = in.getRequestClass();
             if (inClass.equals(WorkoutListRequest.class)) {
                 return new GenericDataResult(this.getWorkoutList(database, in));
@@ -44,9 +44,9 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                 return new GenericDataResult(null);
             }
         } catch (Exception e) {
-            this.getLogger().log("Request parse error: " + e);
+            this.getLogger().log("Request error: " + e);
         } finally {
-            return new GenericDataResult(400, "Could not parse data request", null);
+            return new GenericDataResult(400, "Invalid request", null);
         }
     }
 

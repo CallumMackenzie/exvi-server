@@ -5,11 +5,34 @@
  */
 package com.camackenzie.exvi.server.database;
 
+import com.camackenzie.exvi.core.api.GenericDataResult;
+import com.camackenzie.exvi.server.util.AWSDynamoDB;
+
 /**
  *
  * @author callum
  */
 public class UserLoginEntry extends DatabaseEntry {
+
+    public static void ensureAccessKeyValid(AWSDynamoDB database,
+            String user,
+            String key) {
+        UserLoginEntry authData = database.getObjectFromTable("exvi-user-login",
+                "username", user, UserLoginEntry.class);
+        if (authData == null) {
+            throw new RuntimeException("User does not exist");
+        }
+        boolean keyMatched = false;
+        for (var akey : authData.getAccessKeys()) {
+            if (akey.equals(key)) {
+                keyMatched = true;
+                break;
+            }
+        }
+        if (!keyMatched) {
+            throw new RuntimeException("Invalid credentials");
+        }
+    }
 
     private String username;
     private String phone;

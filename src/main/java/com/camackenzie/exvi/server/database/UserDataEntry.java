@@ -15,7 +15,6 @@ import com.camackenzie.exvi.core.model.BodyStats;
 import com.camackenzie.exvi.core.model.Workout;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.google.gson.Gson;
-import java.util.ArrayList;
 
 /**
  *
@@ -66,6 +65,18 @@ public class UserDataEntry extends DatabaseEntry {
                 .getItem(get);
 
         return gson.fromJson(gson.toJson(item.getList("workouts")), Workout[].class);
+    }
+
+    public static void ensureUserHasData(AWSDynamoDB database,
+            String user) {
+        if (database.getObjectFromTable("exvi-user-login", "username",
+                user, UserLoginEntry.class) == null) {
+            throw new RuntimeException("User does not have an account");
+        }
+        if (database.getObjectFromTable("exvi-user-data", "username", user,
+                UserLoginEntry.class) == null) {
+            database.putObjectInTable("exvi-user-data", new UserDataEntry(user));
+        }
     }
 
     public static void updateUserWorkouts(AWSDynamoDB database,
