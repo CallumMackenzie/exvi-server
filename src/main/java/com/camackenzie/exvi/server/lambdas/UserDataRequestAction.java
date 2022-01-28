@@ -40,16 +40,15 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
             this.getLogger().log("Request class: " + inClass.getCanonicalName());
             if (inClass.equals(WorkoutListRequest.class)) {
                 WorkoutListResult res = this.getWorkoutList(database, in);
-                this.getLogger().log("res: " + this.getGson().toJson(res));
-                return new GenericDataResult(res);
+                return new GenericDataResult<WorkoutListResult>(res);
             } else if (inClass.equals(WorkoutPutRequest.class)) {
                 this.putWorkouts(database, in);
-                return new GenericDataResult(200, "Success", Void.class);
+                return new GenericDataResult<Void>(200, "Success", Void.class);
             }
         } catch (Exception e) {
             this.getLogger().log("Request error: " + e);
         }
-        return new GenericDataResult(400, "Invalid request", Void.class);
+        return new GenericDataResult<Void>(400, "Invalid request", Void.class);
     }
 
     private void putWorkouts(AWSDynamoDB database,

@@ -56,7 +56,11 @@ public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandler
         APIResult<String> strResponse = new APIResult<>(response.getStatusCode(),
                 this.gson.toJson(response.getBody()),
                 response.getHeaders());
-        pw.write(this.gson.toJson(strResponse));
+
+        String finalResponse = gson.toJson(strResponse);
+        ctx.getLogger().log("Response: " + finalResponse);
+
+        pw.write(finalResponse);
     }
 
     public abstract APIResult<OUT> handleObjectRequest(APIRequest<IN> in, Context context);
