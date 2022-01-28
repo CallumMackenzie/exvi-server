@@ -63,6 +63,9 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         WorkoutListRequest req = in.getBody();
         Workout[] workouts
                 = UserDataEntry.userWorkouts(database, in.getUsername());
+        
+        this.getLogger().log(UserDataEntry.getUserWorkoutsJSON(database, in.getUsername()));
+        
         if (workouts == null) {
             throw new RuntimeException("User does not have data.");
         }

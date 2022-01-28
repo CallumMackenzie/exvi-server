@@ -63,14 +63,21 @@ public class UserDataEntry extends DatabaseEntry {
         this.bodyStats = bodyStats;
     }
 
-    public static Workout[] userWorkouts(AWSDynamoDB database,
+    public static String getUserWorkoutsJSON(AWSDynamoDB database,
             String user) {
         GetItemSpec get = new GetItemSpec()
                 .withPrimaryKey("username", user)
-                .withProjectionExpression("workouts");
+                .withProjectionExpression("workouts")
+                .withConsistentRead(true);
         Item item = database.cacheTable("exvi-user-data")
                 .getItem(get);
-        return gson.fromJson(item.getJSON("workouts"), Workout[].class);
+        return item.getJSON("workouts");
+    }
+
+    public static Workout[] userWorkouts(AWSDynamoDB database,
+            String user) {
+        return gson.fromJson(getUserWorkoutsJSON(database,
+                user), Workout[].class);
     }
 
     public static void ensureUserHasData(AWSDynamoDB database,
