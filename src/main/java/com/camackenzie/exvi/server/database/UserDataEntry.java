@@ -17,6 +17,8 @@ import com.camackenzie.exvi.core.model.Workout;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -100,9 +102,9 @@ public class UserDataEntry extends DatabaseEntry {
             String user,
             Workout[] workouts) {
 
-        List<String> workoutList = new ArrayList<>();
+        List<Map> workoutList = new ArrayList<>();
         for (var workout : workouts) {
-            workoutList.add(gson.toJson(workout));
+            workoutList.add(gson.fromJson(gson.toJson(workout), Map.class));
         }
 
         UpdateItemSpec update = new UpdateItemSpec()
