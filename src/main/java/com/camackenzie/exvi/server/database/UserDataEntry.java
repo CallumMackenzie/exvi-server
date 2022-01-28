@@ -6,6 +6,7 @@
 package com.camackenzie.exvi.server.database;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
@@ -96,9 +97,8 @@ public class UserDataEntry extends DatabaseEntry {
             Workout[] workouts) {
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", user)
-                .withUpdateExpression("list_append(workouts, :a)")
-                .withValueMap(new ValueMap().withList(":a", workouts))
-                .withReturnValues(ReturnValue.UPDATED_NEW);
+                .withUpdateExpression("list_append(:a, workout)")
+                .withValueMap(new ValueMap().withList(":a", workouts));
         database.cacheTable("exvi-user-data")
                 .updateItem(update);
     }
