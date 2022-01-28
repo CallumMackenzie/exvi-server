@@ -84,24 +84,25 @@ public class UserDataEntry extends DatabaseEntry {
         }
     }
 
-//    public static void updateUserWorkouts(AWSDynamoDB database,
-//            String user,
-//            Workout[] workouts) {
-//        UpdateItemSpec update = new UpdateItemSpec()
-//                .withPrimaryKey("username", user)
-//                .withUpdateExpression("set workouts = :a")
-//                .withValueMap(new ValueMap().withList(":a", workouts))
-//                .withReturnValues(ReturnValue.UPDATED_NEW);
-//        database.cacheTable("exvi-user-data")
-//                .updateItem(update);
-//    }
+    public static void updateUserWorkouts(AWSDynamoDB database,
+            String user,
+            Workout[] workouts) {
+        UpdateItemSpec update = new UpdateItemSpec()
+                .withPrimaryKey("username", user)
+                .withUpdateExpression("set workouts = :a")
+                .withValueMap(new ValueMap().withList(":a", workouts))
+                .withReturnValues(ReturnValue.UPDATED_NEW);
+        database.cacheTable("exvi-user-data")
+                .updateItem(update);
+    }
+
     public static void addUserWorkouts(AWSDynamoDB database,
             String user,
             Workout[] workouts) {
 
-        List<Map> workoutList = new ArrayList<>();
+        List<String> workoutList = new ArrayList<>();
         for (var workout : workouts) {
-            workoutList.add(Item.fromJSON(gson.toJson(workout)).asMap());
+            workoutList.add(gson.toJson(workout));
         }
 
         UpdateItemSpec update = new UpdateItemSpec()
