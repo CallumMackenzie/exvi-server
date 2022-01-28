@@ -67,11 +67,10 @@ public class UserDataEntry extends DatabaseEntry {
             String user) {
         GetItemSpec get = new GetItemSpec()
                 .withPrimaryKey("username", user)
-                .withAttributesToGet("workouts");
+                .withProjectionExpression("workouts");
         Item item = database.cacheTable("exvi-user-data")
                 .getItem(get);
-
-        return gson.fromJson(gson.toJson(item.getList("workouts")), Workout[].class);
+        return gson.fromJson(item.getJSON("workouts"), Workout[].class);
     }
 
     public static void ensureUserHasData(AWSDynamoDB database,
