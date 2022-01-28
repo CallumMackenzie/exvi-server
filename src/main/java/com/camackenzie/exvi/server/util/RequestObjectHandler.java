@@ -59,7 +59,6 @@ public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandler
 
         String finalResponse = gson.toJson(strResponse);
         ctx.getLogger().log("Response: " + finalResponse);
-
         pw.write(finalResponse);
     }
 
