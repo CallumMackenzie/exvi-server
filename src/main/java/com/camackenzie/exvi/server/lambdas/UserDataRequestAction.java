@@ -39,7 +39,9 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
             Class inClass = in.getRequestClass();
             this.getLogger().log("Request class: " + inClass.getCanonicalName());
             if (inClass.equals(WorkoutListRequest.class)) {
-                return new GenericDataResult(this.getWorkoutList(database, in));
+                WorkoutListResult res = this.getWorkoutList(database, in);
+                this.getLogger().log("res: " + this.getGson().toJson(res));
+                return new GenericDataResult(res);
             } else if (inClass.equals(WorkoutPutRequest.class)) {
                 this.putWorkouts(database, in);
                 return new GenericDataResult(200, "Success", Void.class);
