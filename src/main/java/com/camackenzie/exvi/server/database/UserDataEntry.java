@@ -88,7 +88,7 @@ public class UserDataEntry extends DatabaseEntry {
         }
         if (database.getObjectFromTable("exvi-user-data", "username", user,
                 UserLoginEntry.class) == null) {
-            database.putObjectInTable("exvi-user-data", new UserDataEntry(user));
+//            database.putObjectInTable("exvi-user-data", new UserDataEntry(user));
         }
     }
 
