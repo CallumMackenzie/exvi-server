@@ -43,7 +43,6 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                 this.putWorkouts(database, in);
                 return new GenericDataResult(200, "Success", Void.class);
             }
-            this.getLogger().log("Passed through");
         } catch (Exception e) {
             this.getLogger().log("Request error: " + e);
         }
@@ -52,7 +51,6 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
 
     private void putWorkouts(AWSDynamoDB database,
             GenericDataRequest<WorkoutPutRequest> in) {
-        
         UserDataEntry.addUserWorkouts(database,
                 in.getUsername(),
                 in.getBody().getWorkouts());
@@ -60,9 +58,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
 
     private WorkoutListResult getWorkoutList(AWSDynamoDB database,
             GenericDataRequest<WorkoutListRequest> in) {
-        
-        this.getLogger().log("getWorkoutList");
-        
+
         WorkoutListRequest req = in.getBody();
         Workout[] workouts
                 = UserDataEntry.userWorkouts(database, in.getUsername());
