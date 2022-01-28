@@ -16,6 +16,8 @@ import com.camackenzie.exvi.core.model.BodyStats;
 import com.camackenzie.exvi.core.model.Workout;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
+import java.util.Map;
 
 /**
  *
@@ -80,31 +82,28 @@ public class UserDataEntry extends DatabaseEntry {
         }
     }
 
-    public static void updateUserWorkouts(AWSDynamoDB database,
-            String user,
-            Workout[] workouts) {
-        UpdateItemSpec update = new UpdateItemSpec()
-                .withPrimaryKey("username", user)
-                .withUpdateExpression("set workouts = :a")
-                .withValueMap(new ValueMap().withList(":a", workouts))
-                .withReturnValues(ReturnValue.UPDATED_NEW);
-        database.cacheTable("exvi-user-data")
-                .updateItem(update);
-    }
+//    public static void updateUserWorkouts(AWSDynamoDB database,
+//            String user,
+//            Workout[] workouts) {
+//        UpdateItemSpec update = new UpdateItemSpec()
+//                .withPrimaryKey("username", user)
+//                .withUpdateExpression("set workouts = :a")
+//                .withValueMap(new ValueMap().withList(":a", workouts))
+//                .withReturnValues(ReturnValue.UPDATED_NEW);
+//        database.cacheTable("exvi-user-data")
+//                .updateItem(update);
+//    }
 
     public static void addUserWorkouts(AWSDynamoDB database,
             String user,
             Workout[] workouts) {
 
-        Item[] toAppend = new Item[workouts.length];
-        for (int i = 0; i < workouts.length; ++i) {
-            toAppend[i] = Item.fromJSON(gson.toJson(workouts[i]));
-        }
+        Map obj = Item.fromJSON(gson.toJson(workouts)).asMap();
 
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", user)
                 .withUpdateExpression("set workouts = list_append(:a, workouts)")
-                .withValueMap(new ValueMap().withList(":a", toAppend))
+                .withValueMap(new ValueMap().withList(":a", obj))
                 .withReturnValues(ReturnValue.UPDATED_NEW);
         database.cacheTable("exvi-user-data")
                 .updateItem(update);
