@@ -95,10 +95,16 @@ public class UserDataEntry extends DatabaseEntry {
     public static void addUserWorkouts(AWSDynamoDB database,
             String user,
             Workout[] workouts) {
+
+        Item[] toAppend = new Item[workouts.length];
+        for (int i = 0; i < workouts.length; ++i) {
+            toAppend[i] = Item.fromJSON(gson.toJson(workouts[i]));
+        }
+
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", user)
                 .withUpdateExpression("set workouts = list_append(:a, workouts)")
-                .withValueMap(new ValueMap().withList(":a", workouts))
+                .withValueMap(new ValueMap().withList(":a", toAppend))
                 .withReturnValues(ReturnValue.UPDATED_NEW);
         database.cacheTable("exvi-user-data")
                 .updateItem(update);

@@ -44,7 +44,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                 return new GenericDataResult(200, "Success", Void.class);
             }
         } catch (Exception e) {
-            this.getLogger().log("Request error: " + e.getMessage());
+            this.getLogger().log("Request error: " + e);
         }
         return new GenericDataResult(400, "Invalid request", Void.class);
     }
