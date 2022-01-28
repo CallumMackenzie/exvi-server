@@ -65,6 +65,11 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         if (workouts == null) {
             throw new RuntimeException("User does not have data.");
         }
+        
+        for (var w : workouts) {
+            this.getLogger().log("Workout: " + w.getName());
+        }
+        
         switch (req.getType()) {
             case LIST_ALL:
                 return new WorkoutListResult(workouts);
