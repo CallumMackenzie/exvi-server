@@ -97,8 +97,9 @@ public class UserDataEntry extends DatabaseEntry {
             Workout[] workouts) {
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", user)
-                .withUpdateExpression("list_append(:a, workout)")
-                .withValueMap(new ValueMap().withList(":a", workouts));
+                .withUpdateExpression("set workouts = list_append(:a, workout)")
+                .withValueMap(new ValueMap().withList(":a", workouts))
+                .withReturnValues(ReturnValue.UPDATED_NEW);
         database.cacheTable("exvi-user-data")
                 .updateItem(update);
     }
