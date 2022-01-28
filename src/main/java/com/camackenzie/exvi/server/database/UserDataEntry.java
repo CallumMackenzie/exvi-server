@@ -87,8 +87,8 @@ public class UserDataEntry extends DatabaseEntry {
             throw new RuntimeException("User does not have an account");
         }
         if (database.getObjectFromTable("exvi-user-data", "username", user,
-                UserLoginEntry.class) == null) {
-//            database.putObjectInTable("exvi-user-data", new UserDataEntry(user));
+                UserDataEntry.class) == null) {
+            database.putObjectInTable("exvi-user-data", new UserDataEntry(user));
         }
     }
 

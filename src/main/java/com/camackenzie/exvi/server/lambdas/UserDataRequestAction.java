@@ -64,16 +64,10 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         Workout[] workouts
                 = UserDataEntry.userWorkouts(database, in.getUsername());
         
-        this.getLogger().log(UserDataEntry.getUserWorkoutsJSON(database, in.getUsername()));
-        
         if (workouts == null) {
             throw new RuntimeException("User does not have data.");
         }
-        
         this.getLogger().log("Returning " + workouts.length + " workouts");
-        for (var w : workouts) {
-            this.getLogger().log("Workout: " + w.getName());
-        }
         
         switch (req.getType()) {
             case LIST_ALL:
