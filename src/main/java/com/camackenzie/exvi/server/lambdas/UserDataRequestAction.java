@@ -37,6 +37,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
             UserDataEntry.ensureUserHasData(database, in.getUsername());
 
             Class inClass = in.getRequestClass();
+            this.getLogger().log("Request class: " + inClass.getCanonicalName());
             if (inClass.equals(WorkoutListRequest.class)) {
                 return new GenericDataResult(this.getWorkoutList(database, in));
             } else if (inClass.equals(WorkoutPutRequest.class)) {
@@ -66,6 +67,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
             throw new RuntimeException("User does not have data.");
         }
         
+        this.getLogger().log("Returning " + workouts.length + " workouts");
         for (var w : workouts) {
             this.getLogger().log("Workout: " + w.getName());
         }
