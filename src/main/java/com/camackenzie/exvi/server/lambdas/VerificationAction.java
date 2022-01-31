@@ -97,6 +97,7 @@ public class VerificationAction
                     .iterator();
             while (itemIter.hasNext()) {
                 Item next = itemIter.next();
+                this.getLogger().log(next.getString("email") + " vs " + user.getEmail());
                 if (next.getString("email").equalsIgnoreCase(user.getEmail())) {
                     String emailUser = next.getString("username");
                     Item userItem = userTable.getItem("username", emailUser);
