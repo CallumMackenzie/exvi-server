@@ -36,11 +36,11 @@ public class VerificationAction
         Table userTable = dynamoDB.getTable("exvi-user-login");
 
         // Ensure user credentials are valid
-        if (this.checkUsernameErrors(userTable, in)) {
+        if (this.hasUsernameErrors(userTable, in)) {
             return new VerificationResult(1, "Username is invalid");
-        } else if (this.checkEmailErrors(userTable, in)) {
+        } else if (this.hasEmailErrors(userTable, in)) {
             return new VerificationResult(2, "Email is invalid");
-        } else if (this.checkPhoneErrors(userTable, in)) {
+        } else if (this.hasPhoneErrors(userTable, in)) {
             return new VerificationResult(3, "Phone number is invalid");
         } else {
             // Generate verification code
@@ -63,62 +63,55 @@ public class VerificationAction
         }
     }
 
-    private boolean checkPhoneErrors(Table userTable, VerificationRequest user) {
-        if (user.getPhone() == null) {
-            return false;
+    private boolean hasPhoneErrors(Table userTable, VerificationRequest user) {
+        if (user.getPhone() == null
+                || user.getPhone().isBlank()) {
+            return true;
         }
         try {
-            if (!user.getPhone().isBlank()) {
-                var itemIter = userTable.getIndex("phone-index").query("phone", user.getPhone()).iterator();
-                if (itemIter.hasNext()) {
-                    String phoneUser = itemIter.next().getString("username");
-                    Item userItem = userTable.getItem("username", phoneUser);
-                    return !userItem.hasAttribute("verificationCode");
-                }
-            } else {
-                return true;
+            var itemIter = userTable.getIndex("phone-index").query("phone", user.getPhone()).iterator();
+            if (itemIter.hasNext()) {
+                String phoneUser = itemIter.next().getString("username");
+                Item userItem = userTable.getItem("username", phoneUser);
+                return !userItem.hasAttribute("verificationCode");
             }
         } catch (Exception e) {
             this.getLogger().log("Phone validation error: " + e);
         } finally {
-            return false;
+            return true;
         }
     }
 
-    private boolean checkEmailErrors(Table userTable, VerificationRequest user) {
-        if (user.getEmail() == null) {
-            return false;
+    private boolean hasEmailErrors(Table userTable, VerificationRequest user) {
+        if (user.getEmail() == null
+                || user.getEmail().isBlank()) {
+            return true;
         }
         try {
-            if (!user.getEmail().isBlank()) {
-                var itemIter = userTable.getIndex("email-index").query("email", user.getEmail()).iterator();
-                if (itemIter.hasNext()) {
-                    String emailUser = itemIter.next().getString("username");
-                    Item userItem = userTable.getItem("username", emailUser);
-                    return !userItem.hasAttribute("verificationCode");
-                }
-            } else {
-                return true;
+            var itemIter = userTable.getIndex("email-index").query("email", user.getEmail()).iterator();
+            if (itemIter.hasNext()) {
+                String emailUser = itemIter.next().getString("username");
+                Item userItem = userTable.getItem("username", emailUser);
+                return !userItem.hasAttribute("verificationCode");
             }
         } catch (Exception e) {
             this.getLogger().log("Email validation error: " + e);
         } finally {
-            return false;
+            return true;
         }
     }
 
-    private boolean checkUsernameErrors(Table userTable, VerificationRequest user) {
-        if (user.getUsername() == null) {
-            return false;
-        }
-        if (user.getUsername().isBlank()) {
-            return false;
+    private boolean hasUsernameErrors(Table userTable, VerificationRequest user) {
+        if (user.getUsername() == null
+                || user.getUsername().isBlank()) {
+            return true;
         }
         Item outcome = userTable.getItem("username", user.getUsername());
         if (outcome != null) {
             return !outcome.hasAttribute("verificationCode");
+        } else {
+            return false;
         }
-        return false;
     }
 
     private String generateVerificationCode() {
