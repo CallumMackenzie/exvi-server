@@ -86,10 +86,8 @@ public class VerificationAction
     }
 
     private boolean hasEmailErrors(Table userTable, VerificationRequest user) {
-        this.getLogger().log("Checking for email errors: " + getGson().toJson(user));
         if (user.getEmail() == null
                 || user.getEmail().isBlank()) {
-            this.getLogger().log("Email is blank or null");
             return true;
         }
         try {
@@ -97,14 +95,12 @@ public class VerificationAction
                     .iterator();
             while (itemIter.hasNext()) {
                 Item next = itemIter.next();
-                this.getLogger().log("Item: " + next.toJSON());
                 if (next.getString("email").equalsIgnoreCase(user.getEmail())) {
                     String emailUser = next.getString("username");
                     Item userItem = userTable.getItem("username", emailUser);
                     return !userItem.hasAttribute("verificationCode");
                 }
             }
-            this.getLogger().log("No errors found");
             return false;
         } catch (Exception e) {
             this.getLogger().log("Email validation error: " + e);
