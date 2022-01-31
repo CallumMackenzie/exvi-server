@@ -74,6 +74,8 @@ public class VerificationAction
                 String phoneUser = itemIter.next().getString("username");
                 Item userItem = userTable.getItem("username", phoneUser);
                 return !userItem.hasAttribute("verificationCode");
+            } else {
+                return false;
             }
         } catch (Exception e) {
             this.getLogger().log("Phone validation error: " + e);
@@ -93,6 +95,8 @@ public class VerificationAction
                 String emailUser = itemIter.next().getString("username");
                 Item userItem = userTable.getItem("username", emailUser);
                 return !userItem.hasAttribute("verificationCode");
+            } else {
+                return false;
             }
         } catch (Exception e) {
             this.getLogger().log("Email validation error: " + e);
