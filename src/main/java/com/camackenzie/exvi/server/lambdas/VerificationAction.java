@@ -70,13 +70,16 @@ public class VerificationAction
         }
         try {
             var itemIter = userTable.getIndex("phone-index").query("phone", user.getPhone()).iterator();
-            if (itemIter.hasNext()) {
-                String phoneUser = itemIter.next().getString("username");
-                Item userItem = userTable.getItem("username", phoneUser);
-                return !userItem.hasAttribute("verificationCode");
-            } else {
-                return false;
+            while (itemIter.hasNext()) {
+                Item next = itemIter.next();
+                if (next.getString("phone").equalsIgnoreCase(user.getPhone())) {
+                    String phoneUser = itemIter.next().getString("username");
+                    Item userItem = userTable.getItem("username", phoneUser);
+                    return !userItem.hasAttribute("verificationCode");
+                }
             }
+            return false;
+
         } catch (Exception e) {
             this.getLogger().log("Phone validation error: " + e);
         } finally {
@@ -90,16 +93,17 @@ public class VerificationAction
             return true;
         }
         try {
-            var itemIter = userTable.getIndex("email-index").query("email", user.getEmail()).iterator();
-            if (itemIter.hasNext()) {
+            var itemIter = userTable.getIndex("email-index").query("email", user.getEmail())
+                    .iterator();
+            while (itemIter.hasNext()) {
                 Item next = itemIter.next();
-                String emailUser = next.getString("username");
-                this.getLogger().log("USER: " + next.toJSON());
-                Item userItem = userTable.getItem("username", emailUser);
-                return !userItem.hasAttribute("verificationCode");
-            } else {
-                return false;
+                if (next.getString("email").equalsIgnoreCase(user.getEmail())) {
+                    String emailUser = next.getString("username");
+                    Item userItem = userTable.getItem("username", emailUser);
+                    return !userItem.hasAttribute("verificationCode");
+                }
             }
+            return false;
         } catch (Exception e) {
             this.getLogger().log("Email validation error: " + e);
         } finally {
