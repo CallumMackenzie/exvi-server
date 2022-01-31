@@ -79,10 +79,8 @@ public class VerificationAction
                 }
             }
             return false;
-
         } catch (Exception e) {
             this.getLogger().log("Phone validation error: " + e);
-        } finally {
             return true;
         }
     }
@@ -110,7 +108,6 @@ public class VerificationAction
             return false;
         } catch (Exception e) {
             this.getLogger().log("Email validation error: " + e);
-        } finally {
             return true;
         }
     }
