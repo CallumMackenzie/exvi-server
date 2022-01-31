@@ -90,9 +90,11 @@ public class VerificationAction
             return true;
         }
         try {
-            var itemIter = userTable.getIndex("email-index").query("email", user.getEmail()).iterator();
+            var itemIter = userTable.getIndex("email-index").query("email", user.getEmail())
+                    .iterator();
             if (itemIter.hasNext()) {
                 String emailUser = itemIter.next().getString("username");
+                this.getLogger().log("USER: " + emailUser);
                 Item userItem = userTable.getItem("username", emailUser);
                 return !userItem.hasAttribute("verificationCode");
             } else {
