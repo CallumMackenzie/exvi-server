@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -32,8 +33,11 @@ public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandler
     @Override
     public void handleRequestWrapped(BufferedReader bf, PrintWriter pw, Context ctx)
             throws IOException {
-        APIRequest<LinkedTreeMap> requestRaw = gson.fromJson(bf, APIRequest.class);
+        String request = bf.lines().collect(Collectors.joining(""));
+        APIRequest<LinkedTreeMap> requestRaw = gson.fromJson(request, APIRequest.class);
         JsonElement jsonElem = gson.toJsonTree(requestRaw.getBody());
+        
+        ctx.getLogger().log("REQUEST: " + request);
 
         IN requestBody = null;
         if (jsonElem.isJsonPrimitive()) {
