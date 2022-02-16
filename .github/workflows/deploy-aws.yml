@@ -5,7 +5,7 @@ on:
     types: [ created ]
   push:
     branches:
-      - master
+      - kotlin
   workflow_dispatch:
 
 jobs:
