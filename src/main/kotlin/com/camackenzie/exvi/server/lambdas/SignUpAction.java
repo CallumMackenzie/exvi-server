@@ -17,7 +17,6 @@ import com.camackenzie.exvi.core.api.AccountCreationRequest;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 
 /**
- *
  * @author callum
  */
 public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, AccountAccessKeyResult> {
@@ -35,7 +34,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         Table userTable = database.cacheTable("exvi-user-login");
 
         VerificationDatabaseEntry dbEntry = DatabaseEntry.fromItem(
-                userTable.getItem("username", in.getUsername()),
+                userTable.getItem("username", in.getUsername().get()),
                 VerificationDatabaseEntry.class);
 
         if (dbEntry != null) {
@@ -57,7 +56,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
     }
 
     private void registerAccountData(AWSDynamoDB database, AccountCreationRequest ac,
-            VerificationDatabaseEntry entry) {
+                                     VerificationDatabaseEntry entry) {
         Table userTable = database.getTable("exvi-user-login");
         String salt = CryptographyUtils.generateSalt(32),
                 passwordHash = CryptographyUtils.hashSHA256(salt

@@ -30,7 +30,7 @@ public class RetrieveSaltAction
     public AccountSaltResult handleBodyRequest(RetrieveSaltRequest in, Context context) {
         AWSDynamoDB database = new AWSDynamoDB();
         Table accountTable = database.cacheTable("exvi-user-login");
-        Item item = accountTable.getItem("username", in.getUsername());
+        Item item = accountTable.getItem("username", in.getUsername().get());
 
         if (item == null) {
             return new AccountSaltResult(1, "User not found");
