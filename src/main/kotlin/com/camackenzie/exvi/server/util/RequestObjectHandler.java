@@ -43,10 +43,9 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             throws IOException {
         String request = bf.lines().collect(Collectors.joining(""));
         rawRequest = request;
+        ctx.getLogger().log("Raw request: " + request);
         JsonObject requestRaw = JsonParser.parseString(request).getAsJsonObject();
         JsonElement jsonElem = gson.toJsonTree(requestRaw.getAsJsonObject("body"));
-
-        ctx.getLogger().log("REQUEST: " + request);
 
         IN requestBody = null;
         if (jsonElem.isJsonPrimitive()) {
