@@ -61,7 +61,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         }
 
         HashMap<String, String> headers = gson.fromJson(requestObject.get("headers"), HashMap.class);
-        APIRequest<IN> req = new APIRequest(requestObject.get("endpoint").getAsString(),
+        APIRequest<IN> req = new APIRequest("",
                 requestBody,
                 headers);
         APIResult<OUT> response = this.handleObjectRequest(req, ctx);
