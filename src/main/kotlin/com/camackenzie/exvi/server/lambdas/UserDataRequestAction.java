@@ -12,13 +12,13 @@ import com.camackenzie.exvi.core.api.WorkoutListRequest;
 import com.camackenzie.exvi.core.api.WorkoutListResult;
 import com.camackenzie.exvi.core.api.WorkoutPutRequest;
 import com.camackenzie.exvi.core.model.Workout;
+import com.camackenzie.exvi.core.util.None;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 
 /**
- *
  * @author callum
  */
 public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest, GenericDataResult> {
@@ -29,47 +29,46 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
 
     @Override
     public GenericDataResult handleBodyRequest(GenericDataRequest in, Context context) {
-
         AWSDynamoDB database = new AWSDynamoDB();
 
         try {
-            UserLoginEntry.ensureAccessKeyValid(database, in.getUsername(), in.getAccessKey());
-            UserDataEntry.ensureUserHasData(database, in.getUsername());
+            UserLoginEntry.ensureAccessKeyValid(database, in.getUsername().get(), in.getAccessKey().get());
+            UserDataEntry.ensureUserHasData(database, in.getUsername().get());
 
-            Class inClass = in.getRequestClass();
-            this.getLogger().log("Request class: " + inClass.getCanonicalName());
-            if (inClass.equals(WorkoutListRequest.class)) {
+            String requester = in.getRequester().get();
+            this.getLogger().log("Requester: " + requester);
+
+            if (requester.equals(WorkoutListRequest.UID())) {
                 WorkoutListResult res = this.getWorkoutList(database, in);
-                return new GenericDataResult<WorkoutListResult>(res);
-            } else if (inClass.equals(WorkoutPutRequest.class)) {
+                return new GenericDataResult<>(res);
+            } else if (requester.equals(WorkoutPutRequest.UID())) {
                 this.putWorkouts(database, in);
-                return new GenericDataResult<Void>(200, "Success", Void.class);
+                return new GenericDataResult(200, "Success", None.INSTANCE);
             }
         } catch (Exception e) {
             this.getLogger().log("Request error: " + e);
         }
-        return new GenericDataResult<Void>(400, "Invalid request", Void.class);
+        return new GenericDataResult(400, "Invalid request", None.INSTANCE);
     }
 
     private void putWorkouts(AWSDynamoDB database,
-            GenericDataRequest<WorkoutPutRequest> in) {
+                             GenericDataRequest<WorkoutPutRequest> in) {
         UserDataEntry.addUserWorkouts(database,
-                in.getUsername(),
+                in.getUsername().get(),
                 in.getBody().getWorkouts());
     }
 
     private WorkoutListResult getWorkoutList(AWSDynamoDB database,
-            GenericDataRequest<WorkoutListRequest> in) {
-
+                                             GenericDataRequest<WorkoutListRequest> in) {
         WorkoutListRequest req = in.getBody();
         Workout[] workouts
-                = UserDataEntry.userWorkouts(database, in.getUsername());
-        
+                = UserDataEntry.userWorkouts(database, in.getUsername().get());
+
         if (workouts == null) {
             throw new RuntimeException("User does not have data.");
         }
         this.getLogger().log("Returning " + workouts.length + " workouts");
-        
+
         switch (req.getType()) {
             case LIST_ALL:
                 return new WorkoutListResult(workouts);

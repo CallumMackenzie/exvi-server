@@ -20,7 +20,6 @@ import com.camackenzie.exvi.server.util.SMSClient;
 import software.amazon.awssdk.services.sns.model.SnsException;
 
 /**
- *
  * @author callum
  */
 public class VerificationAction
@@ -65,14 +64,14 @@ public class VerificationAction
 
     private boolean hasPhoneErrors(Table userTable, VerificationRequest user) {
         if (user.getPhone() == null
-                || user.getPhone().isBlank()) {
+                || user.getPhone().get().isBlank()) {
             return true;
         }
         try {
             var itemIter = userTable.getIndex("phone-index").query("phone", user.getPhone()).iterator();
             while (itemIter.hasNext()) {
                 Item next = itemIter.next();
-                if (next.getString("phone").equalsIgnoreCase(user.getPhone())) {
+                if (next.getString("phone").equalsIgnoreCase(user.getPhone().get())) {
                     String phoneUser = itemIter.next().getString("username");
                     Item userItem = userTable.getItem("username", phoneUser);
                     return !userItem.hasAttribute("verificationCode");
@@ -87,7 +86,7 @@ public class VerificationAction
 
     private boolean hasEmailErrors(Table userTable, VerificationRequest user) {
         if (user.getEmail() == null
-                || user.getEmail().isBlank()) {
+                || user.getEmail().get().isBlank()) {
             return true;
         }
         try {
@@ -95,7 +94,7 @@ public class VerificationAction
                     .iterator();
             while (itemIter.hasNext()) {
                 Item next = itemIter.next();
-                if (next.getString("email").equalsIgnoreCase(user.getEmail())) {
+                if (next.getString("email").equalsIgnoreCase(user.getEmail().get())) {
                     String emailUser = next.getString("username");
                     Item userItem = userTable.getItem("username", emailUser);
                     return !userItem.hasAttribute("verificationCode");
@@ -110,7 +109,7 @@ public class VerificationAction
 
     private boolean hasUsernameErrors(Table userTable, VerificationRequest user) {
         if (user.getUsername() == null
-                || user.getUsername().isBlank()) {
+                || user.getUsername().get().isBlank()) {
             return true;
         }
         Item outcome = userTable.getItem("username", user.getUsername());
@@ -128,7 +127,7 @@ public class VerificationAction
     }
 
     private boolean trySendEmail(VerificationRequest user, String code) {
-        if (user.getEmail().isBlank()) {
+        if (user.getEmail().get().isBlank()) {
             return false;
         }
         StringBuilder htmlBody = new StringBuilder()
@@ -148,7 +147,7 @@ public class VerificationAction
         try {
             EmailClient emailClient = new AWSEmailClient();
             emailClient.sendEmail("exvi@camackenzie.com",
-                    user.getEmail(),
+                    user.getEmail().get(),
                     "Exvi Verification Code",
                     htmlBody.toString(),
                     textBody.toString());
@@ -161,7 +160,7 @@ public class VerificationAction
     }
 
     private boolean trySendSMSMessage(VerificationRequest user, String code) {
-        if (user.getPhone().isBlank()) {
+        if (user.getPhone().get().isBlank()) {
             return false;
         }
         StringBuilder textContent = new StringBuilder()
@@ -172,7 +171,7 @@ public class VerificationAction
                 .append(".");
         try {
             SMSClient smsc = new AWSSMSClient();
-            smsc.sendText(user.getPhone(), textContent.toString());
+            smsc.sendText(user.getPhone().get(), textContent.toString());
             return true;
         } catch (SnsException e) {
             this.getLogger().log("SNS WARNING: " + e.awsErrorDetails().errorMessage() + "\n");

@@ -44,9 +44,9 @@ public class VerificationDatabaseEntry
     }
 
     public VerificationDatabaseEntry(VerificationRequest uvd, String code) {
-        this(uvd.getUsername(),
-                uvd.getEmail(),
-                uvd.getPhone(),
+        this(uvd.getUsername().get(),
+                uvd.getEmail().get(),
+                uvd.getPhone().get(),
                 code);
     }
 

@@ -16,11 +16,9 @@ import com.camackenzie.exvi.server.util.AuthUtils;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 
 /**
- *
  * @author callum
  */
-public class LoginAction
-        extends RequestBodyHandler<LoginRequest, AccountAccessKeyResult> {
+public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessKeyResult> {
 
     public LoginAction() {
         super(LoginRequest.class);
@@ -31,8 +29,7 @@ public class LoginAction
 
         AWSDynamoDB database = new AWSDynamoDB();
         Table userTable = database.cacheTable("exvi-user-login");
-        UserLoginEntry entry = database.getObjectFromTable("exvi-user-login",
-                "username", in.getUsername(), UserLoginEntry.class);
+        UserLoginEntry entry = database.getObjectFromTable("exvi-user-login", "username", in.getUsername().get(), UserLoginEntry.class);
 
         // Ensure user can be logged in
         if (entry == null) {
@@ -40,7 +37,7 @@ public class LoginAction
         }
 
         // Retreive user data
-        String passwordHashDecrypted = AuthUtils.decryptPasswordHash(in.getPasswordHash());
+        String passwordHashDecrypted = AuthUtils.decryptPasswordHash(in.getPasswordHash().get());
         String databasePasswordHash = entry.getPasswordHash();
 
         // Check if input password matches database
@@ -49,7 +46,7 @@ public class LoginAction
         }
 
         // Generate & store access key
-        String accessKey = AuthUtils.generateAccessKey(database, in.getUsername());
+        String accessKey = AuthUtils.generateAccessKey(database, in.getUsername().get());
 
         // Return access key
         return new AccountAccessKeyResult("Success", accessKey);

@@ -8,6 +8,8 @@ package com.camackenzie.exvi.server.util;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import kotlin.text.Charsets;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -16,10 +18,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.nio.charset.Charset;
 
 /**
- *
  * @author callum
  */
 public abstract class RequestStreamHandlerWrapper implements RequestStreamHandler {
@@ -28,8 +28,8 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
 
     @Override
     public final void handleRequest(InputStream is, OutputStream os, Context ctx) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-        PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, Charset.forName("UTF-8"))));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charsets.UTF_8));
+        PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, Charsets.UTF_8)));
         this.logger = ctx.getLogger();
 
         this.handleRequestWrapped(reader, writer, ctx);

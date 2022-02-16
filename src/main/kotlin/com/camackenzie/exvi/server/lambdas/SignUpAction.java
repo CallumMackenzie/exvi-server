@@ -39,13 +39,13 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
                 VerificationDatabaseEntry.class);
 
         if (dbEntry != null) {
-            if (this.verificationCodeValid(in.getVerificationCode(),
+            if (this.verificationCodeValid(in.getVerificationCode().get(),
                     dbEntry.getVerificationCode(),
                     dbEntry.getVerificationCodeUTC()
             )) {
                 // Verification code is correct
                 this.registerAccountData(database, in, dbEntry);
-                String accessKey = AuthUtils.generateAccessKey(database, in.getUsername());
+                String accessKey = AuthUtils.generateAccessKey(database, in.getUsername().get());
                 return new AccountAccessKeyResult("Account created", accessKey);
             } else {
                 // Verification code is incorrect
@@ -61,15 +61,15 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         Table userTable = database.getTable("exvi-user-login");
         String salt = CryptographyUtils.generateSalt(32),
                 passwordHash = CryptographyUtils.hashSHA256(salt
-                        + AuthUtils.decryptPasswordHash(ac.getPassword()));
+                        + AuthUtils.decryptPasswordHash(ac.getPassword().get()));
         userTable.deleteItem("username", entry.getUsername());
-        database.putObjectInTable(userTable, new UserLoginEntry(ac.getUsername(),
+        database.putObjectInTable(userTable, new UserLoginEntry(ac.getUsername().get(),
                 entry.getPhone(),
                 entry.getEmail(),
                 passwordHash,
                 salt
         ));
-        database.putObjectInTable("exvi-user-data", new UserDataEntry(ac.getUsername()));
+        database.putObjectInTable("exvi-user-data", new UserDataEntry(ac.getUsername().get()));
     }
 
     private boolean verificationCodeValid(String inputCode, String actualCode, long creation) {

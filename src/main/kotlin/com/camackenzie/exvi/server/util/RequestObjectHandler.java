@@ -8,9 +8,12 @@ package com.camackenzie.exvi.server.util;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
+import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.google.gson.internal.LinkedTreeMap;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -18,25 +21,31 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author callum
  */
-public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandlerWrapper {
+public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT extends SelfSerializable>
+        extends RequestStreamHandlerWrapper {
 
     private final Class<IN> inClass;
     private final Gson gson = new Gson();
+    private String rawRequest;
 
     public RequestObjectHandler(Class<IN> inClass) {
         this.inClass = inClass;
+    }
+
+    public final String getRawRequest() {
+        return rawRequest;
     }
 
     @Override
     public void handleRequestWrapped(BufferedReader bf, PrintWriter pw, Context ctx)
             throws IOException {
         String request = bf.lines().collect(Collectors.joining(""));
-        APIRequest<LinkedTreeMap> requestRaw = gson.fromJson(request, APIRequest.class);
-        JsonElement jsonElem = gson.toJsonTree(requestRaw.getBody());
-        
+        rawRequest = request;
+        JsonObject requestRaw = JsonParser.parseString(request).getAsJsonObject();
+        JsonElement jsonElem = gson.toJsonTree(requestRaw.getAsJsonObject("body"));
+
         ctx.getLogger().log("REQUEST: " + request);
 
         IN requestBody = null;
@@ -53,9 +62,10 @@ public abstract class RequestObjectHandler<IN, OUT> extends RequestStreamHandler
             return;
         }
 
-        APIRequest<IN> req = new APIRequest(requestRaw.getEndpoint(),
+        HashMap<String, String> headers = gson.fromJson(requestRaw.get("headers"), HashMap.class);
+        APIRequest<IN> req = new APIRequest(requestRaw.get("endpoint").getAsString(),
                 requestBody,
-                requestRaw.getHeaders());
+                headers);
         APIResult<OUT> response = this.handleObjectRequest(req, ctx);
         APIResult<String> strResponse = new APIResult<>(response.getStatusCode(),
                 this.gson.toJson(response.getBody()),
