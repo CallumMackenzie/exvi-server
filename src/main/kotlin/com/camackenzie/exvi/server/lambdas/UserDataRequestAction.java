@@ -49,7 +49,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         } catch (Exception e) {
             this.getLogger().log("Request error: " + e);
         }
-        throw new RequestException(400, "Invalid request", None.INSTANCE);
+        throw new RequestException(400, "Invalid request");
     }
 
     private void putWorkouts(AWSDynamoDB database,
