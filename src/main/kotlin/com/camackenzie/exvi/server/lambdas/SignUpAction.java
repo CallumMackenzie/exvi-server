@@ -15,9 +15,9 @@ import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
 import com.camackenzie.exvi.core.api.AccountCreationRequest;
 import com.camackenzie.exvi.server.database.UserDataEntry;
+import com.camackenzie.exvi.server.util.RequestException;
 
 /**
- *
  * @author callum
  */
 public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, AccountAccessKeyResult> {
@@ -49,15 +49,15 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
                 return new AccountAccessKeyResult("Account created", accessKey);
             } else {
                 // Verification code is incorrect
-                return new AccountAccessKeyResult(2, "Verification code is incorrect or expired");
+                throw new RequestException(400, "Verification code is incorrect or expired");
             }
         } else {
-            return new AccountAccessKeyResult(1, "User does not have verification data");
+            throw new RequestException(400, "User does not have verification data");
         }
     }
 
     private void registerAccountData(AWSDynamoDB database, AccountCreationRequest ac,
-            VerificationDatabaseEntry entry) {
+                                     VerificationDatabaseEntry entry) {
         Table userTable = database.getTable("exvi-user-login");
         String salt = CryptographyUtils.generateSalt(32),
                 passwordHash = CryptographyUtils.hashSHA256(salt

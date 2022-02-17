@@ -14,6 +14,7 @@ import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.AuthUtils;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
+import com.camackenzie.exvi.server.util.RequestException;
 
 /**
  * @author callum

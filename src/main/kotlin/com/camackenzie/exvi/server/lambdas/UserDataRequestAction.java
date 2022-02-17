@@ -17,6 +17,7 @@ import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
+import com.camackenzie.exvi.server.util.RequestException;
 
 /**
  * @author callum
@@ -48,7 +49,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         } catch (Exception e) {
             this.getLogger().log("Request error: " + e);
         }
-        return new GenericDataResult(400, "Invalid request", None.INSTANCE);
+        throw new RequestException(400, "Invalid request", None.INSTANCE);
     }
 
     private void putWorkouts(AWSDynamoDB database,

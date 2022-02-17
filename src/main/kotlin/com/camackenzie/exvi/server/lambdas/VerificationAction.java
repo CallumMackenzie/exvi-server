@@ -18,6 +18,7 @@ import com.camackenzie.exvi.server.util.EmailClient;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import com.camackenzie.exvi.server.util.SMSClient;
 import software.amazon.awssdk.services.sns.model.SnsException;
+import com.camackenzie.exvi.server.util.RequestException;
 
 /**
  * @author callum
@@ -36,11 +37,11 @@ public class VerificationAction
 
         // Ensure user credentials are valid
         if (this.hasUsernameErrors(userTable, in)) {
-            return new VerificationResult(1, "Username is invalid");
+            throw new RequestException(400, "Username is invalid");
         } else if (this.hasEmailErrors(userTable, in)) {
-            return new VerificationResult(2, "Email is invalid");
+            throw new RequestException(400, "Email is invalid");
         } else if (this.hasPhoneErrors(userTable, in)) {
-            return new VerificationResult(3, "Phone number is invalid");
+            throw new RequestException(400, "Phone number is invalid");
         } else {
             // Generate verification code
             String code = this.generateVerificationCode();
@@ -57,7 +58,7 @@ public class VerificationAction
                         new VerificationDatabaseEntry(in, code));
                 return new VerificationResult(0, "Verification code sent");
             } else {
-                return new VerificationResult(4, "Verification code could not be sent");
+                throw new RequestException(500, "Verification code could not be sent");
             }
         }
     }

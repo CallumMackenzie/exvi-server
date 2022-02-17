@@ -66,15 +66,15 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         APIRequest<IN> req = new APIRequest(requestRaw.get("endpoint").getAsString(),
                 requestBody,
                 headers);
-        final APIResult<OUT> response;
-        final APIResult<String> strResponse;
+
+        APIResult<String> strResponse;
         try {
-            response = this.handleObjectRequest(req, ctx);
+            APIResult<OUT> response = this.handleObjectRequest(req, ctx);
             strResponse = new APIResult<>(response.getStatusCode(),
                     this.gson.toJson(response.getBody()),
                     response.getHeaders());
         } catch (RequestException e) {
-            response = new APIResult<>(e.getCode(),
+            strResponse = new APIResult<String>(e.getCode(),
                     e.getMessage(),
                     APIRequest.jsonHeaders());
         }
