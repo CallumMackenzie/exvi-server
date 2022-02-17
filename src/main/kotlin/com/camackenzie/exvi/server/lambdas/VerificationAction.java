@@ -46,7 +46,7 @@ public class VerificationAction
             // Generate verification code
             String code = this.generateVerificationCode();
 
-            boolean codeSent = false;
+            boolean codeSent;
             if (this.trySendSMSMessage(in, code)) {
                 codeSent = true;
             } else {
@@ -64,12 +64,12 @@ public class VerificationAction
     }
 
     private boolean hasPhoneErrors(Table userTable, VerificationRequest user) {
-        if (user.getPhone() == null
-                || user.getPhone().get().isBlank()) {
+        if (user.getPhone().get().isBlank()) {
             return true;
         }
         try {
-            var itemIter = userTable.getIndex("phone-index").query("phone", user.getPhone()).iterator();
+            var itemIter = userTable.getIndex("phone-index")
+                    .query("phone", user.getPhone().get()).iterator();
             while (itemIter.hasNext()) {
                 Item next = itemIter.next();
                 if (next.getString("phone").equalsIgnoreCase(user.getPhone().get())) {
@@ -86,15 +86,12 @@ public class VerificationAction
     }
 
     private boolean hasEmailErrors(Table userTable, VerificationRequest user) {
-        if (user.getEmail() == null
-                || user.getEmail().get().isBlank()) {
+        if (user.getEmail().get().isBlank()) {
             return true;
         }
         try {
-            var itemIter = userTable.getIndex("email-index").query("email", user.getEmail())
-                    .iterator();
-            while (itemIter.hasNext()) {
-                Item next = itemIter.next();
+            for (Item next : userTable.getIndex("email-index")
+                    .query("email", user.getEmail().get())) {
                 if (next.getString("email").equalsIgnoreCase(user.getEmail().get())) {
                     String emailUser = next.getString("username");
                     Item userItem = userTable.getItem("username", emailUser);
@@ -109,11 +106,10 @@ public class VerificationAction
     }
 
     private boolean hasUsernameErrors(Table userTable, VerificationRequest user) {
-        if (user.getUsername() == null
-                || user.getUsername().get().isBlank()) {
+        if (user.getUsername().get().isBlank()) {
             return true;
         }
-        Item outcome = userTable.getItem("username", user.getUsername());
+        Item outcome = userTable.getItem("username", user.getUsername().get());
         if (outcome != null) {
             return !outcome.hasAttribute("verificationCode");
         } else {
@@ -133,7 +129,7 @@ public class VerificationAction
         }
         StringBuilder htmlBody = new StringBuilder()
                 .append("<h2>Hello ")
-                .append(user.getUsername())
+                .append(user.getUsername().get())
                 .append("!</h2>")
                 .append("<p>Your exvi user verification code is:</p>")
                 .append("<h3>")
@@ -141,7 +137,7 @@ public class VerificationAction
                 .append("</h3>");
         StringBuilder textBody = new StringBuilder()
                 .append("Hello ")
-                .append(user.getUsername())
+                .append(user.getUsername().get())
                 .append("!\n\nYour Exvi user verification code is ")
                 .append(code)
                 .append(".");
@@ -166,7 +162,7 @@ public class VerificationAction
         }
         StringBuilder textContent = new StringBuilder()
                 .append("Hello ")
-                .append(user.getUsername())
+                .append(user.getUsername().get())
                 .append("! Your verification code for Exvi is ")
                 .append(code)
                 .append(".");
@@ -177,7 +173,7 @@ public class VerificationAction
         } catch (SnsException e) {
             this.getLogger().log("SNS WARNING: " + e.awsErrorDetails().errorMessage() + "\n");
         } catch (Exception e) {
-            this.getLogger().log("SNS CLIENT WARNING: " + e.toString());
+            this.getLogger().log("SNS CLIENT WARNING: " + e);
         }
         return false;
     }

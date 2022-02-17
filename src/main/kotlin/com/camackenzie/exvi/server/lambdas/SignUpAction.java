@@ -35,7 +35,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         Table userTable = database.cacheTable("exvi-user-login");
 
         VerificationDatabaseEntry dbEntry = DatabaseEntry.fromItem(
-                userTable.getItem("username", in.getUsername()),
+                userTable.getItem("username", in.getUsername().get()),
                 VerificationDatabaseEntry.class);
 
         if (dbEntry != null) {

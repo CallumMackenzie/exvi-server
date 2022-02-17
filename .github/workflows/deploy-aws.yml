@@ -1,0 +1,166 @@
+name: Deploy to AWS Lambda
+
+on:
+  release:
+    types: [ created ]
+  push:
+    branches:
+      - kotlin
+  workflow_dispatch:
+
+jobs:
+
+  update_aws_lambsa:
+    name: Deploy to AWS Lambda
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          server-id: github
+          settings-path: ${{ github.workspace }}
+
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+        ############################# Build and deploy individual lambdas
+        #############################
+      - name: Deploy verification lambda
+        run: mvn -B package --file pom.xml -P verification-lambda
+      - uses: appleboy/lambda-action@v0.1.5
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          function_name: ExviUserVerification
+          zip_file: target/verification-lambda.jar
+        #############################
+      - name: Deploy sign up lambda
+        run: mvn -B package --file pom.xml -P sign-up-lambda
+      - uses: appleboy/lambda-action@v0.1.5
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          function_name: ExviSignUp
+          zip_file: target/sign-up-lambda.jar
+        #############################
+      - name: Deploy salt retrieval lambda
+        run: mvn -B package --file pom.xml -P retrieve-salt-lambda
+      - uses: appleboy/lambda-action@v0.1.5
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          function_name: ExviRetrieveSalt
+          zip_file: target/retrieve-salt-lambda.jar
+        #############################
+      - name: Deploy login lambda
+        run: mvn -B package --file pom.xml -P login-lambda
+      - uses: appleboy/lambda-action@v0.1.5
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          function_name: ExviLogin
+          zip_file: target/login-lambda.jar
+        #############################
+      - name: Deploy login lambda
+        run: mvn -B package --file pom.xml -P user-data-lambda
+      - uses: appleboy/lambda-action@v0.1.5
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          function_name: ExviUserData
+          zip_file: target/user-data-lambda.jar
+        #############################
+        #############################
+
+      - name: Build dependencies only with Maven
+        run: mvn -B package --file pom.xml -P fat-jar-no-lambdas
+
+      - name: Set up output zip structure
+        run: |
+          mkdir zip
+          mkdir zip/java
+          mkdir zip/java/lib
+          mv -f target/*.jar zip/java/lib/
+
+      - name: Zip output
+        uses: vimtor/action-zip@v1
+        with:
+          files: zip
+          dest: exvi-deps.zip
+
+      - name: Publish zipped dependencies to AWS Lambda layer
+        uses: taotao2345/aws-lambda-publishlayer@v1.0.0
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        with:
+          layer_name: ExviServer
+          zip_file: exvi-deps.zip
+
+        ############################# Update individual lambda dependencies
+        #############################
+      - name: Update verification lambda deps
+        uses: callummackenzie/latest-lambda-layer-action@v0.11
+        with:
+          aws_region: ${{ secrets.AWS_REGION }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          function_name: ExviUserVerification
+        #############################
+      - name: Update sign up lambda deps
+        uses: callummackenzie/latest-lambda-layer-action@v0.11
+        with:
+          aws_region: ${{ secrets.AWS_REGION }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          function_name: ExviSignUp
+        #############################
+      - name: Update salt retrieval lambda deps
+        uses: callummackenzie/latest-lambda-layer-action@v0.11
+        with:
+          aws_region: ${{ secrets.AWS_REGION }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          function_name: ExviRetrieveSalt
+        #############################
+      - name: Update login lambda deps
+        uses: callummackenzie/latest-lambda-layer-action@v0.11
+        with:
+          aws_region: ${{ secrets.AWS_REGION }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          function_name: ExviLogin
+        #############################
+      - name: Update user data lambda deps
+        uses: callummackenzie/latest-lambda-layer-action@v0.11
+        with:
+          aws_region: ${{ secrets.AWS_REGION }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          function_name: ExviUserData
+        #############################
+        #############################
+
+      - name: Trim lambda layers
+        uses: callummackenzie/trim-lambda-layers-action@v0.2
+        with:
+          aws_region: ${{ secrets.AWS_REGION }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          layer_name: ExviServer
+          version_keep_count: 4
