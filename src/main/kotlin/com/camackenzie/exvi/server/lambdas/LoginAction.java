@@ -33,7 +33,7 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
 
         // Ensure user can be logged in
         if (entry == null) {
-            return new AccountAccessKeyResult(1, "Invalid credentials");
+            throw new RequestException(400, "Invalid credentials");
         }
 
         // Retreive user data
@@ -42,7 +42,7 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
 
         // Check if input password matches database
         if (!databasePasswordHash.equals(passwordHashDecrypted)) {
-            return new AccountAccessKeyResult(2, "Invalid credentials");
+            throw new RequestException(400, "Invalid credentials");
         }
 
         // Generate & store access key
