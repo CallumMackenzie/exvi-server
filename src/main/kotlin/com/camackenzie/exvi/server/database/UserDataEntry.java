@@ -85,8 +85,9 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                 user, UserLoginEntry.class) == null) {
             throw new ApiException(400, "User does not have an account");
         }
-        if (database.getObjectFromTable("exvi-user-data", "username", user,
-                UserDataEntry.class) == null) {
+        Item item = database.cacheTable("exvi-user-data")
+                .getItem("username", user);
+        if (item == null) {
             database.putObjectInTable("exvi-user-data", new UserDataEntry(user));
         }
     }
