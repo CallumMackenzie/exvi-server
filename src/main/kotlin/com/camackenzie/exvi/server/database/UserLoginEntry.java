@@ -13,7 +13,7 @@ import com.camackenzie.exvi.server.util.AWSDynamoDB;
  *
  * @author callum
  */
-public class UserLoginEntry extends DatabaseEntry {
+public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
 
     public static void ensureAccessKeyValid(AWSDynamoDB database,
             String user,
@@ -38,7 +38,7 @@ public class UserLoginEntry extends DatabaseEntry {
     public static void ensureAccessKeyValid(AWSDynamoDB database,
                                             EncodedStringCache user,
                                             EncodedStringCache key) {
-        ensureAccessKeyValid(database, user, key);
+        ensureAccessKeyValid(database, user.get(), key.get());
     }
 
     private String username;
