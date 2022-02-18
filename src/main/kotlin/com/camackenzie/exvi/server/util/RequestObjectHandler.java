@@ -56,18 +56,19 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         // Parse request to json
         JsonObject requestObject = JsonParser.parseString(rawRequest).getAsJsonObject();
         JsonElement requestBodyObject = requestObject.get("body");
-        rawBody = gson.toJson(requestBodyObject);
 
         IN requestBody = null;
         if (requestBodyObject.isJsonPrimitive()) {
             if (requestBodyObject.getAsJsonPrimitive().isString()) {
-                requestBody = gson.fromJson(requestBodyObject.getAsString(), this.inClass);
+                rawBody = requestBodyObject.getAsString();
+                requestBody = gson.fromJson(rawBody, this.inClass);
             }
         } else if (requestBodyObject.isJsonObject()) {
+            rawBody = gson.toJson(requestBodyObject);
             requestBody = gson.fromJson(requestBodyObject, this.inClass);
         }
         if (requestBody == null) {
-            pw.write(gson.toJson(new APIResult(400, "Cannot parse request body.",
+            pw.write(gson.toJson(new APIResult(400, "Cannot parse request body",
                     new HashMap<>())));
             return;
         }
