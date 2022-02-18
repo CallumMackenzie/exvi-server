@@ -5,7 +5,6 @@
  */
 package com.camackenzie.exvi.server.lambdas;
 
-import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
@@ -14,7 +13,7 @@ import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.AuthUtils;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
-import com.camackenzie.exvi.server.util.RequestException;
+import com.camackenzie.exvi.server.util.ApiException;
 
 /**
  * @author callum
@@ -34,7 +33,7 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
 
         // Ensure user can be logged in
         if (entry == null) {
-            throw new RequestException(400, "Invalid credentials");
+            throw new ApiException(400, "Invalid credentials");
         }
 
         // Retreive user data
@@ -43,13 +42,13 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
 
         // Check if input password matches database
         if (!databasePasswordHash.equals(passwordHashDecrypted)) {
-            throw new RequestException(400, "Invalid credentials");
+            throw new ApiException(400, "Invalid credentials");
         }
 
         // Generate & store access key
         String accessKey = AuthUtils.generateAccessKey(database, in.getUsername().get());
 
         // Return access key
-        return new AccountAccessKeyResult("Success", accessKey);
+        return new AccountAccessKeyResult(accessKey);
     }
 }

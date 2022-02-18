@@ -6,6 +6,7 @@
 package com.camackenzie.exvi.server.database;
 
 import com.camackenzie.exvi.core.api.GenericDataResult;
+import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 
 /**
@@ -32,6 +33,12 @@ public class UserLoginEntry extends DatabaseEntry {
         if (!keyMatched) {
             throw new RuntimeException("Invalid credentials");
         }
+    }
+
+    public static void ensureAccessKeyValid(AWSDynamoDB database,
+                                            EncodedStringCache user,
+                                            EncodedStringCache key) {
+        ensureAccessKeyValid(database, user, key);
     }
 
     private String username;

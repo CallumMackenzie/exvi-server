@@ -8,40 +8,34 @@ package com.camackenzie.exvi.server.lambdas;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
+import com.camackenzie.exvi.core.api.NoneResult;
 import com.camackenzie.exvi.core.api.VerificationRequest;
-import com.camackenzie.exvi.core.api.VerificationResult;
 import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
-import com.camackenzie.exvi.server.util.AWSDynamoDB;
-import com.camackenzie.exvi.server.util.AWSEmailClient;
-import com.camackenzie.exvi.server.util.AWSSMSClient;
-import com.camackenzie.exvi.server.util.EmailClient;
-import com.camackenzie.exvi.server.util.RequestBodyHandler;
-import com.camackenzie.exvi.server.util.SMSClient;
+import com.camackenzie.exvi.server.util.*;
 import software.amazon.awssdk.services.sns.model.SnsException;
-import com.camackenzie.exvi.server.util.RequestException;
 
 /**
  * @author callum
  */
 public class VerificationAction
-        extends RequestBodyHandler<VerificationRequest, VerificationResult> {
+        extends RequestBodyHandler<VerificationRequest, NoneResult> {
 
     public VerificationAction() {
         super(VerificationRequest.class);
     }
 
     @Override
-    public VerificationResult handleBodyRequest(VerificationRequest in, Context context) {
+    public NoneResult handleBodyRequest(VerificationRequest in, Context context) {
         AWSDynamoDB dynamoDB = new AWSDynamoDB();
         Table userTable = dynamoDB.getTable("exvi-user-login");
 
         // Ensure user credentials are valid
         if (this.hasUsernameErrors(userTable, in)) {
-            throw new RequestException(400, "Username is invalid");
+            throw new ApiException(400, "Username is invalid");
         } else if (this.hasEmailErrors(userTable, in)) {
-            throw new RequestException(400, "Email is invalid");
+            throw new ApiException(400, "Email is invalid");
         } else if (this.hasPhoneErrors(userTable, in)) {
-            throw new RequestException(400, "Phone number is invalid");
+            throw new ApiException(400, "Phone number is invalid");
         } else {
             // Generate verification code
             String code = this.generateVerificationCode();
@@ -56,9 +50,9 @@ public class VerificationAction
             if (codeSent) {
                 dynamoDB.putObjectInTable(userTable,
                         new VerificationDatabaseEntry(in, code));
-                return new VerificationResult(0, "Verification code sent");
+                return NoneResult.INSTANCE;
             } else {
-                throw new RequestException(500, "Verification code could not be sent");
+                throw new ApiException(500, "Verification code could not be sent");
             }
         }
     }

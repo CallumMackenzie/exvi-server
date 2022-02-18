@@ -24,9 +24,10 @@ public abstract class RequestBodyHandler<IN extends SelfSerializable, OUT extend
 
     @Override
     public APIResult<OUT> handleObjectRequest(APIRequest<IN> in, Context context) {
+        OUT out = this.handleBodyRequest(in.getBody(), context);
         return new APIResult<OUT>(200,
-                this.handleBodyRequest(in.getBody(), context),
-                new HashMap<>()).withJsonHeader();
+                out,
+                APIRequest.jsonHeaders());
     }
 
     public abstract OUT handleBodyRequest(IN in, Context context);

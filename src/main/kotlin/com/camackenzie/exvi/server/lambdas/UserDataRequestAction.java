@@ -6,18 +6,13 @@
 package com.camackenzie.exvi.server.lambdas;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.camackenzie.exvi.core.api.GenericDataRequest;
-import com.camackenzie.exvi.core.api.GenericDataResult;
-import com.camackenzie.exvi.core.api.WorkoutListRequest;
-import com.camackenzie.exvi.core.api.WorkoutListResult;
-import com.camackenzie.exvi.core.api.WorkoutPutRequest;
+import com.camackenzie.exvi.core.api.*;
 import com.camackenzie.exvi.core.model.Workout;
-import com.camackenzie.exvi.core.util.None;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
-import com.camackenzie.exvi.server.util.RequestException;
+import com.camackenzie.exvi.server.util.ApiException;
 
 /**
  * @author callum
@@ -31,37 +26,36 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
     @Override
     public GenericDataResult handleBodyRequest(GenericDataRequest in, Context context) {
         AWSDynamoDB database = new AWSDynamoDB();
+        this.getLogger().log("Requester: " + in.getRequester().get());
 
-        try {
-            UserLoginEntry.ensureAccessKeyValid(database, in.getUsername().get(), in.getAccessKey().get());
-            UserDataEntry.ensureUserHasData(database, in.getUsername().get());
-
-            String requester = in.getRequester().get();
-            this.getLogger().log("Requester: " + requester);
-
-            if (requester.equals(WorkoutListRequest.UID())) {
-                WorkoutListResult res = this.getWorkoutList(database, in);
-                return new GenericDataResult<>(res);
-            } else if (requester.equals(WorkoutPutRequest.UID())) {
-                this.putWorkouts(database, in);
-                return new GenericDataResult(200, "Success", None.INSTANCE);
+        switch (in.getRequester().get()) {
+            case WorkoutListRequest.uid: {
+                WorkoutListRequest request = this.getGson().fromJson(this.getRawRequestBody(), WorkoutListRequest.class);
+                UserLoginEntry.ensureAccessKeyValid(database, request.getUsername(), request.getAccessKey());
+                UserDataEntry.ensureUserHasData(database, request.getUsername());
+                return this.getWorkoutList(database, request);
             }
-        } catch (Exception e) {
-            this.getLogger().log("Request error: " + e);
+            case WorkoutPutRequest.uid: {
+                WorkoutPutRequest request = this.getGson().fromJson(this.getRawRequestBody(), WorkoutPutRequest.class);
+                UserLoginEntry.ensureAccessKeyValid(database, request.getUsername(), request.getAccessKey());
+                UserDataEntry.ensureUserHasData(database, request.getUsername());
+                this.putWorkouts(database, request);
+                return NoneResult.INSTANCE;
+            }
+            default:
+                throw new ApiException(400, "Could not recognize requester");
         }
-        throw new RequestException(400, "Invalid request");
     }
 
     private void putWorkouts(AWSDynamoDB database,
-                             GenericDataRequest<WorkoutPutRequest> in) {
+                             WorkoutPutRequest in) {
         UserDataEntry.addUserWorkouts(database,
                 in.getUsername().get(),
-                in.getBody().getWorkouts());
+                in.getWorkouts());
     }
 
     private WorkoutListResult getWorkoutList(AWSDynamoDB database,
-                                             GenericDataRequest<WorkoutListRequest> in) {
-        WorkoutListRequest req = in.getBody();
+                                             WorkoutListRequest in) {
         Workout[] workouts
                 = UserDataEntry.userWorkouts(database, in.getUsername().get());
 
@@ -70,7 +64,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         }
         this.getLogger().log("Returning " + workouts.length + " workouts");
 
-        switch (req.getType()) {
+        switch (in.getType()) {
             case LIST_ALL:
                 return new WorkoutListResult(workouts);
             default:

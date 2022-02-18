@@ -379,7 +379,7 @@
         <dependency>
             <groupId>com.github.CallumMackenzie.exvi-core</groupId>
             <artifactId>exvi-core-jvm</artifactId>
-            <version>7be9f6f068799f4dfceaa0b1dad5c31b679b26ed</version>
+            <version>cb30b3f8c1691f4d92011d4a26e23686805ddb12</version>
             <scope>${build.scope}</scope>
         </dependency>
         <dependency>

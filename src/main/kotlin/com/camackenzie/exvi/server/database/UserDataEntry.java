@@ -13,6 +13,7 @@ import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.camackenzie.exvi.core.model.ActiveWorkout;
 import com.camackenzie.exvi.core.model.BodyStats;
+import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.model.Workout;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.google.gson.Gson;
@@ -90,6 +91,11 @@ public class UserDataEntry extends DatabaseEntry {
                 UserDataEntry.class) == null) {
             database.putObjectInTable("exvi-user-data", new UserDataEntry(user));
         }
+    }
+
+    public static void ensureUserHasData(AWSDynamoDB database,
+                                         EncodedStringCache user) {
+        ensureUserHasData(database, user.get());
     }
 
     public static void updateUserWorkouts(AWSDynamoDB database,

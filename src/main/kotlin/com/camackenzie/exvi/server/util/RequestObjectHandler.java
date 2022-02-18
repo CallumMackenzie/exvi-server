@@ -10,7 +10,6 @@ import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.google.gson.*;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,7 +24,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
 
     private final Class<IN> inClass;
     private final Gson gson = new Gson();
-    private String rawRequest;
+    private String rawRequest, rawBody;
 
     public RequestObjectHandler(Class<IN> inClass) {
         this.inClass = inClass;
@@ -33,6 +32,10 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
 
     public final String getRawRequest() {
         return rawRequest;
+    }
+
+    public final String getRawRequestBody() {
+        return rawBody;
     }
 
     @Override
@@ -45,6 +48,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         // Parse request to json
         JsonObject requestObject = JsonParser.parseString(rawRequest).getAsJsonObject();
         JsonElement requestBodyObject = requestObject.get("body");
+        rawBody = gson.toJson(requestBodyObject);
 
         IN requestBody = null;
         if (requestBodyObject.isJsonPrimitive()) {
@@ -71,7 +75,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             strResponse = new APIResult<>(response.getStatusCode(),
                     this.gson.toJson(response.getBody()),
                     response.getHeaders());
-        } catch (RequestException e) {
+        } catch (ApiException e) {
             strResponse = new APIResult<String>(e.getCode(),
                     e.getMessage(),
                     APIRequest.jsonHeaders());

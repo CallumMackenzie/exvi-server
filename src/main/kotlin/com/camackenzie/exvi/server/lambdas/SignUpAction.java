@@ -15,7 +15,7 @@ import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
 import com.camackenzie.exvi.core.api.AccountCreationRequest;
 import com.camackenzie.exvi.server.database.UserDataEntry;
-import com.camackenzie.exvi.server.util.RequestException;
+import com.camackenzie.exvi.server.util.ApiException;
 
 /**
  * @author callum
@@ -46,13 +46,13 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
                 // Verification code is correct
                 this.registerAccountData(database, in, dbEntry);
                 String accessKey = AuthUtils.generateAccessKey(database, in.getUsername().get());
-                return new AccountAccessKeyResult("Account created", accessKey);
+                return new AccountAccessKeyResult(accessKey);
             } else {
                 // Verification code is incorrect
-                throw new RequestException(400, "Verification code is incorrect or expired");
+                throw new ApiException(400, "Verification code is incorrect or expired");
             }
         } else {
-            throw new RequestException(400, "User does not have verification data");
+            throw new ApiException(400, "User does not have verification data");
         }
     }
 
