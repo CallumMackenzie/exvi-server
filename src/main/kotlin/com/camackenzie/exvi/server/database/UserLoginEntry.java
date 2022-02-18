@@ -8,6 +8,7 @@ package com.camackenzie.exvi.server.database;
 import com.camackenzie.exvi.core.api.GenericDataResult;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
+import com.camackenzie.exvi.server.util.ApiException;
 
 /**
  *
@@ -21,7 +22,7 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
         UserLoginEntry authData = database.getObjectFromTable("exvi-user-login",
                 "username", user, UserLoginEntry.class);
         if (authData == null) {
-            throw new RuntimeException("User does not exist");
+            throw new ApiException(400, "User does not exist");
         }
         boolean keyMatched = false;
         for (var akey : authData.getAccessKeys()) {
@@ -31,7 +32,7 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
             }
         }
         if (!keyMatched) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ApiException(400, "Invalid credentials");
         }
     }
 

@@ -16,10 +16,8 @@ import com.camackenzie.exvi.core.model.BodyStats;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.model.Workout;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
+import com.camackenzie.exvi.server.util.ApiException;
 import com.google.gson.Gson;
-import com.google.gson.internal.LinkedTreeMap;
-import com.google.gson.reflect.TypeToken;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +26,7 @@ import java.util.Map;
  *
  * @author callum
  */
-public class UserDataEntry extends DatabaseEntry {
+public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
 
     private static final Gson gson = new Gson();
 
@@ -85,7 +83,7 @@ public class UserDataEntry extends DatabaseEntry {
             String user) {
         if (database.getObjectFromTable("exvi-user-login", "username",
                 user, UserLoginEntry.class) == null) {
-            throw new RuntimeException("User does not have an account");
+            throw new ApiException(400, "User does not have an account");
         }
         if (database.getObjectFromTable("exvi-user-data", "username", user,
                 UserDataEntry.class) == null) {
