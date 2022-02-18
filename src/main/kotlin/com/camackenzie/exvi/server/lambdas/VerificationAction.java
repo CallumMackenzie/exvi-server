@@ -26,6 +26,18 @@ public class VerificationAction
 
     @Override
     public NoneResult handleBodyRequest(VerificationRequest in, Context context) {
+        // Preconditions
+        if (in.getUsername().get().isBlank()) {
+            throw new ApiException(400, "No username provided");
+        }
+        if (in.getEmail().get().isBlank()) {
+            throw new ApiException(400, "No email provided");
+        }
+        if (in.getPhone().get().isBlank()) {
+            throw new ApiException(400, "No phone number provided");
+        }
+
+        // Retrieve resources
         AWSDynamoDB dynamoDB = new AWSDynamoDB();
         Table userTable = dynamoDB.getTable("exvi-user-login");
 
@@ -58,9 +70,6 @@ public class VerificationAction
     }
 
     private boolean hasPhoneErrors(Table userTable, VerificationRequest user) {
-        if (user.getPhone().get().isBlank()) {
-            return true;
-        }
         try {
             var itemIter = userTable.getIndex("phone-index")
                     .query("phone", user.getPhone().get()).iterator();
@@ -80,9 +89,6 @@ public class VerificationAction
     }
 
     private boolean hasEmailErrors(Table userTable, VerificationRequest user) {
-        if (user.getEmail().get().isBlank()) {
-            return true;
-        }
         try {
             for (Item next : userTable.getIndex("email-index")
                     .query("email", user.getEmail().get())) {
@@ -100,9 +106,6 @@ public class VerificationAction
     }
 
     private boolean hasUsernameErrors(Table userTable, VerificationRequest user) {
-        if (user.getUsername().get().isBlank()) {
-            return true;
-        }
         Item outcome = userTable.getItem("username", user.getUsername().get());
         if (outcome != null) {
             return !outcome.hasAttribute("verificationCode");
@@ -118,9 +121,6 @@ public class VerificationAction
     }
 
     private boolean trySendEmail(VerificationRequest user, String code) {
-        if (user.getEmail().get().isBlank()) {
-            return false;
-        }
         StringBuilder htmlBody = new StringBuilder()
                 .append("<h2>Hello ")
                 .append(user.getUsername().get())
@@ -151,9 +151,6 @@ public class VerificationAction
     }
 
     private boolean trySendSMSMessage(VerificationRequest user, String code) {
-        if (user.getPhone().get().isBlank()) {
-            return false;
-        }
         StringBuilder textContent = new StringBuilder()
                 .append("Hello ")
                 .append(user.getUsername().get())

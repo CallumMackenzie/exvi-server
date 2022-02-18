@@ -26,7 +26,15 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
 
     @Override
     public AccountAccessKeyResult handleBodyRequest(LoginRequest in, Context context) {
+        // Preconditions
+        if (in.getUsername().get().isBlank()) {
+            throw new ApiException(400, "No username provided");
+        }
+        if (in.getPasswordHash().get().isBlank()) {
+            throw new ApiException(400, "No password provided");
+        }
 
+        // Retrieve resources
         AWSDynamoDB database = new AWSDynamoDB();
         Table userTable = database.cacheTable("exvi-user-login");
         UserLoginEntry entry = database.getObjectFromTable("exvi-user-login", "username", in.getUsername().get(), UserLoginEntry.class);

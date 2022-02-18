@@ -18,12 +18,12 @@ import com.camackenzie.exvi.core.model.Workout;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.ApiException;
 import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
- *
  * @author callum
  */
 public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
@@ -63,7 +63,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public static String getUserWorkoutsJSON(AWSDynamoDB database,
-            String user) {
+                                             String user) {
         GetItemSpec get = new GetItemSpec()
                 .withPrimaryKey("username", user)
                 .withProjectionExpression("workouts")
@@ -74,13 +74,13 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public static Workout[] userWorkouts(AWSDynamoDB database,
-            String user) {
+                                         String user) {
         return gson.fromJson(getUserWorkoutsJSON(database,
                 user), Workout[].class);
     }
 
     public static void ensureUserHasData(AWSDynamoDB database,
-            String user) {
+                                         String user) {
         if (database.getObjectFromTable("exvi-user-login", "username",
                 user, UserLoginEntry.class) == null) {
             throw new ApiException(400, "User does not have an account");
@@ -97,8 +97,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public static void updateUserWorkouts(AWSDynamoDB database,
-            String user,
-            Workout[] workouts) {
+                                          String user,
+                                          Workout[] workouts) {
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", user)
                 .withUpdateExpression("set workouts = :a")
@@ -109,9 +109,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public static void addUserWorkouts(AWSDynamoDB database,
-            String user,
-            Workout[] workouts) {
-
+                                       String user,
+                                       Workout[] workouts) {
         List<Map> workoutList = new ArrayList<>();
         for (var workout : workouts) {
             workoutList.add(gson.fromJson(gson.toJson(workout), Map.class));

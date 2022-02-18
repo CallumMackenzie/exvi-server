@@ -29,6 +29,12 @@ public class RetrieveSaltAction
 
     @Override
     public AccountSaltResult handleBodyRequest(RetrieveSaltRequest in, Context context) {
+        // Preconditions
+        if (in.getUsername().get().isBlank()) {
+            throw new ApiException(400, "No username provided");
+        }
+
+        // Retrieve resources
         AWSDynamoDB database = new AWSDynamoDB();
         Table accountTable = database.cacheTable("exvi-user-login");
         Item item = accountTable.getItem("username", in.getUsername().get());

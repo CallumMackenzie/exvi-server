@@ -25,6 +25,12 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
 
     @Override
     public GenericDataResult handleBodyRequest(GenericDataRequest in, Context context) {
+        // Preconditions
+        if (in.getRequester().get().isBlank()) {
+            throw new ApiException(400, "No requester provided");
+        }
+
+        // Retrieve resources
         AWSDynamoDB database = new AWSDynamoDB();
         this.getLogger().log("Requester: " + in.getRequester().get());
 

@@ -30,7 +30,18 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
 
     @Override
     public AccountAccessKeyResult handleBodyRequest(AccountCreationRequest in, Context context) {
+        // Preconditions
+        if (in.getUsername().get().isBlank()) {
+            throw new ApiException(400, "No username provided");
+        }
+        if (in.getPassword().get().isBlank()) {
+            throw new ApiException(400, "No password provided");
+        }
+        if (in.getVerificationCode().get().isBlank()) {
+            throw new ApiException(400, "No verification code provided");
+        }
 
+        // Retrieve resources
         AWSDynamoDB database = new AWSDynamoDB();
         Table userTable = database.cacheTable("exvi-user-login");
 
