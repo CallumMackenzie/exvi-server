@@ -8,8 +8,10 @@ package com.camackenzie.exvi.server.util;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
+import com.camackenzie.exvi.core.api.GenericDataRequest;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.google.gson.*;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -23,11 +25,12 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         extends RequestStreamHandlerWrapper {
 
     private final Class<IN> inClass;
-    private final Gson gson = new Gson();
+    private final Eson eson;
     private String rawRequest, rawBody;
 
     public RequestObjectHandler(Class<IN> inClass) {
         this.inClass = inClass;
+        this.eson = new Eson();
     }
 
     public final String getRawRequest() {
@@ -41,6 +44,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
     @Override
     public void handleRequestWrapped(BufferedReader bf, PrintWriter pw, Context ctx)
             throws IOException {
+        Gson gson = eson.getGson();
         // Get raw request as string
         rawRequest = bf.lines().collect(Collectors.joining(""));
         // Log raw request
@@ -53,13 +57,13 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         IN requestBody = null;
         if (requestBodyObject.isJsonPrimitive()) {
             if (requestBodyObject.getAsJsonPrimitive().isString()) {
-                requestBody = this.gson.fromJson(requestBodyObject.getAsString(), this.inClass);
+                requestBody = gson.fromJson(requestBodyObject.getAsString(), this.inClass);
             }
         } else if (requestBodyObject.isJsonObject()) {
-            requestBody = this.gson.fromJson(requestBodyObject, this.inClass);
+            requestBody = gson.fromJson(requestBodyObject, this.inClass);
         }
         if (requestBody == null) {
-            pw.write(this.gson.toJson(new APIResult(400, "Cannot parse request body.",
+            pw.write(gson.toJson(new APIResult(400, "Cannot parse request body.",
                     new HashMap<>())));
             return;
         }
@@ -73,7 +77,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         try {
             APIResult<OUT> response = this.handleObjectRequest(req, ctx);
             strResponse = new APIResult<>(response.getStatusCode(),
-                    this.gson.toJson(response.getBody()),
+                    gson.toJson(response.getBody()),
                     response.getHeaders());
         } catch (ApiException e) {
             strResponse = new APIResult<String>(e.getCode(),
@@ -89,7 +93,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
     public abstract APIResult<OUT> handleObjectRequest(APIRequest<IN> in, Context context);
 
     public final Gson getGson() {
-        return this.gson;
+        return this.eson.getGson();
     }
 
 }
