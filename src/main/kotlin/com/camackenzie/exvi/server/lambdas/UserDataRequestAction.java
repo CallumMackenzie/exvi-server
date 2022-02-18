@@ -27,16 +27,17 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
     public GenericDataResult handleBodyRequest(GenericDataRequest in, Context context) {
         AWSDynamoDB database = new AWSDynamoDB();
         this.getLogger().log("Requester: " + in.getRequester().get());
+        this.getLogger().log("Request body: " + this.getRawRequestBody());
 
         switch (in.getRequester().get()) {
             case WorkoutListRequest.uid: {
-                WorkoutListRequest request = this.getGson().fromJson(this.getRawRequestBody(), WorkoutListRequest.class);
+                WorkoutListRequest request = this.getRequestBodyAs(WorkoutListRequest.class);
                 UserLoginEntry.ensureAccessKeyValid(database, request.getUsername(), request.getAccessKey());
                 UserDataEntry.ensureUserHasData(database, request.getUsername());
                 return this.getWorkoutList(database, request);
             }
             case WorkoutPutRequest.uid: {
-                WorkoutPutRequest request = this.getGson().fromJson(this.getRawRequestBody(), WorkoutPutRequest.class);
+                WorkoutPutRequest request = this.getRequestBodyAs(WorkoutPutRequest.class);
                 UserLoginEntry.ensureAccessKeyValid(database, request.getUsername(), request.getAccessKey());
                 UserDataEntry.ensureUserHasData(database, request.getUsername());
                 this.putWorkouts(database, request);

@@ -41,6 +41,10 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         return rawBody;
     }
 
+    public final <Z> Z getRequestBodyAs(Class<Z> cls) {
+        return this.getGson().fromJson(this.getRawRequestBody(), cls);
+    }
+
     @Override
     public void handleRequestWrapped(BufferedReader bf, PrintWriter pw, Context ctx)
             throws IOException {
