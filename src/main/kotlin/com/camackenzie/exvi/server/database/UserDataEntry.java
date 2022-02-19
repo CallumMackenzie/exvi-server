@@ -165,7 +165,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     public static void addUserWorkouts(AWSDynamoDB database,
                                        String user,
                                        Workout[] workouts) {
-        List<Map> toAppend = toMapList(workouts);
+        List<Map> toAppend = new ArrayList<>();
         Workout[] userWorkouts = userWorkouts(database, user);
         boolean[] workoutIdsMatched = new boolean[userWorkouts.length];
 
