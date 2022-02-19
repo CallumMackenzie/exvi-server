@@ -185,8 +185,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
             } else {
                 UpdateItemSpec spec = new UpdateItemSpec()
                         .withPrimaryKey("username", user)
-                        .withUpdateExpression("set workouts[:index] = :updated")
-                        .withValueMap(new ValueMap().withInt(":index", matched)
+                        .withUpdateExpression("set workouts[" + matched + "] = :updated")
+                        .withValueMap(new ValueMap()
                                 .withMap(":updated", toMap(toPut)))
                         .withReturnValues(ReturnValue.UPDATED_NEW);
                 database.cacheTable("exvi-user-data")
