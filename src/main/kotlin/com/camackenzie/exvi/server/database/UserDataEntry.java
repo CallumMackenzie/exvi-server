@@ -145,7 +145,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     private static <T extends SelfSerializable> List<Map> toMapList(List<T> l) {
         List<Map> ret = new ArrayList<>();
         for (var li : l) {
-            ret.add(gson.fromJson(li.toJson(), Map.class));
+            ret.add(toMap(li));
         }
         return ret;
     }
@@ -153,20 +153,51 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     private static <T extends SelfSerializable> List<Map> toMapList(T[] l) {
         List<Map> ret = new ArrayList<>();
         for (var li : l) {
-            ret.add(gson.fromJson(li.toJson(), Map.class));
+            ret.add(toMap(li));
         }
         return ret;
+    }
+
+    private static <T extends SelfSerializable> Map toMap(T in) {
+        return gson.fromJson(in.toJson(), Map.class);
     }
 
     public static void addUserWorkouts(AWSDynamoDB database,
                                        String user,
                                        Workout[] workouts) {
-        List<Map> workoutList = toMapList(workouts);
+        List<Map> toAppend = toMapList(workouts);
+        Workout[] userWorkouts = userWorkouts(database, user);
+        boolean[] workoutIdsMatched = new boolean[userWorkouts.length];
+
+        for (var toPut : workouts) {
+            int matched = -1;
+            for (int i = 0; i < userWorkouts.length; ++i) {
+                if (!workoutIdsMatched[i]) {
+                    if (toPut.getId().get().equals(userWorkouts[i].getId().get())) {
+                        matched = i;
+                        workoutIdsMatched[i] = true;
+                        break;
+                    }
+                }
+            }
+            if (matched == -1) {
+                toAppend.add(toMap(toPut));
+            } else {
+                UpdateItemSpec spec = new UpdateItemSpec()
+                        .withPrimaryKey("username", user)
+                        .withUpdateExpression("set workouts[:index] = :updated")
+                        .withValueMap(new ValueMap().withInt(":index", matched)
+                                .withMap(":updated", toMap(toPut)))
+                        .withReturnValues(ReturnValue.UPDATED_NEW);
+                database.cacheTable("exvi-user-data")
+                        .updateItem(spec);
+            }
+        }
 
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", user)
                 .withUpdateExpression("set workouts = list_append(:a, workouts)")
-                .withValueMap(new ValueMap().withList(":a", workoutList))
+                .withValueMap(new ValueMap().withList(":a", toAppend))
                 .withReturnValues(ReturnValue.UPDATED_NEW);
         database.cacheTable("exvi-user-data")
                 .updateItem(update);
