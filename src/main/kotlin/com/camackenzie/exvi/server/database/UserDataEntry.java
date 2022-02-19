@@ -15,6 +15,7 @@ import com.camackenzie.exvi.core.model.ActiveWorkout;
 import com.camackenzie.exvi.core.model.BodyStats;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.model.Workout;
+import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.ApiException;
 import com.google.gson.Gson;
@@ -101,10 +102,11 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     public static void updateUserWorkouts(AWSDynamoDB database,
                                           String user,
                                           Workout[] workouts) {
+        List<Map> workoutList = toMapList(workouts);
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", user)
                 .withUpdateExpression("set workouts = :a")
-                .withValueMap(new ValueMap().withList(":a", workouts))
+                .withValueMap(new ValueMap().withList(":a", workoutList))
                 .withReturnValues(ReturnValue.UPDATED_NEW);
         database.cacheTable("exvi-user-data")
                 .updateItem(update);
@@ -130,13 +132,18 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         updateUserWorkouts(database, user, workouts);
     }
 
+    private static <T extends SelfSerializable> List<Map> toMapList(T[] l) {
+        List<Map> ret = new ArrayList<>();
+        for (var li : l) {
+            ret.add(gson.fromJson(li.toJson(), Map.class));
+        }
+        return ret;
+    }
+
     public static void addUserWorkouts(AWSDynamoDB database,
                                        String user,
                                        Workout[] workouts) {
-        List<Map> workoutList = new ArrayList<>();
-        for (var workout : workouts) {
-            workoutList.add(gson.fromJson(gson.toJson(workout), Map.class));
-        }
+        List<Map> workoutList = toMapList(workouts);
 
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", user)
