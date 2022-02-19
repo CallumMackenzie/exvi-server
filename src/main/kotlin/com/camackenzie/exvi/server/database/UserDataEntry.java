@@ -99,10 +99,9 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         ensureUserHasData(database, user.get());
     }
 
-    public static void updateUserWorkouts(AWSDynamoDB database,
-                                          String user,
-                                          Workout[] workouts) {
-        List<Map> workoutList = toMapList(workouts);
+    private static void updateUserWorkoutsRaw(AWSDynamoDB database,
+                                              String user,
+                                              List<Map> workoutList) {
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", user)
                 .withUpdateExpression("set workouts = :a")
@@ -112,12 +111,23 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                 .updateItem(update);
     }
 
+    public static void updateUserWorkouts(AWSDynamoDB database,
+                                          String user,
+                                          Workout[] workouts) {
+        updateUserWorkoutsRaw(database, user, toMapList(workouts));
+    }
+
+    public static void updateUserWorkouts(AWSDynamoDB database,
+                                          String user,
+                                          List<Workout> workouts) {
+        updateUserWorkoutsRaw(database, user, toMapList(workouts));
+    }
+
     public static void removeUserWorkouts(AWSDynamoDB database,
                                           String user,
                                           String[] ids) {
-        Workout[] workouts = userWorkouts(database, user);
         ArrayList<Workout> newWorkouts = new ArrayList<>();
-        for (var workout : workouts) {
+        for (var workout : userWorkouts(database, user)) {
             boolean remove = false;
             for (var id : ids) {
                 if (workout.getId().get().equals(id)) {
@@ -129,7 +139,15 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                 newWorkouts.add(workout);
             }
         }
-        updateUserWorkouts(database, user, workouts);
+        updateUserWorkouts(database, user, newWorkouts);
+    }
+
+    private static <T extends SelfSerializable> List<Map> toMapList(List<T> l) {
+        List<Map> ret = new ArrayList<>();
+        for (var li : l) {
+            ret.add(gson.fromJson(li.toJson(), Map.class));
+        }
+        return ret;
     }
 
     private static <T extends SelfSerializable> List<Map> toMapList(T[] l) {
