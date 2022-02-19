@@ -19,6 +19,7 @@ import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.ApiException;
 import com.google.gson.Gson;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +108,26 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                 .withReturnValues(ReturnValue.UPDATED_NEW);
         database.cacheTable("exvi-user-data")
                 .updateItem(update);
+    }
+
+    public static void removeUserWorkouts(AWSDynamoDB database,
+                                          String user,
+                                          String[] ids) {
+        Workout[] workouts = userWorkouts(database, user);
+        ArrayList<Workout> newWorkouts = new ArrayList<>();
+        for (var workout : workouts) {
+            boolean remove = false;
+            for (var id : ids) {
+                if (workout.getId().get().equals(id)) {
+                    remove = true;
+                    break;
+                }
+            }
+            if (!remove) {
+                newWorkouts.add(workout);
+            }
+        }
+        updateUserWorkouts(database, user, workouts);
     }
 
     public static void addUserWorkouts(AWSDynamoDB database,

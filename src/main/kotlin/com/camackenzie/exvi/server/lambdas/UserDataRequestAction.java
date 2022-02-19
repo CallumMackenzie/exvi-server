@@ -8,11 +8,14 @@ package com.camackenzie.exvi.server.lambdas;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.*;
 import com.camackenzie.exvi.core.model.Workout;
+import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import com.camackenzie.exvi.server.util.ApiException;
+
+import java.util.Arrays;
 
 /**
  * @author callum
@@ -37,20 +40,37 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         switch (in.getRequester().get()) {
             case WorkoutListRequest.uid: {
                 WorkoutListRequest request = this.getRequestBodyAs(WorkoutListRequest.class);
-                UserLoginEntry.ensureAccessKeyValid(database, request.getUsername(), request.getAccessKey());
-                UserDataEntry.ensureUserHasData(database, request.getUsername());
+                ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 return this.getWorkoutList(database, request);
             }
             case WorkoutPutRequest.uid: {
                 WorkoutPutRequest request = this.getRequestBodyAs(WorkoutPutRequest.class);
-                UserLoginEntry.ensureAccessKeyValid(database, request.getUsername(), request.getAccessKey());
-                UserDataEntry.ensureUserHasData(database, request.getUsername());
-                this.putWorkouts(database, request);
+                ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+                putWorkouts(database, request);
+                return NoneResult.INSTANCE;
+            }
+            case DeleteWorkoutsRequest.uid: {
+                DeleteWorkoutsRequest request = this.getRequestBodyAs(DeleteWorkoutsRequest.class);
+                ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+                deleteWorkouts(database, request);
                 return NoneResult.INSTANCE;
             }
             default:
                 throw new ApiException(400, "Could not recognize requester");
         }
+    }
+
+    private void ensureUserValidity(AWSDynamoDB database,
+                                    EncodedStringCache username,
+                                    EncodedStringCache accessKey) {
+        UserLoginEntry.ensureAccessKeyValid(database, username, accessKey);
+        UserDataEntry.ensureUserHasData(database, username);
+    }
+
+    private void deleteWorkouts(AWSDynamoDB database, DeleteWorkoutsRequest request) {
+        UserDataEntry.removeUserWorkouts(database, request.getUsername().get(),
+                Arrays.stream(request.getWorkoutIds()).map(i -> i.get()).toArray(sz -> new String[sz])
+        );
     }
 
     private void putWorkouts(AWSDynamoDB database,
