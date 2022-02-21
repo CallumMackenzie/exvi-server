@@ -1,6 +1,6 @@
 package com.camackenzie.exvi.server.util;
 
-// T class should be called RequestException, but for some reason IntelliJ doesn't like that name...
+// This class should be called RequestException, but for some reason IntelliJ doesn't like that name...
 public class ApiException extends RuntimeException {
 
     private final int code;
