@@ -36,6 +36,10 @@ public class VerificationAction
         if (in.getPhone().get().isBlank()) {
             throw new ApiException(400, "No phone number provided");
         }
+        if (!in.getPhone().get().startsWith("+1")) {
+            throw new ApiException(400, "Only Canadian phone numbers are currently supported. "
+                                   + "Please add +1 in front of your number.");
+        }
 
         // Retrieve resources
         AWSDynamoDB dynamoDB = new AWSDynamoDB();
