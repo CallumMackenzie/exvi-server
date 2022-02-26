@@ -158,8 +158,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return ret;
     }
 
-    private static <T extends SelfSerializable> Map toMap(T in) {
-        return gson.fromJson(in.toJson(), Map.class);
+    private static <T> Map toMap(T in) {
+        return gson.fromJson(gson.toJson(in), Map.class);
     }
 
     public static void addUserWorkouts(AWSDynamoDB database,

@@ -39,7 +39,9 @@
     <orderEntry type="library" name="Maven: org.jetbrains:annotations:13.0" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.6.10" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.10" level="project" />
-    <orderEntry type="library" name="Maven: com.github.CallumMackenzie.exvi-core:exvi-core-jvm:f94c1ab15f8a27fee3b89ec593782d399b473068" level="project" />
+    <orderEntry type="library" name="Maven: com.github.CallumMackenzie.exvi-core:exvi-core-jvm:fed437bc3a85afb7fe44e782b6d0b13745448e76" level="project" />
+    <orderEntry type="library" name="Maven: io.ktor:ktor-client-java:1.6.7" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.5.2-native-mt" level="project" />
     <orderEntry type="library" name="Maven: com.soywiz.korlibs.krypto:krypto-jvm:2.2.0" level="project" />
     <orderEntry type="library" name="Maven: io.ktor:ktor-client-core-jvm:1.6.7" level="project" />
     <orderEntry type="library" name="Maven: io.ktor:ktor-http-jvm:1.6.7" level="project" />
@@ -51,8 +53,6 @@
     <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.3.2" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.3.2" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-client-java:1.6.7" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.5.2-native-mt" level="project" />
     <orderEntry type="library" name="Maven: com.amazonaws:aws-lambda-java-core:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: com.amazonaws:aws-lambda-java-events:3.9.0" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.6" level="project" />
