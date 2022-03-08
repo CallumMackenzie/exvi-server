@@ -15,6 +15,7 @@ import com.camackenzie.exvi.core.model.ActiveWorkout;
 import com.camackenzie.exvi.core.model.BodyStats;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.model.Workout;
+import com.camackenzie.exvi.core.util.Identifiable;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.ApiException;
@@ -24,6 +25,8 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * @author callum
@@ -79,6 +82,23 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                                          String user) {
         return gson.fromJson(getUserWorkoutsJSON(database,
                 user), Workout[].class);
+    }
+
+    public static String getActiveUserWorkoutsJSON(AWSDynamoDB database,
+                                                   String user) {
+        GetItemSpec get = new GetItemSpec()
+                .withPrimaryKey("username", user)
+                .withProjectionExpression("activeWorkouts")
+                .withConsistentRead(true);
+        Item item = database.cacheTable("exvi-user-data")
+                .getItem(get);
+        return item.getJSON("activeWorkouts");
+    }
+
+    public static ActiveWorkout[] activeUserWorkouts(AWSDynamoDB database,
+                                                     String user) {
+        return gson.fromJson(getActiveUserWorkoutsJSON(database,
+                user), ActiveWorkout[].class);
     }
 
     public static void ensureUserHasData(AWSDynamoDB database,
@@ -162,18 +182,18 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return gson.fromJson(gson.toJson(in), Map.class);
     }
 
-    public static void addUserWorkouts(AWSDynamoDB database,
-                                       String user,
-                                       Workout[] workouts) {
-        List<Map> toAppend = new ArrayList<>();
-        Workout[] userWorkouts = userWorkouts(database, user);
-        boolean[] workoutIdsMatched = new boolean[userWorkouts.length];
+    private static <T extends Identifiable> void forEachIdentifiable(
+            T[] identifiables,
+            BiConsumer<T, Integer> onMatch,
+            Consumer<T> onNotMatched
+    ) {
+        boolean[] workoutIdsMatched = new boolean[identifiables.length];
 
-        for (var toPut : workouts) {
+        for (var toPut : identifiables) {
             int matched = -1;
-            for (int i = 0; i < userWorkouts.length; ++i) {
+            for (int i = 0; i < identifiables.length; ++i) {
                 if (!workoutIdsMatched[i]) {
-                    if (toPut.getId().get().equals(userWorkouts[i].getId().get())) {
+                    if (toPut.getIdentifier().get().equals(identifiables[i].getIdentifier().get())) {
                         matched = i;
                         workoutIdsMatched[i] = true;
                         break;
@@ -181,18 +201,40 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                 }
             }
             if (matched == -1) {
-                toAppend.add(toMap(toPut));
+                onNotMatched.accept(toPut);
             } else {
-                UpdateItemSpec spec = new UpdateItemSpec()
-                        .withPrimaryKey("username", user)
-                        .withUpdateExpression("set workouts[" + matched + "] = :updated")
-                        .withValueMap(new ValueMap()
-                                .withMap(":updated", toMap(toPut)))
-                        .withReturnValues(ReturnValue.UPDATED_NEW);
-                database.cacheTable("exvi-user-data")
-                        .updateItem(spec);
+                onMatch.accept(toPut, matched);
             }
         }
+    }
+
+    public static void addActiveUserWorkouts(AWSDynamoDB database,
+                                             String user,
+                                             ActiveWorkout[] workouts) {
+
+    }
+
+    public static void addUserWorkouts(AWSDynamoDB database,
+                                       String user,
+                                       Workout[] workouts) {
+        List<Map> toAppend = new ArrayList<>();
+        Workout[] userWorkouts = userWorkouts(database, user);
+        boolean[] workoutIdsMatched = new boolean[userWorkouts.length];
+
+        forEachIdentifiable(workouts,
+                (wk, index) -> {
+                    UpdateItemSpec spec = new UpdateItemSpec()
+                            .withPrimaryKey("username", user)
+                            .withUpdateExpression("set workouts[" + index + "] = :updated")
+                            .withValueMap(new ValueMap()
+                                    .withMap(":updated", toMap(wk)))
+                            .withReturnValues(ReturnValue.UPDATED_NEW);
+                    database.cacheTable("exvi-user-data")
+                            .updateItem(spec);
+                },
+                wk -> {
+                    toAppend.add(toMap(wk));
+                });
 
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", user)

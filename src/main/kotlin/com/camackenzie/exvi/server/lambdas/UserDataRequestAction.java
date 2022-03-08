@@ -7,6 +7,7 @@ package com.camackenzie.exvi.server.lambdas;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.*;
+import com.camackenzie.exvi.core.model.ActiveWorkout;
 import com.camackenzie.exvi.core.model.Workout;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.server.database.UserDataEntry;
@@ -41,12 +42,23 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
             case WorkoutListRequest.uid: {
                 WorkoutListRequest request = this.getRequestBodyAs(WorkoutListRequest.class);
                 ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                return this.getWorkoutList(database, request);
+                switch (request.getType()) {
+                    case ListAllTemplates:
+                        return this.getWorkoutList(database, request);
+                    case ListAllActive:
+                        return this.getActiveWorkoutList(database, request);
+                }
             }
             case WorkoutPutRequest.uid: {
                 WorkoutPutRequest request = this.getRequestBodyAs(WorkoutPutRequest.class);
                 ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 putWorkouts(database, request);
+                return NoneResult.INSTANCE;
+            }
+            case ActiveWorkoutPutRequest.uid: {
+                ActiveWorkoutPutRequest request = this.getRequestBodyAs(ActiveWorkoutPutRequest.class);
+                ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+                putActiveWorkouts(database, request);
                 return NoneResult.INSTANCE;
             }
             case DeleteWorkoutsRequest.uid: {
@@ -80,23 +92,23 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                 in.getWorkouts());
     }
 
-    private WorkoutListResult getWorkoutList(AWSDynamoDB database,
-                                             WorkoutListRequest in) {
-        Workout[] workouts
-                = UserDataEntry.userWorkouts(database, in.getUsername().get());
-
-        if (workouts == null) {
-            throw new RuntimeException("User does not have data.");
-        }
-        this.getLogger().log("Returning " + workouts.length + " workouts");
-
-        switch (in.getType()) {
-            case LIST_ALL:
-                return new WorkoutListResult(workouts);
-            default:
-                break;
-        }
-        throw new RuntimeException("WorkoutListRequest type was not recognised");
+    private void putActiveWorkouts(AWSDynamoDB database, ActiveWorkoutPutRequest in) {
+        UserDataEntry.addActiveUserWorkouts(database,
+                in.getUsername().get(),
+                in.getWorkouts());
     }
 
+    private ActiveWorkoutListResult getActiveWorkoutList(AWSDynamoDB database, WorkoutListRequest in) {
+        ActiveWorkout[] workouts = UserDataEntry.activeUserWorkouts(database, in.getUsername().get());
+        if (workouts == null) throw new RuntimeException("User does not have active workout data");
+        this.getLogger().log("Returning " + workouts.length + " active workouts");
+        return new ActiveWorkoutListResult(workouts);
+    }
+
+    private WorkoutListResult getWorkoutList(AWSDynamoDB database, WorkoutListRequest in) {
+        Workout[] workouts = UserDataEntry.userWorkouts(database, in.getUsername().get());
+        if (workouts == null) throw new RuntimeException("User does not have workout data.");
+        this.getLogger().log("Returning " + workouts.length + " workouts");
+        return new WorkoutListResult(workouts);
+    }
 }
