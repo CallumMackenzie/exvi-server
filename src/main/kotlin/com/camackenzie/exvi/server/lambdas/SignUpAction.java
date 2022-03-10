@@ -80,7 +80,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
                 passwordHash,
                 salt
         ));
-        database.putObjectInTable("exvi-user-data", new UserDataEntry(ac.getUsername().get()));
+        UserDataEntry.ensureUserHasData(database, ac.getUsername().get());
     }
 
     private boolean verificationCodeValid(String inputCode, String actualCode, long creation) {

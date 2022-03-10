@@ -13,8 +13,8 @@ import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.camackenzie.exvi.core.model.ActiveWorkout;
 import com.camackenzie.exvi.core.model.BodyStats;
-import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.model.Workout;
+import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.Identifiable;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
@@ -22,7 +22,6 @@ import com.camackenzie.exvi.server.util.ApiException;
 import com.google.gson.Gson;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,36 +40,30 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     private final ActiveWorkout[] activeWorkouts;
     private BodyStats bodyStats;
 
-    public UserDataEntry(String username) {
+    private transient AWSDynamoDB database;
+
+    private UserDataEntry(@NotNull AWSDynamoDB database,
+                          @NotNull String username,
+                          Workout[] workouts,
+                          ActiveWorkout[] activeWorkouts,
+                          BodyStats bodyStats) {
         this.username = username;
-        this.bodyStats = BodyStats.Companion.average();
-        this.workouts = new Workout[0];
-        this.activeWorkouts = new ActiveWorkout[0];
-    }
-
-    public String getUsername() {
-        return this.username;
-    }
-
-    public BodyStats getBodyStats() {
-        return this.bodyStats;
-    }
-
-    public Workout[] getWorkouts() {
-        return workouts;
-    }
-
-    public ActiveWorkout[] getActiveWorkouts() {
-        return activeWorkouts;
-    }
-
-    public void setBodyStats(BodyStats bodyStats) {
         this.bodyStats = bodyStats;
+        this.workouts = workouts;
+        this.activeWorkouts = activeWorkouts;
     }
 
-    public static String getUserWorkoutsJSON(AWSDynamoDB database, String user) {
+    private static UserDataEntry defaultData(@NotNull AWSDynamoDB database, @NotNull String username) {
+        return new UserDataEntry(database, username, new Workout[0], new ActiveWorkout[0], BodyStats.average());
+    }
+
+    private static UserDataEntry registeredUser(@NotNull AWSDynamoDB database, @NotNull String username) {
+        return new UserDataEntry(database, username, null, null, null);
+    }
+
+    public String getUserWorkoutsJSON() {
         GetItemSpec get = new GetItemSpec()
-                .withPrimaryKey("username", user)
+                .withPrimaryKey("username", username)
                 .withProjectionExpression("workouts")
                 .withConsistentRead(true);
         Item item = database.cacheTable("exvi-user-data")
@@ -78,89 +71,40 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return item.getJSON("workouts");
     }
 
-    public static Workout[] userWorkouts(AWSDynamoDB database, String user) {
-        return gson.fromJson(getUserWorkoutsJSON(database,
-                user), Workout[].class);
+    public Workout[] userWorkouts() {
+        return gson.fromJson(getUserWorkoutsJSON(), Workout[].class);
     }
 
-    public static String getActiveUserWorkoutsJSON(AWSDynamoDB database, String user) {
+    public String getActiveUserWorkoutsJSON() {
         GetItemSpec get = new GetItemSpec()
-                .withPrimaryKey("username", user)
+                .withPrimaryKey("username", username)
                 .withProjectionExpression("activeWorkouts")
                 .withConsistentRead(true);
-        Item item = database.cacheTable("exvi-user-data")
-                .getItem(get);
+        Item item = database.cacheTable("exvi-user-data").getItem(get);
         return item.getJSON("activeWorkouts");
     }
 
-    public static ActiveWorkout[] activeUserWorkouts(AWSDynamoDB database, String user) {
-        return gson.fromJson(getActiveUserWorkoutsJSON(database, user), ActiveWorkout[].class);
+    public ActiveWorkout[] activeWorkouts() {
+        return gson.fromJson(getActiveUserWorkoutsJSON(), ActiveWorkout[].class);
     }
 
-    public static void ensureUserHasData(AWSDynamoDB database,
-                                         String user) {
+    public static UserDataEntry ensureUserHasData(@NotNull AWSDynamoDB database, @NotNull String user) {
         if (database.getObjectFromTable("exvi-user-login", "username",
                 user, UserLoginEntry.class) == null) {
             throw new ApiException(400, "User does not have an account");
         }
-        Item item = database.cacheTable("exvi-user-data")
-                .getItem("username", user);
+        Item item = database.cacheTable("exvi-user-data").getItem("username", user);
         if (item == null) {
-            database.putObjectInTable("exvi-user-data", new UserDataEntry(user));
+            UserDataEntry entry = UserDataEntry.defaultData(database, user);
+            database.putObjectInTable("exvi-user-data", entry);
+            return entry;
+        } else {
+            return UserDataEntry.registeredUser(database, user);
         }
     }
 
-    public static void ensureUserHasData(AWSDynamoDB database, EncodedStringCache user) {
-        ensureUserHasData(database, user.get());
-    }
-
-    private static UpdateItemOutcome updateDataEntryRaw(AWSDynamoDB database, String user, String key, Object value) {
-        UpdateItemSpec update = new UpdateItemSpec()
-                .withPrimaryKey("username", user)
-                .withUpdateExpression("set " + key + " = :a")
-                .withValueMap(new ValueMap().withList(":a", value))
-                .withReturnValues(ReturnValue.UPDATED_NEW);
-        return database.cacheTable("exvi-user-data")
-                .updateItem(update);
-    }
-
-    private static UpdateItemOutcome appendToDataEntryList(AWSDynamoDB database, String user, String key, Object value) {
-        UpdateItemSpec update = new UpdateItemSpec()
-                .withPrimaryKey("username", user)
-                .withUpdateExpression("set " + key + " = list_append(:a, " + key + ")")
-                .withValueMap(new ValueMap().withList(":a", value))
-                .withReturnValues(ReturnValue.UPDATED_NEW);
-        return database.cacheTable("exvi-user-data")
-                .updateItem(update);
-    }
-
-    private static void updateActiveUserWorkoutsRaw(AWSDynamoDB database, String user, List<Map> workoutList) {
-        updateDataEntryRaw(database, user, "activeWorkouts", workoutList);
-    }
-
-    private static void updateUserWorkoutsRaw(AWSDynamoDB database, String user, List<Map> workoutList) {
-        updateDataEntryRaw(database, user, "workouts", workoutList);
-    }
-
-    public static void updateUserWorkouts(AWSDynamoDB database, String user, List<Workout> workouts) {
-        updateUserWorkoutsRaw(database, user, toMapList(workouts));
-    }
-
-    public static void removeUserWorkouts(AWSDynamoDB database, String user, String[] ids) {
-        ArrayList<Workout> newWorkouts = new ArrayList<>();
-        for (var workout : userWorkouts(database, user)) {
-            boolean remove = false;
-            for (var id : ids) {
-                if (workout.getId().get().equals(id)) {
-                    remove = true;
-                    break;
-                }
-            }
-            if (!remove) {
-                newWorkouts.add(workout);
-            }
-        }
-        updateUserWorkouts(database, user, newWorkouts);
+    public static UserDataEntry ensureUserHasData(@NotNull AWSDynamoDB database, @NotNull EncodedStringCache user) {
+        return ensureUserHasData(database, user.get());
     }
 
     private static <T extends SelfSerializable> List<Map> toMapList(List<T> l) {
@@ -208,26 +152,92 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         }
     }
 
-    public static void addActiveUserWorkouts(AWSDynamoDB database, String user, ActiveWorkout[] workouts) {
+    private UpdateItemOutcome updateDataEntryRaw(String key, Object value) {
+        UpdateItemSpec update = new UpdateItemSpec()
+                .withPrimaryKey("username", username)
+                .withUpdateExpression("set " + key + " = :a")
+                .withValueMap(new ValueMap().withList(":a", value))
+                .withReturnValues(ReturnValue.UPDATED_NEW);
+        return database.cacheTable("exvi-user-data").updateItem(update);
+    }
+
+    private UpdateItemOutcome appendToDataEntryList(String key, Object value) {
+        UpdateItemSpec update = new UpdateItemSpec()
+                .withPrimaryKey("username", username)
+                .withUpdateExpression("set " + key + " = list_append(:a, " + key + ")")
+                .withValueMap(new ValueMap().withList(":a", value))
+                .withReturnValues(ReturnValue.UPDATED_NEW);
+        return database.cacheTable("exvi-user-data").updateItem(update);
+    }
+
+    private void updateActiveUserWorkoutsRaw(List<Map> workoutList) {
+        updateDataEntryRaw("activeWorkouts", workoutList);
+    }
+
+    private void updateUserWorkoutsRaw(List<Map> workoutList) {
+        updateDataEntryRaw("workouts", workoutList);
+    }
+
+    public void updateUserWorkouts(List<Workout> workouts) {
+        updateUserWorkoutsRaw(toMapList(workouts));
+    }
+
+    public void removeUserWorkouts(String[] ids) {
+        ArrayList<Workout> newWorkouts = new ArrayList<>();
+//        for (var workout : userWorkouts()) {
+//            boolean remove = false;
+//            for (var id : ids) {
+//                if (workout.getId().get().equals(id)) {
+//                    remove = true;
+//                    break;
+//                }
+//            }
+//            if (!remove) {
+//                newWorkouts.add(workout);
+//            }
+//        }
+
+        updateUserWorkouts(newWorkouts);
+    }
+
+    public void addActiveUserWorkouts(ActiveWorkout[] workouts) {
         List<Map> toAppend = new ArrayList<>();
         forEachIdentifiable(workouts,
-                (wk, index) -> updateDataEntryRaw(database, user, "activeWorkouts[" + index + "]", toMap(wk)),
+                (wk, index) -> updateDataEntryRaw("activeWorkouts[" + index + "]", toMap(wk)),
                 wk -> toAppend.add(toMap(wk)));
         if (!toAppend.isEmpty()) {
-            appendToDataEntryList(database, user, "activeWorkouts", toAppend);
+            appendToDataEntryList("activeWorkouts", toAppend);
         }
     }
 
-    public static void addUserWorkouts(AWSDynamoDB database,
-                                       String user,
-                                       Workout[] workouts) {
+    public void addUserWorkouts(Workout[] workouts) {
         List<Map> toAppend = new ArrayList<>();
         forEachIdentifiable(workouts,
-                (wk, index) -> updateDataEntryRaw(database, user, "workouts[" + index + "]", toMap(wk)),
+                (wk, index) -> updateDataEntryRaw("workouts[" + index + "]", toMap(wk)),
                 wk -> toAppend.add(toMap(wk)));
         if (!toAppend.isEmpty()) {
-            appendToDataEntryList(database, user, "workouts", toAppend);
+            appendToDataEntryList("workouts", toAppend);
         }
+    }
+
+    public String getUsername() {
+        return this.username;
+    }
+
+    public BodyStats getBodyStats() {
+        return this.bodyStats;
+    }
+
+    public void setBodyStats(BodyStats bodyStats) {
+        this.bodyStats = bodyStats;
+    }
+
+    public Workout[] getWorkouts() {
+        return workouts;
+    }
+
+    public ActiveWorkout[] getActiveWorkouts() {
+        return activeWorkouts;
     }
 
 }
