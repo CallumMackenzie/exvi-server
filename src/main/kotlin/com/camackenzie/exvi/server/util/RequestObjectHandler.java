@@ -55,7 +55,9 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                                      @NotNull Context ctx) throws IOException {
         Gson gson = eson.getGson();
         // Get raw request as string
-        rawRequest = gson.fromJson(bf, EncodedStringCache.class).get();
+        var encoded = gson.fromJson(bf, EncodedStringCache.class);
+        getLogger().log("Encoded request " + encoded.toJson());
+        rawRequest = encoded.get();
         // Log raw request
         ctx.getLogger().log("Raw request: " + rawRequest);
         // Parse request to json
