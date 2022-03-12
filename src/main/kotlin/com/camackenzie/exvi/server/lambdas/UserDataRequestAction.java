@@ -44,6 +44,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 switch (request.getType()) {
                     case ListAllTemplates:
+                        this.getLogger().log(user.getWorkoutsJSON());
                         return new WorkoutListResult(user.getWorkouts());
                     case ListAllActive:
                         return new ActiveWorkoutListResult(user.getActiveWorkouts());

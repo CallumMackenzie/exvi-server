@@ -113,11 +113,11 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return item.getJSON(attr);
     }
 
-    public String getUserWorkoutsJSON() {
+    public String getWorkoutsJSON() {
         return getUserJSON("workouts", "workouts");
     }
 
-    public String getActiveUserWorkoutsJSON() {
+    public String getActiveWorkoutsJSON() {
         return getUserJSON("activeWorkouts", "activeWorkouts");
     }
 
@@ -126,11 +126,11 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public Workout[] getWorkouts() {
-        return workouts = gson.fromJson(getUserWorkoutsJSON(), Workout[].class);
+        return workouts = gson.fromJson(getWorkoutsJSON(), Workout[].class);
     }
 
     public ActiveWorkout[] getActiveWorkouts() {
-        return activeWorkouts = gson.fromJson(getActiveUserWorkoutsJSON(), ActiveWorkout[].class);
+        return activeWorkouts = gson.fromJson(getActiveWorkoutsJSON(), ActiveWorkout[].class);
     }
 
     public BodyStats getBodyStats() {
