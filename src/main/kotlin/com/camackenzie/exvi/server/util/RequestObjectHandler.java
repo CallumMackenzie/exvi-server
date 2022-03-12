@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -98,7 +99,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         } catch (ApiException e) {
             strResponse = new APIResult(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
         } catch (Throwable e) {
-            getLogger().log("Uncaught Exception: " + e);
+            getLogger().log("Uncaught Exception: " + e + " : Stack Trace: " + Arrays.asList(e.getStackTrace()));
             strResponse = new APIResult<>(500, "Internal server error.", APIRequest.jsonHeaders());
         }
 
