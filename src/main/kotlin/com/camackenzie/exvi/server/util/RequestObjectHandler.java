@@ -59,8 +59,9 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         APIResult<String> strResponse;
         try {
             // Get raw request as string
-            String stringRequest = bf.lines().collect(Collectors.joining(""));
-            EncodedStringCache encoded = EncodedStringCache.fromEncoded(stringRequest);
+            String encodedRequest = bf.lines().collect(Collectors.joining(""));
+            ctx.getLogger().log("Encoded request: " + encodedRequest);
+            EncodedStringCache encoded = EncodedStringCache.fromEncoded(encodedRequest);
             rawRequest = encoded.get();
             // Log raw request
             ctx.getLogger().log("Raw request: " + rawRequest);
