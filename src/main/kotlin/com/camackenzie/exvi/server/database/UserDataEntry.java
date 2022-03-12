@@ -27,8 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  * @author callum
@@ -141,6 +139,11 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return this.bodyStats = gson.fromJson(getBodyStatsJSON(), BodyStats.class);
     }
 
+    public void setBodyStats(BodyStats bs) {
+        this.bodyStats = bs;
+        updateDataEntryRaw("bodyStats", toMap(bs));
+    }
+
     private UpdateItemOutcome updateDataEntryRaw(@NotNull String key, Object value) {
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", username)
@@ -237,11 +240,6 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                     return Unit.INSTANCE;
                 });
         if (!toAppend.isEmpty()) appendToDataEntryList("workouts", toAppend);
-    }
-
-    public void setBodyStats(BodyStats bs) {
-        this.bodyStats = bs;
-        updateDataEntryRaw("bodyStats", toMap(bs));
     }
 
 }

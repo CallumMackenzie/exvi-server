@@ -8,10 +8,12 @@ package com.camackenzie.exvi.server.util;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
-import com.camackenzie.exvi.core.api.GenericDataRequest;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.SelfSerializable;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -55,8 +57,8 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                                      @NotNull Context ctx) throws IOException {
         Gson gson = eson.getGson();
         // Get raw request as string
-        var encoded = gson.fromJson(bf, EncodedStringCache.class);
-        getLogger().log("Encoded request " + encoded.toJson());
+        String stringRequest = bf.lines().collect(Collectors.joining(""));
+        EncodedStringCache encoded = EncodedStringCache.fromEncoded(stringRequest);
         rawRequest = encoded.get();
         // Log raw request
         ctx.getLogger().log("Raw request: " + rawRequest);
