@@ -55,6 +55,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         this.bodyStats = bodyStats;
         this.workouts = workouts;
         this.activeWorkouts = activeWorkouts;
+        this.database = database;
     }
 
     private static UserDataEntry defaultData(@NotNull AWSDynamoDB database, @NotNull String username) {
