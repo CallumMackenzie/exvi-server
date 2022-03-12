@@ -68,6 +68,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
 
         APIResult<String> strResponse;
         try {
+            // Parse request from either json or json string format
             IN requestBody = null;
             if (requestBodyObject.isJsonPrimitive()) {
                 if (requestBodyObject.getAsJsonPrimitive().isString()) {
@@ -78,14 +79,18 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                 rawBody = gson.toJson(requestBodyObject);
                 requestBody = gson.fromJson(requestBodyObject, this.inClass);
             }
+            // Ensure a valid request body has been parsed
             if (requestBody == null) {
                 throw new ApiException(400, "Cannot parse request body");
             }
+            // Pass the headers to a new api request object with the proper body format
             HashMap<String, String> headers = gson.fromJson(requestObject.get("headers"), HashMap.class);
             APIRequest<IN> req = new APIRequest("",
                     requestBody,
                     headers);
+            // Call inheriting class for response
             APIResult<OUT> response = this.handleObjectRequest(req, ctx);
+            // Get JSON response
             strResponse = new APIResult<>(response.getStatusCode(),
                     gson.toJson(response.getBody()),
                     response.getHeaders());
@@ -95,9 +100,10 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             strResponse = new APIResult<>(500, "Internal server error.", APIRequest.jsonHeaders());
         }
 
+        // Encode & return
         String finalResponse = gson.toJson(strResponse);
         ctx.getLogger().log("Response: " + finalResponse);
-        pw.write(new EncodedStringCache(finalResponse).toJson());
+        pw.write(new EncodedStringCache(finalResponse).getEncoded());
     }
 
     @NotNull
