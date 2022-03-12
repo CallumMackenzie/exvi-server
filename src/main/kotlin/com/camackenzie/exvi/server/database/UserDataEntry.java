@@ -16,10 +16,12 @@ import com.camackenzie.exvi.core.model.BodyStats;
 import com.camackenzie.exvi.core.model.Workout;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.Identifiable;
+import com.camackenzie.exvi.core.util.RawIdentifiable;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.ApiException;
 import com.google.gson.Gson;
+import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -35,11 +37,13 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
 
     private static final Gson gson = new Gson();
 
-    private final String username;
-    private final Workout[] workouts;
-    private final ActiveWorkout[] activeWorkouts;
+    @NotNull
+    public final String username;
+    private Workout[] workouts;
+    private ActiveWorkout[] activeWorkouts;
     private BodyStats bodyStats;
 
+    @NotNull
     private transient AWSDynamoDB database;
 
     private UserDataEntry(@NotNull AWSDynamoDB database,
@@ -61,33 +65,6 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return new UserDataEntry(database, username, null, null, null);
     }
 
-    public String getUserWorkoutsJSON() {
-        GetItemSpec get = new GetItemSpec()
-                .withPrimaryKey("username", username)
-                .withProjectionExpression("workouts")
-                .withConsistentRead(true);
-        Item item = database.cacheTable("exvi-user-data")
-                .getItem(get);
-        return item.getJSON("workouts");
-    }
-
-    public Workout[] userWorkouts() {
-        return gson.fromJson(getUserWorkoutsJSON(), Workout[].class);
-    }
-
-    public String getActiveUserWorkoutsJSON() {
-        GetItemSpec get = new GetItemSpec()
-                .withPrimaryKey("username", username)
-                .withProjectionExpression("activeWorkouts")
-                .withConsistentRead(true);
-        Item item = database.cacheTable("exvi-user-data").getItem(get);
-        return item.getJSON("activeWorkouts");
-    }
-
-    public ActiveWorkout[] activeWorkouts() {
-        return gson.fromJson(getActiveUserWorkoutsJSON(), ActiveWorkout[].class);
-    }
-
     public static UserDataEntry ensureUserHasData(@NotNull AWSDynamoDB database, @NotNull String user) {
         if (database.getObjectFromTable("exvi-user-login", "username",
                 user, UserLoginEntry.class) == null) {
@@ -107,7 +84,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return ensureUserHasData(database, user.get());
     }
 
-    private static <T extends SelfSerializable> List<Map> toMapList(List<T> l) {
+    private static <T extends SelfSerializable> List<Map> toMapList(@NotNull List<T> l) {
         List<Map> ret = new ArrayList<>();
         for (var li : l) {
             ret.add(toMap(li));
@@ -115,7 +92,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return ret;
     }
 
-    private static <T extends SelfSerializable> List<Map> toMapList(T[] l) {
+    private static <T extends SelfSerializable> List<Map> toMapList(@NotNull T[] l) {
         List<Map> ret = new ArrayList<>();
         for (var li : l) {
             ret.add(toMap(li));
@@ -123,36 +100,48 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return ret;
     }
 
-    private static <T> Map toMap(T in) {
+    private static <T> Map toMap(@NotNull T in) {
         return gson.fromJson(gson.toJson(in), Map.class);
     }
 
-    private static <T extends Identifiable> void forEachIdentifiable(
-            T[] identifiables,
-            BiConsumer<T, Integer> onMatch,
-            Consumer<T> onNotMatched
-    ) {
-        boolean[] workoutIdsMatched = new boolean[identifiables.length];
-        for (var toPut : identifiables) {
-            int matched = -1;
-            for (int i = 0; i < identifiables.length; ++i) {
-                if (!workoutIdsMatched[i]) {
-                    if (toPut.getIdentifier().get().equals(identifiables[i].getIdentifier().get())) {
-                        matched = i;
-                        workoutIdsMatched[i] = true;
-                        break;
-                    }
-                }
-            }
-            if (matched == -1) {
-                onNotMatched.accept(toPut);
-            } else {
-                onMatch.accept(toPut, matched);
-            }
-        }
+    private String getUserJSON(String projectionExpr, String attr) {
+        GetItemSpec get = new GetItemSpec()
+                .withPrimaryKey("username", username)
+                .withProjectionExpression(projectionExpr)
+                .withConsistentRead(true);
+        Item item = database.cacheTable("exvi-user-data")
+                .getItem(get);
+        return item.getJSON(attr);
     }
 
-    private UpdateItemOutcome updateDataEntryRaw(String key, Object value) {
+    public String getUserWorkoutsJSON() {
+        return getUserJSON("workouts", "workouts");
+    }
+
+    public String getActiveUserWorkoutsJSON() {
+        return getUserJSON("activeWorkouts", "activeWorkouts");
+    }
+
+    public String getBodyStatsJSON() {
+        return getUserJSON("bodyStats", "bodyStats");
+    }
+
+    public Workout[] getWorkouts() {
+        if (workouts != null) return workouts;
+        else return workouts = gson.fromJson(getUserWorkoutsJSON(), Workout[].class);
+    }
+
+    public ActiveWorkout[] getActiveWorkouts() {
+        if (activeWorkouts != null) return activeWorkouts;
+        else return activeWorkouts = gson.fromJson(getActiveUserWorkoutsJSON(), ActiveWorkout[].class);
+    }
+
+    public BodyStats getBodyStats() {
+        if (this.bodyStats != null) return this.bodyStats;
+        else return this.bodyStats = gson.fromJson(getBodyStatsJSON(), BodyStats.class);
+    }
+
+    private UpdateItemOutcome updateDataEntryRaw(@NotNull String key, Object value) {
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", username)
                 .withUpdateExpression("set " + key + " = :a")
@@ -161,7 +150,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return database.cacheTable("exvi-user-data").updateItem(update);
     }
 
-    private UpdateItemOutcome appendToDataEntryList(String key, Object value) {
+    private UpdateItemOutcome appendToDataEntryList(@NotNull String key, Object value) {
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", username)
                 .withUpdateExpression("set " + key + " = list_append(:a, " + key + ")")
@@ -170,74 +159,89 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return database.cacheTable("exvi-user-data").updateItem(update);
     }
 
-    private void updateActiveUserWorkoutsRaw(List<Map> workoutList) {
-        updateDataEntryRaw("activeWorkouts", workoutList);
+    private <T> List<T> arrayToList(@NotNull T[] arr) {
+        return new ArrayList<>() {{
+            for (var i : arr) add(i);
+        }};
     }
 
-    private void updateUserWorkoutsRaw(List<Map> workoutList) {
-        updateDataEntryRaw("workouts", workoutList);
+    private void updateActiveUserWorkouts(@NotNull List<ActiveWorkout> workoutList) {
+        updateDataEntryRaw("activeWorkouts", toMapList(workoutList));
     }
 
-    public void updateUserWorkouts(List<Workout> workouts) {
-        updateUserWorkoutsRaw(toMapList(workouts));
+    public void updateUserWorkouts(@NotNull List<Workout> workoutList) {
+        updateDataEntryRaw("workouts", toMapList(workoutList));
     }
 
-    public void removeUserWorkouts(String[] ids) {
+    public void removeUserWorkouts(@NotNull Identifiable[] ids) {
         ArrayList<Workout> newWorkouts = new ArrayList<>();
-//        for (var workout : userWorkouts()) {
-//            boolean remove = false;
-//            for (var id : ids) {
-//                if (workout.getId().get().equals(id)) {
-//                    remove = true;
-//                    break;
-//                }
-//            }
-//            if (!remove) {
-//                newWorkouts.add(workout);
-//            }
-//        }
-
+        Identifiable.checkIntersects(arrayToList(ids),
+                arrayToList(getWorkouts()), (a, ai, b, bi) -> Unit.INSTANCE,
+                (a, ai) -> Unit.INSTANCE,
+                (b, bi) -> {
+                    newWorkouts.add((Workout) b);
+                    return Unit.INSTANCE;
+                });
         updateUserWorkouts(newWorkouts);
     }
 
-    public void addActiveUserWorkouts(ActiveWorkout[] workouts) {
-        List<Map> toAppend = new ArrayList<>();
-        forEachIdentifiable(workouts,
-                (wk, index) -> updateDataEntryRaw("activeWorkouts[" + index + "]", toMap(wk)),
-                wk -> toAppend.add(toMap(wk)));
-        if (!toAppend.isEmpty()) {
-            appendToDataEntryList("activeWorkouts", toAppend);
+    public void removeUserWorkouts(@NotNull EncodedStringCache[] ids) {
+        var identifiables = new Identifiable[ids.length];
+        for (int i = 0; i < identifiables.length; ++i) {
+            identifiables[i] = new RawIdentifiable(ids[i]);
         }
+        removeUserWorkouts(identifiables);
     }
 
-    public void addUserWorkouts(Workout[] workouts) {
-        List<Map> toAppend = new ArrayList<>();
-        forEachIdentifiable(workouts,
-                (wk, index) -> updateDataEntryRaw("workouts[" + index + "]", toMap(wk)),
-                wk -> toAppend.add(toMap(wk)));
-        if (!toAppend.isEmpty()) {
-            appendToDataEntryList("workouts", toAppend);
+    public void removeActiveUserWorkouts(@NotNull Identifiable[] ids) {
+        ArrayList<ActiveWorkout> newWorkouts = new ArrayList<>();
+        Identifiable.checkIntersects(arrayToList(ids),
+                arrayToList(getActiveWorkouts()), (a, ai, b, bi) -> Unit.INSTANCE,
+                (a, ai) -> Unit.INSTANCE,
+                (b, bi) -> {
+                    newWorkouts.add((ActiveWorkout) b);
+                    return Unit.INSTANCE;
+                });
+        updateActiveUserWorkouts(newWorkouts);
+    }
+
+    public void removeActiveUserWorkouts(@NotNull EncodedStringCache[] ids) {
+        var idnts = new Identifiable[ids.length];
+        for (int i = 0; i < idnts.length; ++i) {
+            idnts[i] = new RawIdentifiable(ids[i]);
         }
+        removeActiveUserWorkouts(idnts);
     }
 
-    public String getUsername() {
-        return this.username;
+    public void addActiveUserWorkouts(@NotNull ActiveWorkout[] workouts) {
+        List<Map> toAppend = new ArrayList<>();
+        Identifiable.checkIntersects(arrayToList(workouts), arrayToList(getActiveWorkouts()),
+                (addedWk, addedIndex, userWk, userIndex) -> {
+                    updateDataEntryRaw("activeWorkouts[" + userIndex + "]", toMap(userWk));
+                    return Unit.INSTANCE;
+                }, (addedWorkout, index) -> {
+                    toAppend.add(toMap(addedWorkout));
+                    return Unit.INSTANCE;
+                });
+        if (!toAppend.isEmpty()) appendToDataEntryList("activeWorkouts", toAppend);
     }
 
-    public BodyStats getBodyStats() {
-        return this.bodyStats;
+    public void addUserWorkouts(@NotNull Workout[] workouts) {
+        List<Map> toAppend = new ArrayList<>();
+        Identifiable.checkIntersects(arrayToList(workouts), arrayToList(getWorkouts()),
+                (addedWk, addedIndex, userWk, userIndex) -> {
+                    updateDataEntryRaw("workouts[" + userIndex + "]", toMap(userWk));
+                    return Unit.INSTANCE;
+                }, (addedWorkout, index) -> {
+                    toAppend.add(toMap(addedWorkout));
+                    return Unit.INSTANCE;
+                });
+        if (!toAppend.isEmpty()) appendToDataEntryList("workouts", toAppend);
     }
 
-    public void setBodyStats(BodyStats bodyStats) {
-        this.bodyStats = bodyStats;
-    }
-
-    public Workout[] getWorkouts() {
-        return workouts;
-    }
-
-    public ActiveWorkout[] getActiveWorkouts() {
-        return activeWorkouts;
+    public void setBodyStats(BodyStats bs) {
+        this.bodyStats = bs;
+        updateDataEntryRaw("bodyStats", toMap(bs));
     }
 
 }

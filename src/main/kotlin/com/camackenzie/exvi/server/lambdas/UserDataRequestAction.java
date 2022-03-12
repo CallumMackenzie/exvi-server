@@ -40,31 +40,49 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
 
         switch (in.getRequester().get()) {
             case WorkoutListRequest.uid: {
-                WorkoutListRequest request = this.getRequestBodyAs(WorkoutListRequest.class);
-                ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+                var request = this.getRequestBodyAs(WorkoutListRequest.class);
+                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 switch (request.getType()) {
                     case ListAllTemplates:
-                        return this.getWorkoutList(database, request);
+                        return new WorkoutListResult(user.getWorkouts());
                     case ListAllActive:
-                        return this.getActiveWorkoutList(database, request);
+                        return new ActiveWorkoutListResult(user.getActiveWorkouts());
                 }
             }
             case WorkoutPutRequest.uid: {
-                WorkoutPutRequest request = this.getRequestBodyAs(WorkoutPutRequest.class);
-                ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                putWorkouts(database, request);
+                var request = this.getRequestBodyAs(WorkoutPutRequest.class);
+                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+                user.addUserWorkouts(request.getWorkouts());
                 return NoneResult.INSTANCE;
             }
             case ActiveWorkoutPutRequest.uid: {
-                ActiveWorkoutPutRequest request = this.getRequestBodyAs(ActiveWorkoutPutRequest.class);
-                ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                putActiveWorkouts(database, request);
+                var request = this.getRequestBodyAs(ActiveWorkoutPutRequest.class);
+                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+                user.addActiveUserWorkouts(request.getWorkouts());
                 return NoneResult.INSTANCE;
             }
             case DeleteWorkoutsRequest.uid: {
-                DeleteWorkoutsRequest request = this.getRequestBodyAs(DeleteWorkoutsRequest.class);
-                ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                deleteWorkouts(database, request);
+                var request = this.getRequestBodyAs(DeleteWorkoutsRequest.class);
+                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+                switch (request.getWorkoutType()) {
+                    case Workout:
+                        user.removeUserWorkouts(request.getWorkoutIds());
+                        break;
+                    case ActiveWorkout:
+                        user.removeActiveUserWorkouts(request.getWorkoutIds());
+                        break;
+                }
+                return NoneResult.INSTANCE;
+            }
+            case GetBodyStatsRequest.uid: {
+                var request = this.getRequestBodyAs(GetBodyStatsRequest.class);
+                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+                return new GetBodyStatsResponse(user.getBodyStats());
+            }
+            case SetBodyStatsRequest.uid: {
+                var request = this.getRequestBodyAs(SetBodyStatsRequest.class);
+                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+                user.setBodyStats(request.getBodyStats());
                 return NoneResult.INSTANCE;
             }
             default:
@@ -72,43 +90,10 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         }
     }
 
-    private void ensureUserValidity(AWSDynamoDB database,
-                                    EncodedStringCache username,
-                                    EncodedStringCache accessKey) {
+    private UserDataEntry ensureUserValidity(AWSDynamoDB database,
+                                             EncodedStringCache username,
+                                             EncodedStringCache accessKey) {
         UserLoginEntry.ensureAccessKeyValid(database, username, accessKey);
-        UserDataEntry.ensureUserHasData(database, username);
-    }
-
-    private void deleteWorkouts(AWSDynamoDB database, DeleteWorkoutsRequest request) {
-        UserDataEntry.removeUserWorkouts(database, request.getUsername().get(),
-                Arrays.stream(request.getWorkoutIds()).map(i -> i.get()).toArray(sz -> new String[sz])
-        );
-    }
-
-    private void putWorkouts(AWSDynamoDB database,
-                             WorkoutPutRequest in) {
-        UserDataEntry.addUserWorkouts(database,
-                in.getUsername().get(),
-                in.getWorkouts());
-    }
-
-    private void putActiveWorkouts(AWSDynamoDB database, ActiveWorkoutPutRequest in) {
-        UserDataEntry.addActiveUserWorkouts(database,
-                in.getUsername().get(),
-                in.getWorkouts());
-    }
-
-    private ActiveWorkoutListResult getActiveWorkoutList(AWSDynamoDB database, WorkoutListRequest in) {
-        ActiveWorkout[] workouts = UserDataEntry.activeUserWorkouts(database, in.getUsername().get());
-        if (workouts == null) throw new RuntimeException("User does not have active workout data");
-        this.getLogger().log("Returning " + workouts.length + " active workouts");
-        return new ActiveWorkoutListResult(workouts);
-    }
-
-    private WorkoutListResult getWorkoutList(AWSDynamoDB database, WorkoutListRequest in) {
-        Workout[] workouts = UserDataEntry.userWorkouts(database, in.getUsername().get());
-        if (workouts == null) throw new RuntimeException("User does not have workout data.");
-        this.getLogger().log("Returning " + workouts.length + " workouts");
-        return new WorkoutListResult(workouts);
+        return UserDataEntry.ensureUserHasData(database, username);
     }
 }
