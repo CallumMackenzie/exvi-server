@@ -58,15 +58,18 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         this.database = database;
     }
 
+    @NotNull
     private static UserDataEntry defaultData(@NotNull AWSDynamoDB database, @NotNull String username) {
         return new UserDataEntry(database, username, new Workout[0], new ActiveWorkout[0], BodyStats.average());
     }
 
+    @NotNull
     private static UserDataEntry registeredUser(@NotNull AWSDynamoDB database, @NotNull String username) {
         return new UserDataEntry(database, username, null, null, null);
     }
 
-    public static UserDataEntry ensureUserHasData(@NotNull AWSDynamoDB database, @NotNull String user) {
+    @NotNull
+    public static UserDataEntry ensureUserHasData(@NotNull AWSDynamoDB database, @NotNull String user) throws ApiException {
         if (database.getObjectFromTable("exvi-user-login", "username",
                 user, UserLoginEntry.class) == null) {
             throw new ApiException(400, "User does not have an account");
@@ -81,10 +84,12 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         }
     }
 
+    @NotNull
     public static UserDataEntry ensureUserHasData(@NotNull AWSDynamoDB database, @NotNull EncodedStringCache user) {
         return ensureUserHasData(database, user.get());
     }
 
+    @NotNull
     private static <T extends SelfSerializable> List<Map> toMapList(@NotNull List<T> l) {
         List<Map> ret = new ArrayList<>();
         for (var li : l) {
@@ -93,19 +98,12 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return ret;
     }
 
-    private static <T extends SelfSerializable> List<Map> toMapList(@NotNull T[] l) {
-        List<Map> ret = new ArrayList<>();
-        for (var li : l) {
-            ret.add(toMap(li));
-        }
-        return ret;
-    }
-
+    @NotNull
     private static <T> Map toMap(@NotNull T in) {
         return gson.fromJson(gson.toJson(in), Map.class);
     }
 
-    private String getUserJSON(String projectionExpr, String attr) {
+    private String getUserJSON(@NotNull String projectionExpr, @NotNull String attr) {
         GetItemSpec get = new GetItemSpec()
                 .withPrimaryKey("username", username)
                 .withProjectionExpression(projectionExpr)
@@ -128,18 +126,15 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public Workout[] getWorkouts() {
-        if (workouts != null) return workouts;
-        else return workouts = gson.fromJson(getUserWorkoutsJSON(), Workout[].class);
+        return workouts = gson.fromJson(getUserWorkoutsJSON(), Workout[].class);
     }
 
     public ActiveWorkout[] getActiveWorkouts() {
-        if (activeWorkouts != null) return activeWorkouts;
-        else return activeWorkouts = gson.fromJson(getActiveUserWorkoutsJSON(), ActiveWorkout[].class);
+        return activeWorkouts = gson.fromJson(getActiveUserWorkoutsJSON(), ActiveWorkout[].class);
     }
 
     public BodyStats getBodyStats() {
-        if (this.bodyStats != null) return this.bodyStats;
-        else return this.bodyStats = gson.fromJson(getBodyStatsJSON(), BodyStats.class);
+        return this.bodyStats = gson.fromJson(getBodyStatsJSON(), BodyStats.class);
     }
 
     private UpdateItemOutcome updateDataEntryRaw(@NotNull String key, Object value) {
