@@ -56,18 +56,18 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                                      @NotNull PrintWriter pw,
                                      @NotNull Context ctx) throws IOException {
         Gson gson = eson.getGson();
-        // Get raw request as string
-        String stringRequest = bf.lines().collect(Collectors.joining(""));
-        EncodedStringCache encoded = EncodedStringCache.fromEncoded(stringRequest);
-        rawRequest = encoded.get();
-        // Log raw request
-        ctx.getLogger().log("Raw request: " + rawRequest);
-        // Parse request to json
-        JsonObject requestObject = JsonParser.parseString(rawRequest).getAsJsonObject();
-        JsonElement requestBodyObject = requestObject.get("body");
-
         APIResult<String> strResponse;
         try {
+            // Get raw request as string
+            String stringRequest = bf.lines().collect(Collectors.joining(""));
+            EncodedStringCache encoded = EncodedStringCache.fromEncoded(stringRequest);
+            rawRequest = encoded.get();
+            // Log raw request
+            ctx.getLogger().log("Raw request: " + rawRequest);
+            // Parse request to json
+            JsonObject requestObject = JsonParser.parseString(rawRequest).getAsJsonObject();
+            JsonElement requestBodyObject = requestObject.get("body");
+
             // Parse request from either json or json string format
             IN requestBody = null;
             if (requestBodyObject.isJsonPrimitive()) {
@@ -97,6 +97,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         } catch (ApiException e) {
             strResponse = new APIResult(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
         } catch (Throwable e) {
+            getLogger().log("Uncaught Exception: " + e);
             strResponse = new APIResult<>(500, "Internal server error.", APIRequest.jsonHeaders());
         }
 
