@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
 import com.camackenzie.exvi.core.api.GenericDataRequest;
+import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.google.gson.*;
 
@@ -57,42 +58,38 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         JsonObject requestObject = JsonParser.parseString(rawRequest).getAsJsonObject();
         JsonElement requestBodyObject = requestObject.get("body");
 
-        IN requestBody = null;
-        if (requestBodyObject.isJsonPrimitive()) {
-            if (requestBodyObject.getAsJsonPrimitive().isString()) {
-                rawBody = requestBodyObject.getAsString();
-                requestBody = gson.fromJson(rawBody, this.inClass);
-            }
-        } else if (requestBodyObject.isJsonObject()) {
-            rawBody = gson.toJson(requestBodyObject);
-            requestBody = gson.fromJson(requestBodyObject, this.inClass);
-        }
-        if (requestBody == null) {
-            pw.write(gson.toJson(new APIResult(400, "Cannot parse request body",
-                    new HashMap<>())));
-            return;
-        }
-
-        HashMap<String, String> headers = gson.fromJson(requestObject.get("headers"), HashMap.class);
-        APIRequest<IN> req = new APIRequest("",
-                requestBody,
-                headers);
-
         APIResult<String> strResponse;
         try {
+            IN requestBody = null;
+            if (requestBodyObject.isJsonPrimitive()) {
+                if (requestBodyObject.getAsJsonPrimitive().isString()) {
+                    rawBody = requestBodyObject.getAsString();
+                    requestBody = gson.fromJson(rawBody, this.inClass);
+                }
+            } else if (requestBodyObject.isJsonObject()) {
+                rawBody = gson.toJson(requestBodyObject);
+                requestBody = gson.fromJson(requestBodyObject, this.inClass);
+            }
+            if (requestBody == null) {
+                throw new ApiException(400, "Cannot parse request body");
+            }
+            HashMap<String, String> headers = gson.fromJson(requestObject.get("headers"), HashMap.class);
+            APIRequest<IN> req = new APIRequest("",
+                    requestBody,
+                    headers);
             APIResult<OUT> response = this.handleObjectRequest(req, ctx);
             strResponse = new APIResult<>(response.getStatusCode(),
                     gson.toJson(response.getBody()),
                     response.getHeaders());
         } catch (ApiException e) {
-            strResponse = new APIResult<String>(e.getCode(),
-                    e.getMessage(),
-                    APIRequest.jsonHeaders());
+            strResponse = new APIResult(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
+        } catch (Throwable e) {
+            strResponse = new APIResult<>(500, "Internal server error.", APIRequest.jsonHeaders());
         }
 
         String finalResponse = gson.toJson(strResponse);
         ctx.getLogger().log("Response: " + finalResponse);
-        pw.write(finalResponse);
+        pw.write(new EncodedStringCache(finalResponse).toJson());
     }
 
     public abstract APIResult<OUT> handleObjectRequest(APIRequest<IN> in, Context context);

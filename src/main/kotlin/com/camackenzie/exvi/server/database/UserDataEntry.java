@@ -103,6 +103,10 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return gson.fromJson(gson.toJson(in), Map.class);
     }
 
+    private String getUserJSON(@NotNull String attr) {
+        return getUserJSON(attr, attr);
+    }
+
     private String getUserJSON(@NotNull String projectionExpr, @NotNull String attr) {
         GetItemSpec get = new GetItemSpec()
                 .withPrimaryKey("username", username)
@@ -114,15 +118,15 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public String getWorkoutsJSON() {
-        return getUserJSON("workouts", "workouts");
+        return getUserJSON("workouts");
     }
 
     public String getActiveWorkoutsJSON() {
-        return getUserJSON("activeWorkouts", "activeWorkouts");
+        return getUserJSON("activeWorkouts");
     }
 
     public String getBodyStatsJSON() {
-        return getUserJSON("bodyStats", "bodyStats");
+        return getUserJSON("bodyStats");
     }
 
     public Workout[] getWorkouts() {
