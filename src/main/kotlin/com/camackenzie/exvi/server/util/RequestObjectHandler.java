@@ -12,6 +12,7 @@ import com.camackenzie.exvi.core.api.GenericDataRequest;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.google.gson.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,11 +26,13 @@ import java.util.stream.Collectors;
 public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT extends SelfSerializable>
         extends RequestStreamHandlerWrapper {
 
+    @NotNull
     private final Class<IN> inClass;
+    @NotNull
     private final Eson eson;
     private String rawRequest, rawBody;
 
-    public RequestObjectHandler(Class<IN> inClass) {
+    public RequestObjectHandler(@NotNull Class<IN> inClass) {
         this.inClass = inClass;
         this.eson = new Eson();
     }
@@ -42,16 +45,17 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         return rawBody;
     }
 
-    public final <Z> Z getRequestBodyAs(Class<Z> cls) {
+    public final <Z> Z getRequestBodyAs(@NotNull Class<Z> cls) {
         return this.getGson().fromJson(this.getRawRequestBody(), cls);
     }
 
     @Override
-    public void handleRequestWrapped(BufferedReader bf, PrintWriter pw, Context ctx)
-            throws IOException {
+    public void handleRequestWrapped(@NotNull BufferedReader bf,
+                                     @NotNull PrintWriter pw,
+                                     @NotNull Context ctx) throws IOException {
         Gson gson = eson.getGson();
         // Get raw request as string
-        rawRequest = bf.lines().collect(Collectors.joining(""));
+        rawRequest = gson.fromJson(bf, EncodedStringCache.class).get();
         // Log raw request
         ctx.getLogger().log("Raw request: " + rawRequest);
         // Parse request to json
@@ -92,8 +96,10 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         pw.write(new EncodedStringCache(finalResponse).toJson());
     }
 
-    public abstract APIResult<OUT> handleObjectRequest(APIRequest<IN> in, Context context);
+    @NotNull
+    public abstract APIResult<OUT> handleObjectRequest(@NotNull APIRequest<IN> in, @NotNull Context context);
 
+    @NotNull
     public final Gson getGson() {
         return this.eson.getGson();
     }

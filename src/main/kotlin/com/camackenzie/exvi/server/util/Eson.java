@@ -7,6 +7,7 @@ import com.google.gson.*;
 
 public class Eson {
 
+    @NotNull
     private final Gson gson,
             defaultGson = new Gson();
 
@@ -16,11 +17,12 @@ public class Eson {
         this.gson = builder.create();
     }
 
+    @NotNull
     public Gson getGson() {
         return this.gson;
     }
 
-    private void registerGenericDataRequest(GsonBuilder builder) {
+    private void registerGenericDataRequest(@NotNull GsonBuilder builder) {
         builder.registerTypeAdapter(GenericDataRequest.class,
                 (InstanceCreator) type -> new GenericDataRequest("GenericDataRequest") {
                     @NotNull

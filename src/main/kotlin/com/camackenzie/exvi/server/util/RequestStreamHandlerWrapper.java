@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import kotlin.text.Charsets;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -27,7 +28,9 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
     private LambdaLogger logger;
 
     @Override
-    public final void handleRequest(InputStream is, OutputStream os, Context ctx) throws IOException {
+    public final void handleRequest(@NotNull InputStream is,
+                                    @NotNull OutputStream os,
+                                    @NotNull Context ctx) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charsets.UTF_8));
         PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, Charsets.UTF_8)));
         this.logger = ctx.getLogger();
@@ -41,10 +44,12 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
         writer.close();
     }
 
+    @NotNull
     public final LambdaLogger getLogger() {
         return this.logger;
     }
 
+    @NotNull
     public abstract void handleRequestWrapped(BufferedReader bf, PrintWriter pw, Context ctx) throws IOException;
 
 }

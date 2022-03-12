@@ -5,11 +5,15 @@
  */
 package com.camackenzie.exvi.server.util;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
- *
  * @author callum
  */
 public interface EmailClient {
-
-    public void sendEmail(String sender, String recipient, String subject, String htmlBody, String plainTextBody);
+    void sendEmail(@NotNull String sender,
+                   @NotNull String recipient,
+                   @NotNull String subject,
+                   @NotNull String htmlBody,
+                   @NotNull String plainTextBody);
 }

@@ -5,11 +5,12 @@
  */
 package com.camackenzie.exvi.server.util;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
- *
  * @author callum
  */
 public interface SMSClient {
 
-    public void sendText(String recipient, String message);
+    void sendText(@NotNull String recipient, @NotNull String message);
 }
