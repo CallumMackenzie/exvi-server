@@ -56,13 +56,13 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
             case WorkoutPutRequest.uid: {
                 var request = this.getRequestBodyAs(WorkoutPutRequest.class);
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                user.addUserWorkouts(request.getWorkouts());
+                user.addWorkouts(request.getWorkouts());
                 return NoneResult.INSTANCE;
             }
             case ActiveWorkoutPutRequest.uid: {
                 var request = this.getRequestBodyAs(ActiveWorkoutPutRequest.class);
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                user.addActiveUserWorkouts(request.getWorkouts());
+                user.addActiveWorkouts(request.getWorkouts());
                 return NoneResult.INSTANCE;
             }
             case DeleteWorkoutsRequest.uid: {
@@ -70,10 +70,10 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 switch (request.getWorkoutType()) {
                     case Workout:
-                        user.removeUserWorkouts(request.getWorkoutIds());
+                        user.removeWorkouts(request.getWorkoutIds());
                         break;
                     case ActiveWorkout:
-                        user.removeActiveUserWorkouts(request.getWorkoutIds());
+                        user.removeActiveWorkouts(request.getWorkoutIds());
                         break;
                 }
                 return NoneResult.INSTANCE;
@@ -99,6 +99,6 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                                              @NotNull EncodedStringCache username,
                                              @NotNull EncodedStringCache accessKey) {
         UserLoginEntry.ensureAccessKeyValid(database, username, accessKey);
-        return UserDataEntry.ensureUserHasData(database, username);
+        return UserDataEntry.ensureUserHasData(database, getLogger(), username);
     }
 }

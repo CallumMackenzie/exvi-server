@@ -84,7 +84,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
                 passwordHash,
                 salt
         ));
-        UserDataEntry.ensureUserHasData(database, ac.getUsername().get());
+        UserDataEntry.ensureUserHasData(database, getLogger(), ac.getUsername().get());
     }
 
     private boolean verificationCodeValid(@NotNull String inputCode, @NotNull String actualCode, long creation) {
