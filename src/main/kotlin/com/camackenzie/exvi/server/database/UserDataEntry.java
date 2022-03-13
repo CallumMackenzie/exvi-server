@@ -129,7 +129,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public Workout[] getWorkouts() {
-        return workouts = gson.fromJson(getWorkoutsJSON(), Workout[][].class)[0];
+        return workouts = gson.fromJson(getWorkoutsJSON(), Workout[].class);
     }
 
     public ActiveWorkout[] getActiveWorkouts() {
@@ -181,7 +181,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
 
     public void removeUserWorkouts(@NotNull Identifiable[] ids) {
         ArrayList<Workout> newWorkouts = new ArrayList<>();
-        Identifiable.checkIntersects(arrayToList(ids),
+        Identifiable.intersectIndexed(arrayToList(ids),
                 arrayToList(getWorkouts()), (a, ai, b, bi) -> Unit.INSTANCE,
                 (a, ai) -> Unit.INSTANCE,
                 (b, bi) -> {
@@ -201,7 +201,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
 
     public void removeActiveUserWorkouts(@NotNull Identifiable[] ids) {
         ArrayList<ActiveWorkout> newWorkouts = new ArrayList<>();
-        Identifiable.checkIntersects(arrayToList(ids),
+        Identifiable.intersectIndexed(arrayToList(ids),
                 arrayToList(getActiveWorkouts()), (a, ai, b, bi) -> Unit.INSTANCE,
                 (a, ai) -> Unit.INSTANCE,
                 (b, bi) -> {
@@ -220,29 +220,29 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public void addActiveUserWorkouts(@NotNull ActiveWorkout[] workouts) {
-        List<Map<?, ?>> toAppend = new ArrayList<>();
-        Identifiable.checkIntersects(arrayToList(workouts), arrayToList(getActiveWorkouts()),
+        List<ActiveWorkout> toAppend = new ArrayList<>();
+        Identifiable.intersectIndexed(arrayToList(workouts), arrayToList(getActiveWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
                     updateDataEntryRaw("activeWorkouts[" + userIndex + "]", toMap(userWk));
                     return Unit.INSTANCE;
                 }, (addedWorkout, index) -> {
-                    toAppend.add(toMap(addedWorkout));
+                    toAppend.add((ActiveWorkout) addedWorkout);
                     return Unit.INSTANCE;
                 });
-        if (!toAppend.isEmpty()) appendToDataEntryList("activeWorkouts", toAppend);
+        if (!toAppend.isEmpty()) appendToDataEntryList("activeWorkouts", toMapList(toAppend));
     }
 
     public void addUserWorkouts(@NotNull Workout[] workouts) {
-        List<Map<?, ?>> toAppend = new ArrayList<>();
-        Identifiable.checkIntersects(arrayToList(workouts), arrayToList(getWorkouts()),
+        List<Workout> toAppend = new ArrayList<>();
+        Identifiable.intersectIndexed(arrayToList(workouts), arrayToList(getWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
                     updateDataEntryRaw("workouts[" + userIndex + "]", toMap(userWk));
                     return Unit.INSTANCE;
                 }, (addedWorkout, index) -> {
-                    toAppend.add(toMap(addedWorkout));
+                    toAppend.add((Workout) addedWorkout);
                     return Unit.INSTANCE;
                 });
-        if (!toAppend.isEmpty()) appendToDataEntryList("workouts", toAppend);
+        if (!toAppend.isEmpty()) appendToDataEntryList("workouts", toMapList(toAppend));
     }
 
 }
