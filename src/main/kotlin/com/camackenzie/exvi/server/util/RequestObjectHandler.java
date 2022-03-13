@@ -60,26 +60,20 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         APIResult<String> strResponse;
         try {
             // Get raw request as string
-            String encodedRequest = bf.lines().collect(Collectors.joining(""));
-            ctx.getLogger().log("Encoded request: " + encodedRequest);
-            EncodedStringCache encoded = EncodedStringCache.fromEncoded(encodedRequest);
-            rawRequest = encoded.get();
+            rawRequest = bf.lines().collect(Collectors.joining(""));
             // Log raw request
             ctx.getLogger().log("Raw request: " + rawRequest);
             // Parse request to json
             JsonObject requestObject = JsonParser.parseString(rawRequest).getAsJsonObject();
             JsonElement requestBodyObject = requestObject.get("body");
 
-            // Parse request from either json or json string format
+            // Parse request
             IN requestBody = null;
             if (requestBodyObject.isJsonPrimitive()) {
                 if (requestBodyObject.getAsJsonPrimitive().isString()) {
-                    rawBody = requestBodyObject.getAsString();
+                    rawBody = EncodedStringCache.fromEncoded(requestBodyObject.getAsString()).get();
                     requestBody = gson.fromJson(rawBody, this.inClass);
                 }
-            } else if (requestBodyObject.isJsonObject()) {
-                rawBody = gson.toJson(requestBodyObject);
-                requestBody = gson.fromJson(requestBodyObject, this.inClass);
             }
             // Ensure a valid request body has been parsed
             if (requestBody == null) {
