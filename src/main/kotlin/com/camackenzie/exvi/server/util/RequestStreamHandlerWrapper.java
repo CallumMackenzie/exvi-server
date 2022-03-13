@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 /**
  * @author callum
  */
+@SuppressWarnings("unused")
 public abstract class RequestStreamHandlerWrapper implements RequestStreamHandler {
 
     private LambdaLogger logger;

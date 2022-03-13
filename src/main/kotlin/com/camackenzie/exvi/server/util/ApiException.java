@@ -2,7 +2,6 @@ package com.camackenzie.exvi.server.util;
 
 import org.jetbrains.annotations.NotNull;
 
-// This class should be called RequestException, but for some reason IntelliJ doesn't like that name...
 public class ApiException extends RuntimeException {
 
     private final int code;

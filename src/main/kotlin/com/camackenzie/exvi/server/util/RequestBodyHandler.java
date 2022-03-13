@@ -16,6 +16,7 @@ import java.util.HashMap;
 /**
  * @author callum
  */
+@SuppressWarnings("unused")
 public abstract class RequestBodyHandler<IN extends SelfSerializable, OUT extends SelfSerializable>
         extends RequestObjectHandler<IN, OUT> {
 
@@ -27,7 +28,7 @@ public abstract class RequestBodyHandler<IN extends SelfSerializable, OUT extend
     @NotNull
     public APIResult<OUT> handleObjectRequest(@NotNull APIRequest<IN> in, @NotNull Context context) {
         OUT out = this.handleBodyRequest(in.getBody(), context);
-        return new APIResult<OUT>(200,
+        return new APIResult<>(200,
                 out,
                 APIRequest.jsonHeaders());
     }

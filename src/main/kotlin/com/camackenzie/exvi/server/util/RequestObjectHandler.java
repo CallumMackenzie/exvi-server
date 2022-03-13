@@ -18,7 +18,6 @@ import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,6 +26,7 @@ import java.util.stream.Collectors;
 /**
  * @author callum
  */
+@SuppressWarnings("unused")
 public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT extends SelfSerializable>
         extends RequestStreamHandlerWrapper {
 
@@ -56,7 +56,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
     @Override
     public void handleRequestWrapped(@NotNull BufferedReader bf,
                                      @NotNull PrintWriter pw,
-                                     @NotNull Context ctx) throws IOException {
+                                     @NotNull Context ctx) {
         Gson gson = eson.getGson();
         APIResult<String> strResponse;
         try {
@@ -80,8 +80,8 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                 throw new ApiException(400, "Cannot parse request body");
             }
             // Pass the headers to a new api request object with the proper body format
-            HashMap<String, String> headers = gson.fromJson(requestObject.get("headers"), HashMap.class);
-            APIRequest<IN> req = new APIRequest("",
+            HashMap headers = gson.fromJson(requestObject.get("headers"), HashMap.class);
+            APIRequest<IN> req = new APIRequest<>("",
                     requestBody,
                     headers);
             // Call inheriting class for response
@@ -91,11 +91,11 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                     gson.toJson(response.getBody()),
                     response.getHeaders());
         } catch (ApiException e) {
-            strResponse = new APIResult(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
+            strResponse = new APIResult<>(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
         } catch (Throwable e) {
             getLogger().log("Uncaught Exception: " + e
                     + "\nStack Trace: \n\t"
-                    + Arrays.stream(e.getStackTrace()).map(el -> el.toString()).collect(Collectors.joining("\n\t")));
+                    + Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining("\n\t")));
             strResponse = new APIResult<>(500, "Internal server error.", APIRequest.jsonHeaders());
         }
 

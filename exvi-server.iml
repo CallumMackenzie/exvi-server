@@ -40,7 +40,7 @@
     <orderEntry type="library" name="Maven: org.jetbrains:annotations:13.0" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.6.10" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.10" level="project" />
-    <orderEntry type="library" name="Maven: com.github.CallumMackenzie.exvi-core:exvi-core-jvm:d75cfb02596e196b1dc416e41badc73dc75da8d7" level="project" />
+    <orderEntry type="library" name="Maven: com.github.CallumMackenzie.exvi-core:exvi-core-jvm:3932c18239f9245cc1429ccab73dcfa3afdf62a5" level="project" />
     <orderEntry type="library" name="Maven: io.ktor:ktor-client-java:1.6.7" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.5.2-native-mt" level="project" />
     <orderEntry type="library" name="Maven: com.soywiz.korlibs.krypto:krypto-jvm:2.2.0" level="project" />

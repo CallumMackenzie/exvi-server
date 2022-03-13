@@ -41,6 +41,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         AWSDynamoDB database = new AWSDynamoDB();
         this.getLogger().log("Requester: " + in.getRequester().get());
 
+        // Determine behaviour based on request
         switch (in.getRequester().get()) {
             case WorkoutListRequest.uid: {
                 var request = this.getRequestBodyAs(WorkoutListRequest.class);
