@@ -62,8 +62,6 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         try {
             // Get raw request as string
             rawRequest = bf.lines().collect(Collectors.joining(""));
-            // Log raw request
-            ctx.getLogger().log("Raw request: " + rawRequest);
             // Parse request to json
             JsonObject requestObject = JsonParser.parseString(rawRequest).getAsJsonObject();
             JsonElement requestBodyObject = requestObject.get("body");
@@ -76,6 +74,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                     requestBody = gson.fromJson(rawBody, this.inClass);
                 }
             }
+            getLogger().log("Decoded request body: " + rawBody);
             // Ensure a valid request body has been parsed
             if (requestBody == null) {
                 throw new ApiException(400, "Cannot parse request body");
@@ -101,9 +100,9 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         }
 
         // Encode & return
+        getLogger().log("Response: " + strResponse.getBody());
         strResponse.setBody(CryptographyUtils.encodeString(strResponse.getBody()));
         String finalResponse = gson.toJson(strResponse);
-        ctx.getLogger().log("Response: " + finalResponse);
         pw.write(finalResponse);
     }
 
