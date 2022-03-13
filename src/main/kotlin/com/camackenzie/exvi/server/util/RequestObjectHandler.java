@@ -8,6 +8,7 @@ package com.camackenzie.exvi.server.util;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
+import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.google.gson.Gson;
@@ -100,9 +101,10 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         }
 
         // Encode & return
+        strResponse.setBody(CryptographyUtils.encodeString(strResponse.getBody()));
         String finalResponse = gson.toJson(strResponse);
         ctx.getLogger().log("Response: " + finalResponse);
-        pw.write(new EncodedStringCache(finalResponse).getEncoded());
+        pw.write(finalResponse);
     }
 
     @NotNull
