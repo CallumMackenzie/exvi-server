@@ -129,7 +129,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public Workout[] getWorkouts() {
-        return workouts = gson.fromJson(getWorkoutsJSON(), Workout[].class);
+        return workouts = gson.fromJson(getWorkoutsJSON(), Workout[][].class)[0];
     }
 
     public ActiveWorkout[] getActiveWorkouts() {
@@ -153,7 +153,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                 .withReturnValues(ReturnValue.UPDATED_NEW);
         database.cacheTable("exvi-user-data").updateItem(update);
     }
-    
+
     private void appendToDataEntryList(@NotNull String key, Object value) {
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", username)
