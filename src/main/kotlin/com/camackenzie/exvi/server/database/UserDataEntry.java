@@ -135,7 +135,6 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                 .withValueMap(new ValueMap().withList(":a", value))
                 .withReturnValues(ReturnValue.UPDATED_NEW);
         var result = database.cacheTable("exvi-user-data").updateItem(update);
-        logger.log("APPEND RESULT: " + result.getUpdateItemResult().toString());
     }
 
     /////////////////////////
