@@ -100,8 +100,8 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             strResponse = new APIResult(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
         } catch (Throwable e) {
             getLogger().log("Uncaught Exception: " + e
-                    + " : Stack Trace: "
-                    + Arrays.stream(e.getStackTrace()).map(el -> el.toString()).collect(Collectors.joining("\n")));
+                    + "\nStack Trace: \n\t"
+                    + Arrays.stream(e.getStackTrace()).map(el -> el.toString()).collect(Collectors.joining("\n\t")));
             strResponse = new APIResult<>(500, "Internal server error.", APIRequest.jsonHeaders());
         }
 
