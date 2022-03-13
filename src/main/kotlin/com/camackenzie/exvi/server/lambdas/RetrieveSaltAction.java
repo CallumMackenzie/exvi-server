@@ -14,12 +14,14 @@ import com.camackenzie.exvi.core.api.RetrieveSaltRequest;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.ApiException;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.StandardCharsets;
 
 /**
  * @author callum
  */
+@SuppressWarnings("unused")
 public class RetrieveSaltAction
         extends RequestBodyHandler<RetrieveSaltRequest, AccountSaltResult> {
 
@@ -28,7 +30,8 @@ public class RetrieveSaltAction
     }
 
     @Override
-    public AccountSaltResult handleBodyRequest(RetrieveSaltRequest in, Context context) {
+    @NotNull
+    public AccountSaltResult handleBodyRequest(@NotNull RetrieveSaltRequest in, @NotNull Context context) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");

@@ -16,10 +16,12 @@ import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
 import com.camackenzie.exvi.core.api.AccountCreationRequest;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.util.ApiException;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author callum
  */
+@SuppressWarnings("unused")
 public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, AccountAccessKeyResult> {
 
     private static final long VERIFICATION_CODE_EXPIRY = 60 * 60 * 1000;
@@ -29,7 +31,8 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
     }
 
     @Override
-    public AccountAccessKeyResult handleBodyRequest(AccountCreationRequest in, Context context) {
+    @NotNull
+    public AccountAccessKeyResult handleBodyRequest(@NotNull AccountCreationRequest in, @NotNull Context context) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
@@ -67,8 +70,9 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         }
     }
 
-    private void registerAccountData(AWSDynamoDB database, AccountCreationRequest ac,
-                                     VerificationDatabaseEntry entry) {
+    private void registerAccountData(@NotNull AWSDynamoDB database,
+                                     @NotNull AccountCreationRequest ac,
+                                     @NotNull VerificationDatabaseEntry entry) {
         Table userTable = database.getTable("exvi-user-login");
         String salt = CryptographyUtils.generateSalt(32),
                 passwordHash = CryptographyUtils.hashSHA256(salt
@@ -83,7 +87,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         UserDataEntry.ensureUserHasData(database, ac.getUsername().get());
     }
 
-    private boolean verificationCodeValid(String inputCode, String actualCode, long creation) {
+    private boolean verificationCodeValid(@NotNull String inputCode, @NotNull String actualCode, long creation) {
         return System.currentTimeMillis() - creation < VERIFICATION_CODE_EXPIRY
                 && inputCode.equals(actualCode);
     }

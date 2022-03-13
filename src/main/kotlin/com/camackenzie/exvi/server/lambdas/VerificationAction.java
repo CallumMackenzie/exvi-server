@@ -12,11 +12,13 @@ import com.camackenzie.exvi.core.api.NoneResult;
 import com.camackenzie.exvi.core.api.VerificationRequest;
 import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
 import com.camackenzie.exvi.server.util.*;
+import org.jetbrains.annotations.NotNull;
 import software.amazon.awssdk.services.sns.model.SnsException;
 
 /**
  * @author callum
  */
+@SuppressWarnings("unused")
 public class VerificationAction
         extends RequestBodyHandler<VerificationRequest, NoneResult> {
 
@@ -25,7 +27,8 @@ public class VerificationAction
     }
 
     @Override
-    public NoneResult handleBodyRequest(VerificationRequest in, Context context) {
+    @NotNull
+    public NoneResult handleBodyRequest(@NotNull VerificationRequest in, @NotNull Context context) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
@@ -38,7 +41,7 @@ public class VerificationAction
         }
         if (!in.getPhone().get().startsWith("+1")) {
             throw new ApiException(400, "Only Canadian phone numbers are currently supported. "
-                                   + "Please add +1 in front of your number.");
+                    + "Please add '+1' in front of your number.");
         }
 
         // Retrieve resources
@@ -73,7 +76,7 @@ public class VerificationAction
         }
     }
 
-    private boolean hasPhoneErrors(Table userTable, VerificationRequest user) {
+    private boolean hasPhoneErrors(@NotNull Table userTable, @NotNull VerificationRequest user) {
         try {
             var itemIter = userTable.getIndex("phone-index")
                     .query("phone", user.getPhone().get()).iterator();
@@ -92,7 +95,7 @@ public class VerificationAction
         }
     }
 
-    private boolean hasEmailErrors(Table userTable, VerificationRequest user) {
+    private boolean hasEmailErrors(@NotNull Table userTable, @NotNull VerificationRequest user) {
         try {
             for (Item next : userTable.getIndex("email-index")
                     .query("email", user.getEmail().get())) {
@@ -109,7 +112,7 @@ public class VerificationAction
         }
     }
 
-    private boolean hasUsernameErrors(Table userTable, VerificationRequest user) {
+    private boolean hasUsernameErrors(@NotNull Table userTable, @NotNull VerificationRequest user) {
         Item outcome = userTable.getItem("username", user.getUsername().get());
         if (outcome != null) {
             return !outcome.hasAttribute("verificationCode");
@@ -118,13 +121,14 @@ public class VerificationAction
         }
     }
 
+    @NotNull
     private String generateVerificationCode() {
         int intCode = (int) (Math.random() * 999999);
         String code = Integer.toString(intCode);
         return "0".repeat(6 - code.length()) + code;
     }
 
-    private boolean trySendEmail(VerificationRequest user, String code) {
+    private boolean trySendEmail(@NotNull VerificationRequest user, @NotNull String code) {
         StringBuilder htmlBody = new StringBuilder()
                 .append("<h2>Hello ")
                 .append(user.getUsername().get())
@@ -154,7 +158,7 @@ public class VerificationAction
         return false;
     }
 
-    private boolean trySendSMSMessage(VerificationRequest user, String code) {
+    private boolean trySendSMSMessage(@NotNull VerificationRequest user, @NotNull String code) {
         StringBuilder textContent = new StringBuilder()
                 .append("Hello ")
                 .append(user.getUsername().get())

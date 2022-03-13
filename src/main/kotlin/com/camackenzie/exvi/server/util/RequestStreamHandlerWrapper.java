@@ -31,9 +31,9 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
     public final void handleRequest(@NotNull InputStream is,
                                     @NotNull OutputStream os,
                                     @NotNull Context ctx) throws IOException {
+        this.logger = ctx.getLogger();
         BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charsets.UTF_8));
         PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, Charsets.UTF_8)));
-        this.logger = ctx.getLogger();
 
         this.handleRequestWrapped(reader, writer, ctx);
 
@@ -49,7 +49,8 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
         return this.logger;
     }
 
-    @NotNull
-    public abstract void handleRequestWrapped(BufferedReader bf, PrintWriter pw, Context ctx) throws IOException;
+    public abstract void handleRequestWrapped(@NotNull BufferedReader bf,
+                                              @NotNull PrintWriter pw,
+                                              @NotNull Context ctx) throws IOException;
 
 }

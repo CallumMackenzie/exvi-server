@@ -6,25 +6,27 @@
 package com.camackenzie.exvi.server.database;
 
 import com.camackenzie.exvi.core.api.VerificationRequest;
+import org.jetbrains.annotations.NotNull;
 
 /**
- *
  * @author callum
  */
+@SuppressWarnings("unused")
 public class VerificationDatabaseEntry
-        extends DatabaseEntry {
+        extends DatabaseEntry<VerificationDatabaseEntry> {
 
+    @NotNull
     private String verificationCode,
             username,
             email,
             phone;
     private long verificationCodeUTC;
 
-    public VerificationDatabaseEntry(String username,
-            String email,
-            String phone,
-            String verificationCode,
-            long verificationCodeUTC) {
+    public VerificationDatabaseEntry(@NotNull String username,
+                                     @NotNull String email,
+                                     @NotNull String phone,
+                                     @NotNull String verificationCode,
+                                     long verificationCodeUTC) {
         this.username = username;
         this.email = email;
         this.phone = phone;
@@ -32,10 +34,10 @@ public class VerificationDatabaseEntry
         this.verificationCodeUTC = verificationCodeUTC;
     }
 
-    public VerificationDatabaseEntry(String username,
-            String email,
-            String phone,
-            String verificationCode) {
+    public VerificationDatabaseEntry(@NotNull String username,
+                                     @NotNull String email,
+                                     @NotNull String phone,
+                                     @NotNull String verificationCode) {
         this(username,
                 email,
                 phone,
@@ -43,7 +45,7 @@ public class VerificationDatabaseEntry
                 System.currentTimeMillis());
     }
 
-    public VerificationDatabaseEntry(VerificationRequest uvd, String code) {
+    public VerificationDatabaseEntry(@NotNull VerificationRequest uvd, @NotNull String code) {
         this(uvd.getUsername().get(),
                 uvd.getEmail().get(),
                 uvd.getPhone().get(),
@@ -53,6 +55,7 @@ public class VerificationDatabaseEntry
     /**
      * @return the verificationCode
      */
+    @NotNull
     public String getVerificationCode() {
         return verificationCode;
     }
@@ -60,13 +63,14 @@ public class VerificationDatabaseEntry
     /**
      * @param verificationCode the verificationCode to set
      */
-    public void setVerificationCode(String verificationCode) {
+    public void setVerificationCode(@NotNull String verificationCode) {
         this.verificationCode = verificationCode;
     }
 
     /**
      * @return the username
      */
+    @NotNull
     public String getUsername() {
         return username;
     }
@@ -74,13 +78,14 @@ public class VerificationDatabaseEntry
     /**
      * @param username the username to set
      */
-    public void setUsername(String username) {
+    public void setUsername(@NotNull String username) {
         this.username = username;
     }
 
     /**
      * @return the email
      */
+    @NotNull
     public String getEmail() {
         return email;
     }
@@ -88,13 +93,14 @@ public class VerificationDatabaseEntry
     /**
      * @param email the email to set
      */
-    public void setEmail(String email) {
+    public void setEmail(@NotNull String email) {
         this.email = email;
     }
 
     /**
      * @return the phone
      */
+    @NotNull
     public String getPhone() {
         return phone;
     }
@@ -102,7 +108,7 @@ public class VerificationDatabaseEntry
     /**
      * @param phone the phone to set
      */
-    public void setPhone(String phone) {
+    public void setPhone(@NotNull String phone) {
         this.phone = phone;
     }
 

@@ -13,17 +13,23 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.camackenzie.exvi.server.database.DatabaseEntry;
 import com.google.gson.Gson;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
 
 /**
- *
  * @author callum
  */
+@SuppressWarnings("unused")
 public class AWSDynamoDB {
 
+    @NotNull
     private final AmazonDynamoDB awsDynamoDB;
+    @NotNull
     private final DynamoDB docClient;
+    @NotNull
     private final HashMap<String, Table> tableNameMap;
+    @NotNull
     private final Gson gson = new Gson();
 
     public AWSDynamoDB() {
@@ -35,52 +41,62 @@ public class AWSDynamoDB {
         this.tableNameMap = new HashMap<>();
     }
 
+    @NotNull
     public HashMap<String, Table> getTableNameMap() {
         return this.tableNameMap;
     }
 
-    public Table cacheTable(String name) {
+    public Table cacheTable(@NotNull String name) {
         Table t = this.getTable(name);
         this.tableNameMap.put(name, t);
         return t;
     }
 
-    public Table getTable(String name) {
+    public Table getTable(@NotNull String name) {
         if (this.tableNameMap.containsKey(name)) {
             return this.tableNameMap.get(name);
         }
         return this.docClient.getTable(name);
     }
 
+    @NotNull
     public DynamoDB getDocClient() {
         return this.docClient;
     }
 
+    @NotNull
     public AmazonDynamoDB getAwsDynamoDB() {
         return this.awsDynamoDB;
     }
 
-    public <T extends DatabaseEntry> void putObjectInTable(String table, T object) {
+    public <T extends DatabaseEntry<?>> void putObjectInTable(@NotNull String table, T object) {
         Table t = this.cacheTable(table);
         this.putObjectInTable(t, object);
     }
 
-    public <T extends DatabaseEntry> void putObjectInTable(Table table, T object) {
+    public <T extends DatabaseEntry<?>> void putObjectInTable(@NotNull Table table, T object) {
         table.putItem(Item.fromJSON(this.gson.toJson(object)));
     }
 
-    public <T extends DatabaseEntry> T getObjectFromTable(Table table, String hashKey,
-            String value, Class<T> cls) {
+    public <T extends DatabaseEntry<?>> T getObjectFromTable(@NotNull Table table,
+                                                          @NotNull String hashKey,
+                                                          @NotNull String value,
+                                                          @NotNull Class<T> cls) {
         return DatabaseEntry.fromItem(table.getItem(hashKey, value), cls);
     }
 
-    public <T extends DatabaseEntry> T getObjectFromTable(String table, String hashKey,
-            String value, Class<T> cls) {
+    public <T extends DatabaseEntry<?>> T getObjectFromTable(@NotNull String table,
+                                                          @NotNull String hashKey,
+                                                          @NotNull String value,
+                                                          @NotNull Class<T> cls) {
         return this.getObjectFromTable(this.cacheTable(table), hashKey, value, cls);
     }
 
-    public <T extends DatabaseEntry> T getObjectFromTableOr(Table table, String hashKey,
-            String value, Class<T> cls, T def) {
+    public <T extends DatabaseEntry<?>> T getObjectFromTableOr(@NotNull Table table,
+                                                            @NotNull String hashKey,
+                                                            @NotNull String value,
+                                                            @NotNull Class<T> cls,
+                                                            T def) {
         T ret = this.getObjectFromTable(table, hashKey, value, cls);
         if (ret == null) {
             return def;
@@ -88,11 +104,11 @@ public class AWSDynamoDB {
         return ret;
     }
 
-    public void deleteObjectFromTable(Table table, String hashKey, String value) {
+    public void deleteObjectFromTable(@NotNull Table table, @NotNull String hashKey, @NotNull String value) {
         table.deleteItem(hashKey, value);
     }
 
-    public void deleteObjectFromTable(String table, String hashKey, String value) {
+    public void deleteObjectFromTable(@NotNull String table, @NotNull String hashKey, @NotNull String value) {
         this.cacheTable(table).deleteItem(hashKey, value);
     }
 

@@ -6,7 +6,6 @@
 package com.camackenzie.exvi.server.database;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
@@ -31,8 +30,10 @@ import java.util.Map;
 /**
  * @author callum
  */
+@SuppressWarnings("unused")
 public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
 
+    @NotNull
     private static final Gson gson = new Gson();
 
     @NotNull
@@ -42,7 +43,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     private BodyStats bodyStats;
 
     @NotNull
-    private transient AWSDynamoDB database;
+    private transient final AWSDynamoDB database;
 
     private UserDataEntry(@NotNull AWSDynamoDB database,
                           @NotNull String username,
@@ -88,8 +89,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     @NotNull
-    private static <T extends SelfSerializable> List<Map> toMapList(@NotNull List<T> l) {
-        List<Map> ret = new ArrayList<>();
+    private static <T extends SelfSerializable> List<Map<?, ?>> toMapList(@NotNull List<T> l) {
+        List<Map<?, ?>> ret = new ArrayList<>();
         for (var li : l) {
             ret.add(toMap(li));
         }
@@ -97,7 +98,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     @NotNull
-    private static <T> Map toMap(@NotNull T in) {
+    private static <T> Map<?, ?> toMap(@NotNull T in) {
         return gson.fromJson(gson.toJson(in), Map.class);
     }
 
@@ -144,27 +145,29 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         updateDataEntryRaw("bodyStats", toMap(bs));
     }
 
-    private UpdateItemOutcome updateDataEntryRaw(@NotNull String key, Object value) {
+    private void updateDataEntryRaw(@NotNull String key, Object value) {
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", username)
                 .withUpdateExpression("set " + key + " = :a")
                 .withValueMap(new ValueMap().withList(":a", value))
                 .withReturnValues(ReturnValue.UPDATED_NEW);
-        return database.cacheTable("exvi-user-data").updateItem(update);
+        database.cacheTable("exvi-user-data").updateItem(update);
     }
-
-    private UpdateItemOutcome appendToDataEntryList(@NotNull String key, Object value) {
+    
+    private void appendToDataEntryList(@NotNull String key, Object value) {
         UpdateItemSpec update = new UpdateItemSpec()
                 .withPrimaryKey("username", username)
                 .withUpdateExpression("set " + key + " = list_append(:a, " + key + ")")
                 .withValueMap(new ValueMap().withList(":a", value))
                 .withReturnValues(ReturnValue.UPDATED_NEW);
-        return database.cacheTable("exvi-user-data").updateItem(update);
+        database.cacheTable("exvi-user-data").updateItem(update);
     }
 
+    @NotNull
+    @SuppressWarnings("unused")
     private <T> List<T> arrayToList(@NotNull T[] arr) {
         return new ArrayList<>() {{
-            for (var i : arr) add(i);
+            addAll(List.of(arr));
         }};
     }
 
@@ -217,7 +220,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public void addActiveUserWorkouts(@NotNull ActiveWorkout[] workouts) {
-        List<Map> toAppend = new ArrayList<>();
+        List<Map<?, ?>> toAppend = new ArrayList<>();
         Identifiable.checkIntersects(arrayToList(workouts), arrayToList(getActiveWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
                     updateDataEntryRaw("activeWorkouts[" + userIndex + "]", toMap(userWk));
@@ -230,7 +233,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public void addUserWorkouts(@NotNull Workout[] workouts) {
-        List<Map> toAppend = new ArrayList<>();
+        List<Map<?, ?>> toAppend = new ArrayList<>();
         Identifiable.checkIntersects(arrayToList(workouts), arrayToList(getWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
                     updateDataEntryRaw("workouts[" + userIndex + "]", toMap(userWk));

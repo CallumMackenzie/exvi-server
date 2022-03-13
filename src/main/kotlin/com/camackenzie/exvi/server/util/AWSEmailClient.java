@@ -13,13 +13,14 @@ import com.amazonaws.services.simpleemail.model.Content;
 import com.amazonaws.services.simpleemail.model.Destination;
 import com.amazonaws.services.simpleemail.model.Message;
 import com.amazonaws.services.simpleemail.model.SendEmailRequest;
+import org.jetbrains.annotations.NotNull;
 
 /**
- *
  * @author callum
  */
 public class AWSEmailClient implements EmailClient {
 
+    @NotNull
     private final AmazonSimpleEmailService ases;
 
     public AWSEmailClient() {
@@ -28,7 +29,11 @@ public class AWSEmailClient implements EmailClient {
     }
 
     @Override
-    public void sendEmail(String sender, String recipient, String subject, String htmlBody, String plainTextBody) {
+    public void sendEmail(@NotNull String sender,
+                          @NotNull String recipient,
+                          @NotNull String subject,
+                          @NotNull String htmlBody,
+                          @NotNull String plainTextBody) {
         SendEmailRequest ser = new SendEmailRequest()
                 .withDestination(new Destination().withToAddresses(recipient))
                 .withMessage(new Message()

@@ -15,12 +15,14 @@ import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import com.camackenzie.exvi.server.util.ApiException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
 /**
  * @author callum
  */
+@SuppressWarnings("unused")
 public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest, GenericDataResult> {
 
     public UserDataRequestAction() {
@@ -28,7 +30,8 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
     }
 
     @Override
-    public GenericDataResult handleBodyRequest(GenericDataRequest in, Context context) {
+    @NotNull
+    public GenericDataResult handleBodyRequest(@NotNull GenericDataRequest in, @NotNull Context context) {
         // Preconditions
         if (in.getRequester().get().isBlank()) {
             throw new ApiException(400, "No requester provided");
@@ -91,9 +94,10 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         }
     }
 
-    private UserDataEntry ensureUserValidity(AWSDynamoDB database,
-                                             EncodedStringCache username,
-                                             EncodedStringCache accessKey) {
+    @NotNull
+    private UserDataEntry ensureUserValidity(@NotNull AWSDynamoDB database,
+                                             @NotNull EncodedStringCache username,
+                                             @NotNull EncodedStringCache accessKey) {
         UserLoginEntry.ensureAccessKeyValid(database, username, accessKey);
         return UserDataEntry.ensureUserHasData(database, username);
     }

@@ -5,6 +5,7 @@
  */
 package com.camackenzie.exvi.server.util;
 
+import org.jetbrains.annotations.NotNull;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
@@ -16,6 +17,7 @@ import software.amazon.awssdk.services.sns.model.PublishResponse;
  */
 public class AWSSMSClient implements SMSClient {
 
+    @NotNull
     private final SnsClient client;
 
     public AWSSMSClient() {
@@ -25,7 +27,7 @@ public class AWSSMSClient implements SMSClient {
     }
 
     @Override
-    public void sendText(String recipient, String message) {
+    public void sendText(@NotNull String recipient, @NotNull String message) {
         PublishRequest pr = PublishRequest.builder()
                 .message(message)
                 .phoneNumber(recipient)

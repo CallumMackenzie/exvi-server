@@ -14,10 +14,12 @@ import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.AuthUtils;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import com.camackenzie.exvi.server.util.ApiException;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author callum
  */
+@SuppressWarnings("unused")
 public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessKeyResult> {
 
     public LoginAction() {
@@ -25,7 +27,8 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
     }
 
     @Override
-    public AccountAccessKeyResult handleBodyRequest(LoginRequest in, Context context) {
+    @NotNull
+    public AccountAccessKeyResult handleBodyRequest(@NotNull LoginRequest in, @NotNull Context context) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
@@ -44,7 +47,7 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
             throw new ApiException(400, "Invalid credentials");
         }
 
-        // Retreive user data
+        // Retrieve user data
         String passwordHashDecrypted = AuthUtils.decryptPasswordHash(in.getPasswordHash().get());
         String databasePasswordHash = entry.getPasswordHash();
 

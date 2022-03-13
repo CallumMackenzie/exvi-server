@@ -7,6 +7,8 @@ package com.camackenzie.exvi.server.util;
 
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -15,7 +17,7 @@ import java.nio.charset.StandardCharsets;
  */
 public class AuthUtils {
 
-    public static String generateAccessKey(AWSDynamoDB database, String username) {
+    public static String generateAccessKey(@NotNull AWSDynamoDB database, @NotNull String username) {
         String accessKey = CryptographyUtils.generateSalt(256);
         UserLoginEntry entry = database.getObjectFromTable("exvi-user-login",
                 "username",
@@ -32,7 +34,7 @@ public class AuthUtils {
         return accessKey;
     }
 
-    public static String decryptPasswordHash(String hash) {
+    public static String decryptPasswordHash(@NotNull String hash) {
         return new String(CryptographyUtils.bytesFromBase64String(hash),
                 StandardCharsets.UTF_8);
     }

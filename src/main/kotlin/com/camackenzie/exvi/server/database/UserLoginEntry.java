@@ -9,16 +9,16 @@ import com.camackenzie.exvi.core.api.GenericDataResult;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.ApiException;
+import org.jetbrains.annotations.NotNull;
 
 /**
- *
  * @author callum
  */
 public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
 
-    public static void ensureAccessKeyValid(AWSDynamoDB database,
-            String user,
-            String key) {
+    public static void ensureAccessKeyValid(@NotNull AWSDynamoDB database,
+                                            @NotNull String user,
+                                            @NotNull String key) {
         UserLoginEntry authData = database.getObjectFromTable("exvi-user-login",
                 "username", user, UserLoginEntry.class);
         if (authData == null) {
@@ -36,24 +36,29 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
         }
     }
 
-    public static void ensureAccessKeyValid(AWSDynamoDB database,
-                                            EncodedStringCache user,
-                                            EncodedStringCache key) {
+    public static void ensureAccessKeyValid(@NotNull AWSDynamoDB database,
+                                            @NotNull EncodedStringCache user,
+                                            @NotNull EncodedStringCache key) {
         ensureAccessKeyValid(database, user.get(), key.get());
     }
 
+    @NotNull
     private String username;
+    @NotNull
     private String phone;
+    @NotNull
     private String email;
+    @NotNull
     private String passwordHash;
+    @NotNull
     private String salt;
     private String[] accessKeys;
 
-    public UserLoginEntry(String username,
-            String phone,
-            String email,
-            String passwordHash,
-            String salt) {
+    public UserLoginEntry(@NotNull String username,
+                          @NotNull String phone,
+                          @NotNull String email,
+                          @NotNull String passwordHash,
+                          @NotNull String salt) {
         this.username = username;
         this.phone = phone;
         this.email = email;
@@ -62,11 +67,12 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
         this.accessKeys = new String[0];
     }
 
+    @NotNull
     public String[] getAccessKeys() {
         return this.accessKeys;
     }
 
-    public void addAccessKey(String key) {
+    public void addAccessKey(@NotNull String key) {
         if (this.accessKeys == null) {
             this.accessKeys = new String[]{key};
         } else {
@@ -77,7 +83,7 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
         }
     }
 
-//    public void removeAccessKey(String key) {
+    //    public void removeAccessKey(String key) {
 //        int toRemove = -1;
 //        for (int i = 0; i < this.accessKeys.length; ++i) {
 //            if (this.accessKeys[i].equals(key)) {
@@ -91,6 +97,7 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
 //            System.arraycopy(this.accessKeys, toRemove + 1, newKeys, toRemove + 1, this.accessKeys.length - toRemove);
 //        }
 //    }
+    @NotNull
     public String getUsername() {
         return username;
     }
@@ -98,13 +105,14 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
     /**
      * @param username the username to set
      */
-    public void setUsername(String username) {
+    public void setUsername(@NotNull String username) {
         this.username = username;
     }
 
     /**
      * @return the phone
      */
+    @NotNull
     public String getPhone() {
         return phone;
     }
@@ -112,13 +120,14 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
     /**
      * @param phone the phone to set
      */
-    public void setPhone(String phone) {
+    public void setPhone(@NotNull String phone) {
         this.phone = phone;
     }
 
     /**
      * @return the email
      */
+    @NotNull
     public String getEmail() {
         return email;
     }
@@ -126,13 +135,14 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
     /**
      * @param email the email to set
      */
-    public void setEmail(String email) {
+    public void setEmail(@NotNull String email) {
         this.email = email;
     }
 
     /**
      * @return the passwordHash
      */
+    @NotNull
     public String getPasswordHash() {
         return passwordHash;
     }
@@ -140,13 +150,14 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
     /**
      * @param passwordHash the passwordHash to set
      */
-    public void setPasswordHash(String passwordHash) {
+    public void setPasswordHash(@NotNull String passwordHash) {
         this.passwordHash = passwordHash;
     }
 
     /**
      * @return the salt
      */
+    @NotNull
     public String getSalt() {
         return salt;
     }
@@ -154,7 +165,7 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
     /**
      * @param salt the salt to set
      */
-    public void setSalt(String salt) {
+    public void setSalt(@NotNull String salt) {
         this.salt = salt;
     }
 
