@@ -6,6 +6,7 @@
 package com.camackenzie.exvi.server.database;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
@@ -28,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * @author callum
@@ -120,22 +123,29 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return item.getJSON(attr);
     }
 
-    private <T> void updateDataEntryRaw(@NotNull String key, T value) {
-        UpdateItemSpec update = new UpdateItemSpec()
+    private UpdateItemOutcome updateDatabaseRaw(@NotNull String key, Function<UpdateItemSpec, UpdateItemSpec> spec) {
+        UpdateItemSpec update = spec.apply(new UpdateItemSpec()
                 .withPrimaryKey("username", username)
-                .withUpdateExpression("set " + key + " = :a")
-                .withValueMap(new ValueMap().withList(":a", value))
-                .withReturnValues(ReturnValue.UPDATED_NEW);
-        database.cacheTable("exvi-user-data").updateItem(update);
+                .withReturnValues(ReturnValue.UPDATED_NEW));
+        return database.cacheTable("exvi-user-data").updateItem(update);
     }
 
-    private <T> void appendToDataEntryList(@NotNull String key, List<T> value) {
-        UpdateItemSpec update = new UpdateItemSpec()
-                .withPrimaryKey("username", username)
+    private void updateDatabaseMapRaw(@NotNull String key, Map<String, ?> value) {
+        updateDatabaseRaw(key, item -> item
+                .withUpdateExpression("set " + key + " = :a")
+                .withValueMap(new ValueMap().withMap(":a", value)));
+    }
+
+    private void updateDatabaseListRaw(@NotNull String key, List<?> value) {
+        updateDatabaseRaw(key, item -> item
+                .withUpdateExpression("set " + key + " = :a")
+                .withValueMap(new ValueMap().withList(":a", value)));
+    }
+
+    private void appendToDatabaseList(@NotNull String key, List<?> value) {
+        updateDatabaseRaw(key, spec -> spec
                 .withUpdateExpression("set " + key + " = list_append(:a, " + key + ")")
-                .withValueMap(new ValueMap().withList(":a", value))
-                .withReturnValues(ReturnValue.UPDATED_NEW);
-        var result = database.cacheTable("exvi-user-data").updateItem(update);
+                .withValueMap(new ValueMap().withList(":a", value)));
     }
 
     /////////////////////////
@@ -143,7 +153,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     /////////////////////////
 
     @NotNull
-    private static <T> Map<?, ?> toMap(@NotNull T in) {
+    private static <T> Map<String, ?> toMap(@NotNull T in) {
         return gson.fromJson(gson.toJson(in), Map.class);
     }
 
@@ -178,7 +188,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
 
     public void setBodyStats(@NotNull BodyStats bs) {
         this.bodyStats = bs;
-        updateDataEntryRaw("bodyStats", toMap(bs));
+        updateDatabaseMapRaw("bodyStats", toMap(bs));
     }
 
     /////////////////////////
@@ -194,7 +204,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public void setWorkouts(@NotNull List<Workout> workoutList) {
-        updateDataEntryRaw("workouts", toMapList(workoutList));
+        updateDatabaseListRaw("workouts", toMapList(workoutList));
     }
 
     /**
@@ -204,7 +214,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
      * @param workoutList the workouts to add
      */
     private void addWorkoutsRaw(@NotNull List<Workout> workoutList) {
-        appendToDataEntryList("workouts", toMapList(workoutList));
+        appendToDatabaseList("workouts", toMapList(workoutList));
     }
 
     public void removeWorkouts(@NotNull Identifiable[] ids) {
@@ -232,7 +242,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         List<Workout> toAdd = new ArrayList<>();
         Identifiable.intersectIndexed(arrayToList(workoutsToAdd), arrayToList(getWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
-                    updateDataEntryRaw("workouts[" + userIndex + "]", toMap(addedWk));
+                    updateDatabaseMapRaw("workouts[" + userIndex + "]", toMap(addedWk));
                     return Unit.INSTANCE;
                 }, (addedWk, index) -> {
                     toAdd.add((Workout) addedWk);
@@ -254,11 +264,11 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public void setActiveWorkouts(@NotNull List<ActiveWorkout> workoutList) {
-        updateDataEntryRaw("activeWorkouts", toMapList(workoutList));
+        updateDatabaseListRaw("activeWorkouts", toMapList(workoutList));
     }
 
     private void addActiveWorkoutsRaw(@NotNull List<ActiveWorkout> workoutList) {
-        appendToDataEntryList("activeWorkouts", toMapList(workoutList));
+        appendToDatabaseList("activeWorkouts", toMapList(workoutList));
     }
 
     public void removeActiveWorkouts(@NotNull Identifiable[] ids) {
@@ -287,7 +297,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         List<ActiveWorkout> toAppend = new ArrayList<>();
         Identifiable.intersectIndexed(arrayToList(workouts), arrayToList(getActiveWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
-                    updateDataEntryRaw("activeWorkouts[" + userIndex + "]", toMap(userWk));
+                    updateDatabaseMapRaw("activeWorkouts[" + userIndex + "]", toMap(userWk));
                     return Unit.INSTANCE;
                 }, (addedWorkout, index) -> {
                     toAppend.add((ActiveWorkout) addedWorkout);
