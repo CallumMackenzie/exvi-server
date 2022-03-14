@@ -25,6 +25,7 @@ import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -209,8 +210,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     public void removeWorkouts(@NotNull Identifiable[] ids) {
         if (ids.length == 0) return;
         ArrayList<Workout> newWorkouts = new ArrayList<>();
-        Identifiable.intersectIndexed(arrayToList(ids),
-                arrayToList(getWorkouts()), (a, ai, b, bi) -> Unit.INSTANCE,
+        Identifiable.intersectIndexed(arrayToList(ids), arrayToList(getWorkouts()),
+                (a, ai, b, bi) -> Unit.INSTANCE,
                 (a, ai) -> Unit.INSTANCE,
                 (b, bi) -> {
                     newWorkouts.add((Workout) b);
@@ -220,11 +221,10 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public void removeWorkouts(@NotNull EncodedStringCache[] ids) {
-        var identifiable = new Identifiable[ids.length];
-        for (int i = 0; i < identifiable.length; ++i) {
-            identifiable[i] = new RawIdentifiable(ids[i]);
-        }
-        removeWorkouts(identifiable);
+        Identifiable[] iids = Arrays.stream(ids)
+                .map(RawIdentifiable::new)
+                .toArray(Identifiable[]::new);
+        removeWorkouts(iids);
     }
 
     public void addWorkouts(@NotNull Workout[] workoutsToAdd) {
