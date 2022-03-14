@@ -17,7 +17,7 @@
         <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <exvi.core.version>ff566a0f760105fc9668b274a32638052d46733b</exvi.core.version>
+        <exvi.core.version>aedf423bcec2b4f05da68ba49ec6484e87e0e06c</exvi.core.version>
     </properties>
 
     <repositories>
@@ -44,20 +44,6 @@
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-help-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <id>show-profiles</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>active-profiles</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>1.6.10</version>
@@ -74,6 +60,20 @@
                         <phase>test-compile</phase>
                         <goals>
                             <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-help-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>show-profiles</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>active-profiles</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -347,7 +347,8 @@
                                 </goals>
                                 <configuration>
                                     <includes>
-                                        <include>com/camackenzie/exvi/server/lambdas/UserDataRequestAction.class</include>
+                                        <include>com/camackenzie/exvi/server/lambdas/UserDataRequestAction.class
+                                        </include>
                                     </includes>
                                 </configuration>
                             </execution>
@@ -457,12 +458,6 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.6.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
             <version>5.6.0</version>
             <scope>test</scope>
         </dependency>
