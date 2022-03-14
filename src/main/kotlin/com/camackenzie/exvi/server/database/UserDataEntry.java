@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -123,7 +122,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return item.getJSON(attr);
     }
 
-    private UpdateItemOutcome updateDatabaseRaw(@NotNull String key, Function<UpdateItemSpec, UpdateItemSpec> spec) {
+    private UpdateItemOutcome updateDatabaseRaw(@NotNull String key, @NotNull Function<UpdateItemSpec, UpdateItemSpec> spec) {
         UpdateItemSpec update = spec.apply(new UpdateItemSpec()
                 .withPrimaryKey("username", username)
                 .withReturnValues(ReturnValue.UPDATED_NEW));
@@ -285,11 +284,10 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public void removeActiveWorkouts(@NotNull EncodedStringCache[] ids) {
-        var idnts = new Identifiable[ids.length];
-        for (int i = 0; i < idnts.length; ++i) {
-            idnts[i] = new RawIdentifiable(ids[i]);
-        }
-        removeActiveWorkouts(idnts);
+        Identifiable[] iids = Arrays.stream(ids)
+                .map(RawIdentifiable::new)
+                .toArray(Identifiable[]::new);
+        removeActiveWorkouts(iids);
     }
 
     public void addActiveWorkouts(@NotNull ActiveWorkout[] workouts) {
