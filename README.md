@@ -18,3 +18,8 @@ The server portion of my high school capstone project.
     - https://github.com/CallumMackenzie/trim-lambda-layers-action
 - Kotlin/Java
   - Kotlin multiplatform dependencies & interoperability
+- Maven
+
+## Related Repositories
+- https://github.com/CallumMackenzie/exvi-client
+- https://github.com/CallumMackenzie/exvi-core
