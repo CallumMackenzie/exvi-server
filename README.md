@@ -9,6 +9,8 @@ The server portion of my high school capstone project.
   - REST API lambda access with API Gateway
   - IAM configured to allocate permissions accordingly
   - Cloudwatch used to monitor requests
+  - DynamoDB to store user data
+    - Global secondary indices to query used emails & phone numbers
 - GitHub actions CI
   - Used to deploy the latest server version
   - Custom GitHub actions to access AWS APIs
