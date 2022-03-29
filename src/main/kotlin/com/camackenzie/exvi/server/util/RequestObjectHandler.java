@@ -57,6 +57,8 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
     public void handleRequestWrapped(@NotNull BufferedReader bf,
                                      @NotNull PrintWriter pw,
                                      @NotNull Context ctx) {
+        long start = System.currentTimeMillis();
+
         Gson gson = eson.getGson();
         APIResult<String> strResponse;
         try {
@@ -75,12 +77,13 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                 }
             }
 
-            // getLogger().log("Decoded request body: " + rawBody);
-
             // Ensure a valid request body has been parsed
             if (requestBody == null) {
                 throw new ApiException(400, "Cannot parse request body");
             }
+            getLogger().log("Request body is valid: " + (System.currentTimeMillis() - start) + " ms");
+            start = System.currentTimeMillis();
+
             // Pass the headers to a new api request object with the proper body format
             HashMap headers = gson.fromJson(requestObject.get("headers"), HashMap.class);
             APIRequest<IN> req = new APIRequest<>("",
@@ -88,10 +91,15 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                     headers);
             // Call inheriting class for response
             APIResult<OUT> response = this.handleObjectRequest(req, ctx);
+
+            getLogger().log("Response formed: " + (System.currentTimeMillis() - start) + " ms");
+
             // Get JSON response
             strResponse = new APIResult<>(response.getStatusCode(),
                     gson.toJson(response.getBody()),
                     response.getHeaders());
+
+            getLogger().log("Response formatted");
         } catch (ApiException e) {
             getLogger().log("Returning API exception: " + e.getMessage());
             strResponse = new APIResult<>(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
