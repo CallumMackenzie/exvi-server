@@ -11,7 +11,7 @@ The server portion of my high school capstone project.
   - Cloudwatch used to monitor requests
   - DynamoDB to store user data
     - Global secondary indices to query used emails & phone numbers
-- GitHub Actions CI
+- GitHub Actions for CD
   - Used to deploy the latest server version
   - Custom GitHub actions to access AWS APIs
     - https://github.com/CallumMackenzie/latest-lambda-layer-action

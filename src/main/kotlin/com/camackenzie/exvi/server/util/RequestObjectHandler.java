@@ -105,8 +105,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         // Encode & return
         getLogger().log("Response: " + strResponse.getBody());
         strResponse.setBody(CryptographyUtils.encodeString(strResponse.getBody()));
-        String finalResponse = gson.toJson(strResponse);
-        pw.write(finalResponse);
+        pw.write(gson.toJson(strResponse));
     }
 
     @NotNull

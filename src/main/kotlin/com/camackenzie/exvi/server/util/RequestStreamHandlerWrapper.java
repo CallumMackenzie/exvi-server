@@ -32,17 +32,21 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
     public final void handleRequest(@NotNull InputStream is,
                                     @NotNull OutputStream os,
                                     @NotNull Context ctx) throws IOException {
-        this.logger = ctx.getLogger();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charsets.UTF_8));
-        PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, Charsets.UTF_8)));
+        try {
+            this.logger = ctx.getLogger();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charsets.UTF_8));
+            PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, Charsets.UTF_8)));
 
-        this.handleRequestWrapped(reader, writer, ctx);
+            this.handleRequestWrapped(reader, writer, ctx);
 
-        if (writer.checkError()) {
-            this.getLogger().log("WRITER ERROR OCCURED");
+            if (writer.checkError()) {
+                this.getLogger().log("WRITER ERROR OCCURED");
+            }
+            reader.close();
+            writer.close();
+        } catch (Throwable t) {
+            getLogger().log("Uncaught fatal response exception: " + t);
         }
-        reader.close();
-        writer.close();
     }
 
     @NotNull
