@@ -74,7 +74,9 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                     requestBody = gson.fromJson(rawBody, this.inClass);
                 }
             }
-            getLogger().log("Decoded request body: " + rawBody);
+
+            // getLogger().log("Decoded request body: " + rawBody);
+
             // Ensure a valid request body has been parsed
             if (requestBody == null) {
                 throw new ApiException(400, "Cannot parse request body");
@@ -91,6 +93,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                     gson.toJson(response.getBody()),
                     response.getHeaders());
         } catch (ApiException e) {
+            getLogger().log("Returning API exception: " + e.getMessage());
             strResponse = new APIResult<>(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
         } catch (Throwable e) {
             getLogger().log("Uncaught Exception: " + e
