@@ -45,7 +45,7 @@ public class VerificationAction
         }
 
         // Retrieve resources
-        AWSDynamoDB dynamoDB = new AWSDynamoDB();
+        DocumentDatabase dynamoDB = new AWSDynamoDB();
         Table userTable = dynamoDB.getTable("exvi-user-login");
 
         // Ensure user credentials are valid

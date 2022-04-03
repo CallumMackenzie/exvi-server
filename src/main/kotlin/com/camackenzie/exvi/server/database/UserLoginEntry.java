@@ -9,6 +9,7 @@ import com.camackenzie.exvi.core.api.GenericDataResult;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.ApiException;
+import com.camackenzie.exvi.server.util.DocumentDatabase;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
 
-    public static void ensureAccessKeyValid(@NotNull AWSDynamoDB database,
+    public static void ensureAccessKeyValid(@NotNull DocumentDatabase database,
                                             @NotNull String user,
                                             @NotNull String key) {
         UserLoginEntry authData = database.getObjectFromTable("exvi-user-login",
@@ -36,7 +37,7 @@ public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
         }
     }
 
-    public static void ensureAccessKeyValid(@NotNull AWSDynamoDB database,
+    public static void ensureAccessKeyValid(@NotNull DocumentDatabase database,
                                             @NotNull EncodedStringCache user,
                                             @NotNull EncodedStringCache key) {
         ensureAccessKeyValid(database, user.get(), key.get());

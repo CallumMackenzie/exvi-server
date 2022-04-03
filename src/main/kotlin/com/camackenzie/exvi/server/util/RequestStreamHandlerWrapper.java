@@ -26,18 +26,18 @@ import java.io.PrintWriter;
 @SuppressWarnings("unused")
 public abstract class RequestStreamHandlerWrapper implements RequestStreamHandler {
 
-    private LambdaLogger logger;
+    private AWSResourceManager resourceManager;
 
     @Override
     public final void handleRequest(@NotNull InputStream is,
                                     @NotNull OutputStream os,
                                     @NotNull Context ctx) throws IOException {
         try {
-            this.logger = ctx.getLogger();
+            resourceManager = AWSResourceManager.get(ctx);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charsets.UTF_8));
             PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, Charsets.UTF_8)));
 
-            this.handleRequestWrapped(reader, writer, ctx);
+            this.handleRequestWrapped(reader, writer, resourceManager);
 
             if (writer.checkError()) {
                 this.getLogger().log("WRITER ERROR OCCURED");
@@ -51,11 +51,11 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
 
     @NotNull
     public final LambdaLogger getLogger() {
-        return this.logger;
+        return resourceManager.getLogger();
     }
 
     public abstract void handleRequestWrapped(@NotNull BufferedReader bf,
                                               @NotNull PrintWriter pw,
-                                              @NotNull Context ctx) throws IOException;
+                                              @NotNull AWSResourceManager resourceManager) throws IOException;
 
 }

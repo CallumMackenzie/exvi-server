@@ -45,8 +45,8 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         }
 
         // Retrieve resources
-        AWSDynamoDB database = new AWSDynamoDB();
-        Table userTable = database.cacheTable("exvi-user-login");
+        DocumentDatabase database = new AWSDynamoDB();
+        Table userTable = database.getTable("exvi-user-login");
 
         VerificationDatabaseEntry dbEntry = DatabaseEntry.fromItem(
                 userTable.getItem("username", in.getUsername().get()),
@@ -70,7 +70,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         }
     }
 
-    private void registerAccountData(@NotNull AWSDynamoDB database,
+    private void registerAccountData(@NotNull DocumentDatabase database,
                                      @NotNull AccountCreationRequest ac,
                                      @NotNull VerificationDatabaseEntry entry) {
         Table userTable = database.getTable("exvi-user-login");

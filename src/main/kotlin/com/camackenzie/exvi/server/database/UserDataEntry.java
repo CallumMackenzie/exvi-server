@@ -12,15 +12,13 @@ import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
-import com.camackenzie.exvi.core.model.ActiveWorkout;
-import com.camackenzie.exvi.core.model.BodyStats;
-import com.camackenzie.exvi.core.model.Workout;
+import com.camackenzie.exvi.core.model.*;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.Identifiable;
 import com.camackenzie.exvi.core.util.RawIdentifiable;
 import com.camackenzie.exvi.core.util.SelfSerializable;
-import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.ApiException;
+import com.camackenzie.exvi.server.util.DocumentDatabase;
 import com.google.gson.Gson;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
@@ -42,21 +40,21 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
 
     @NotNull
     public final String username;
-    private Workout[] workouts;
-    private ActiveWorkout[] activeWorkouts;
-    private BodyStats bodyStats;
+    private ActualWorkout[] workouts;
+    private ActualActiveWorkout[] activeWorkouts;
+    private ActualBodyStats bodyStats;
 
     @NotNull
-    private transient final AWSDynamoDB database;
+    private transient final DocumentDatabase database;
     @NotNull
     private transient final LambdaLogger logger;
 
-    private UserDataEntry(@NotNull AWSDynamoDB database,
+    private UserDataEntry(@NotNull DocumentDatabase database,
                           @NotNull LambdaLogger logger,
                           @NotNull String username,
-                          Workout[] workouts,
-                          ActiveWorkout[] activeWorkouts,
-                          BodyStats bodyStats) {
+                          ActualWorkout[] workouts,
+                          ActualActiveWorkout[] activeWorkouts,
+                          ActualBodyStats bodyStats) {
         this.username = username;
         this.bodyStats = bodyStats;
         this.workouts = workouts;
@@ -70,28 +68,28 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     /////////////////////////
 
     @NotNull
-    private static UserDataEntry defaultData(@NotNull AWSDynamoDB database,
+    private static UserDataEntry defaultData(@NotNull DocumentDatabase database,
                                              @NotNull LambdaLogger logger,
                                              @NotNull String username) {
-        return new UserDataEntry(database, logger, username, new Workout[0], new ActiveWorkout[0], BodyStats.average());
+        return new UserDataEntry(database, logger, username, new ActualWorkout[0], new ActualActiveWorkout[0], ActualBodyStats.average());
     }
 
     @NotNull
-    private static UserDataEntry registeredUser(@NotNull AWSDynamoDB database,
+    private static UserDataEntry registeredUser(@NotNull DocumentDatabase database,
                                                 @NotNull LambdaLogger logger,
                                                 @NotNull String username) {
         return new UserDataEntry(database, logger, username, null, null, null);
     }
 
     @NotNull
-    public static UserDataEntry ensureUserHasData(@NotNull AWSDynamoDB database,
+    public static UserDataEntry ensureUserHasData(@NotNull DocumentDatabase database,
                                                   @NotNull LambdaLogger logger,
                                                   @NotNull String user) throws ApiException {
         if (database.getObjectFromTable("exvi-user-login", "username",
                 user, UserLoginEntry.class) == null) {
             throw new ApiException(400, "User does not have an account");
         }
-        Item item = database.cacheTable("exvi-user-data").getItem("username", user);
+        Item item = database.getTable("exvi-user-data").getItem("username", user);
         if (item == null) {
             UserDataEntry entry = UserDataEntry.defaultData(database, logger, user);
             database.putObjectInTable("exvi-user-data", entry);
@@ -102,7 +100,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     @NotNull
-    public static UserDataEntry ensureUserHasData(@NotNull AWSDynamoDB database,
+    public static UserDataEntry ensureUserHasData(@NotNull DocumentDatabase database,
                                                   @NotNull LambdaLogger logger,
                                                   @NotNull EncodedStringCache user) {
         return ensureUserHasData(database, logger, user.get());
@@ -117,7 +115,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                 .withPrimaryKey("username", username)
                 .withProjectionExpression(projectionExpr)
                 .withConsistentRead(true);
-        Item item = database.cacheTable("exvi-user-data")
+        Item item = database.getTable("exvi-user-data")
                 .getItem(get);
         return item.getJSON(attr);
     }
@@ -126,7 +124,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         UpdateItemSpec update = spec.apply(new UpdateItemSpec()
                 .withPrimaryKey("username", username)
                 .withReturnValues(ReturnValue.UPDATED_NEW));
-        return database.cacheTable("exvi-user-data").updateItem(update);
+        return database.getTable("exvi-user-data").updateItem(update);
     }
 
     private void updateDatabaseMapRaw(@NotNull String key, Map<String, ?> value) {
@@ -181,11 +179,11 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return getUserJSON("bodyStats");
     }
 
-    public BodyStats getBodyStats() {
-        return this.bodyStats = gson.fromJson(getBodyStatsJSON(), BodyStats.class);
+    public ActualBodyStats getBodyStats() {
+        return this.bodyStats = gson.fromJson(getBodyStatsJSON(), ActualBodyStats.class);
     }
 
-    public void setBodyStats(@NotNull BodyStats bs) {
+    public void setBodyStats(@NotNull ActualBodyStats bs) {
         this.bodyStats = bs;
         updateDatabaseMapRaw("bodyStats", toMap(bs));
     }
@@ -198,8 +196,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return getUserJSON("workouts");
     }
 
-    public Workout[] getWorkouts() {
-        return workouts = gson.fromJson(getWorkoutsJSON(), Workout[].class);
+    public ActualWorkout[] getWorkouts() {
+        return workouts = gson.fromJson(getWorkoutsJSON(), ActualWorkout[].class);
     }
 
     public void setWorkouts(@NotNull List<Workout> workoutList) {
@@ -258,8 +256,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return getUserJSON("activeWorkouts");
     }
 
-    public ActiveWorkout[] getActiveWorkouts() {
-        return activeWorkouts = gson.fromJson(getActiveWorkoutsJSON(), ActiveWorkout[].class);
+    public ActualActiveWorkout[] getActiveWorkouts() {
+        return activeWorkouts = gson.fromJson(getActiveWorkoutsJSON(), ActualActiveWorkout[].class);
     }
 
     public void setActiveWorkouts(@NotNull List<ActiveWorkout> workoutList) {

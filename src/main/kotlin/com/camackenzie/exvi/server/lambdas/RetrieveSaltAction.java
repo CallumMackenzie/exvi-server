@@ -8,6 +8,7 @@ package com.camackenzie.exvi.server.lambdas;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
+import com.camackenzie.exvi.server.util.DocumentDatabase;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import com.camackenzie.exvi.core.api.AccountSaltResult;
 import com.camackenzie.exvi.core.api.RetrieveSaltRequest;
@@ -38,8 +39,8 @@ public class RetrieveSaltAction
         }
 
         // Retrieve resources
-        AWSDynamoDB database = new AWSDynamoDB();
-        Table accountTable = database.cacheTable("exvi-user-login");
+        DocumentDatabase database = new AWSDynamoDB();
+        Table accountTable = database.getTable("exvi-user-login");
         Item item = accountTable.getItem("username", in.getUsername().get());
 
         if (item == null) {

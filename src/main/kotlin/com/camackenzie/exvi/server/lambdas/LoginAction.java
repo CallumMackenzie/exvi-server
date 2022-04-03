@@ -10,10 +10,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
 import com.camackenzie.exvi.core.api.LoginRequest;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
-import com.camackenzie.exvi.server.util.AWSDynamoDB;
-import com.camackenzie.exvi.server.util.AuthUtils;
-import com.camackenzie.exvi.server.util.RequestBodyHandler;
-import com.camackenzie.exvi.server.util.ApiException;
+import com.camackenzie.exvi.server.util.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -38,8 +35,8 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
         }
 
         // Retrieve resources
-        AWSDynamoDB database = new AWSDynamoDB();
-        Table userTable = database.cacheTable("exvi-user-login");
+        DocumentDatabase database = new AWSDynamoDB();
+        Table userTable = database.getTable("exvi-user-login");
         UserLoginEntry entry = database.getObjectFromTable("exvi-user-login", "username", in.getUsername().get(), UserLoginEntry.class);
 
         // Ensure user can be logged in

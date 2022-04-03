@@ -7,17 +7,14 @@ package com.camackenzie.exvi.server.lambdas;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.*;
-import com.camackenzie.exvi.core.model.ActiveWorkout;
-import com.camackenzie.exvi.core.model.Workout;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.AWSDynamoDB;
+import com.camackenzie.exvi.server.util.DocumentDatabase;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import com.camackenzie.exvi.server.util.ApiException;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Arrays;
 
 /**
  * @author callum
@@ -38,7 +35,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         }
 
         // Retrieve resources
-        AWSDynamoDB database = new AWSDynamoDB();
+        DocumentDatabase database = new AWSDynamoDB();
         this.getLogger().log("Requester: " + in.getRequester().get());
 
         // Determine behaviour based on request
@@ -95,7 +92,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
     }
 
     @NotNull
-    private UserDataEntry ensureUserValidity(@NotNull AWSDynamoDB database,
+    private UserDataEntry ensureUserValidity(@NotNull DocumentDatabase database,
                                              @NotNull EncodedStringCache username,
                                              @NotNull EncodedStringCache accessKey) {
         UserLoginEntry.ensureAccessKeyValid(database, username, accessKey);

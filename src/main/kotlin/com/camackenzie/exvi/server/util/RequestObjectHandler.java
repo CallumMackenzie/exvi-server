@@ -56,7 +56,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
     @Override
     public void handleRequestWrapped(@NotNull BufferedReader bf,
                                      @NotNull PrintWriter pw,
-                                     @NotNull Context ctx) {
+                                     @NotNull AWSResourceManager resourceManager) {
         long start = System.currentTimeMillis();
 
         Gson gson = eson.getGson();
@@ -90,7 +90,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                     requestBody,
                     headers);
             // Call inheriting class for response
-            APIResult<OUT> response = this.handleObjectRequest(req, ctx);
+            APIResult<OUT> response = this.handleObjectRequest(req, resourceManager.context);
 
             getLogger().log("Response formed: " + (System.currentTimeMillis() - start) + " ms");
 
