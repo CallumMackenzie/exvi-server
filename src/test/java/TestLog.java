@@ -18,6 +18,11 @@ public class TestLog {
             public void handleRequestWrapped(@NotNull BufferedReader bf,
                                              @NotNull PrintWriter pw,
                                              @NotNull AWSResourceManager resourceManager) throws IOException {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    getLogger().e(null, e, null);
+                }
                 getLogger().e("Test", new Exception("Message"), "TEST TAG");
                 pw.write("OUT");
             }
