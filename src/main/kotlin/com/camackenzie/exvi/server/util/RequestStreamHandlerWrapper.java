@@ -45,6 +45,9 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
         try {
             // Set up resource manager
             resourceManager = AWSResourceManager.get(ctx);
+            
+            // Get lambda logger
+            var lambdaLogger = ctx.getLogger();
 
             // Set up logging
             getExviLogger().base(new Antilog() {
@@ -72,7 +75,7 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
                         log.append("\n\t").append(Arrays.stream(throwable.getStackTrace()).map(it -> it.toString())
                                 .collect(Collectors.joining("\n\t\t")));
                     }
-                    ctx.getLogger().log(log.toString());
+                    lambdaLogger.log(log.toString());
                 }
             });
 
@@ -84,7 +87,7 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
             this.handleRequestWrapped(reader, writer, resourceManager);
 
             if (writer.checkError()) {
-                this.getLogger().e("Writer error", null, "ROOT_HANDLER");
+                getLogger().e("Writer error", null, "ROOT_HANDLER");
             }
             reader.close();
             writer.close();
