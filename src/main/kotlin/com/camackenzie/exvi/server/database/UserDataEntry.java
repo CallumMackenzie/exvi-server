@@ -23,6 +23,8 @@ import com.google.gson.Gson;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 
+import static com.camackenzie.exvi.core.util.LoggingKt.getExviLogger;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,11 +48,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
 
     @NotNull
     private transient final DocumentDatabase database;
-    @NotNull
-    private transient final LambdaLogger logger;
 
     private UserDataEntry(@NotNull DocumentDatabase database,
-                          @NotNull LambdaLogger logger,
                           @NotNull String username,
                           ActualWorkout[] workouts,
                           ActualActiveWorkout[] activeWorkouts,
@@ -60,7 +59,6 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         this.workouts = workouts;
         this.activeWorkouts = activeWorkouts;
         this.database = database;
-        this.logger = logger;
     }
 
     /////////////////////////
@@ -69,21 +67,18 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
 
     @NotNull
     private static UserDataEntry defaultData(@NotNull DocumentDatabase database,
-                                             @NotNull LambdaLogger logger,
                                              @NotNull String username) {
-        return new UserDataEntry(database, logger, username, new ActualWorkout[0], new ActualActiveWorkout[0], ActualBodyStats.average());
+        return new UserDataEntry(database, username, new ActualWorkout[0], new ActualActiveWorkout[0], ActualBodyStats.average());
     }
 
     @NotNull
     private static UserDataEntry registeredUser(@NotNull DocumentDatabase database,
-                                                @NotNull LambdaLogger logger,
                                                 @NotNull String username) {
-        return new UserDataEntry(database, logger, username, null, null, null);
+        return new UserDataEntry(database, username, null, null, null);
     }
 
     @NotNull
     public static UserDataEntry ensureUserHasData(@NotNull DocumentDatabase database,
-                                                  @NotNull LambdaLogger logger,
                                                   @NotNull String user) throws ApiException {
         if (database.getObjectFromTable("exvi-user-login", "username",
                 user, UserLoginEntry.class) == null) {
@@ -91,19 +86,18 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         }
         Item item = database.getTable("exvi-user-data").getItem("username", user);
         if (item == null) {
-            UserDataEntry entry = UserDataEntry.defaultData(database, logger, user);
+            UserDataEntry entry = UserDataEntry.defaultData(database, user);
             database.putObjectInTable("exvi-user-data", entry);
             return entry;
         } else {
-            return UserDataEntry.registeredUser(database, logger, user);
+            return UserDataEntry.registeredUser(database, user);
         }
     }
 
     @NotNull
     public static UserDataEntry ensureUserHasData(@NotNull DocumentDatabase database,
-                                                  @NotNull LambdaLogger logger,
                                                   @NotNull EncodedStringCache user) {
-        return ensureUserHasData(database, logger, user.get());
+        return ensureUserHasData(database, user.get());
     }
 
     private String getUserJSON(@NotNull String attr) {
@@ -242,7 +236,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                     updateDatabaseMapRaw("workouts[" + userIndex + "]", toMap(addedWk));
                     return Unit.INSTANCE;
                 }, (addedWk, index) -> {
-                    toAdd.add((Workout) addedWk);
+                    toAdd.add(addedWk);
                     return Unit.INSTANCE;
                 });
         if (!toAdd.isEmpty()) addWorkoutsRaw(toAdd);
@@ -260,22 +254,22 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return activeWorkouts = gson.fromJson(getActiveWorkoutsJSON(), ActualActiveWorkout[].class);
     }
 
-    public void setActiveWorkouts(@NotNull List<ActiveWorkout> workoutList) {
+    public void setActiveWorkouts(@NotNull List<ActualActiveWorkout> workoutList) {
         updateDatabaseListRaw("activeWorkouts", toMapList(workoutList));
     }
 
-    private void addActiveWorkoutsRaw(@NotNull List<ActiveWorkout> workoutList) {
+    private void addActiveWorkoutsRaw(@NotNull List<ActualActiveWorkout> workoutList) {
         appendToDatabaseList("activeWorkouts", toMapList(workoutList));
     }
 
     public void removeActiveWorkouts(@NotNull Identifiable[] ids) {
         if (ids.length == 0) return;
-        ArrayList<ActiveWorkout> newWorkouts = new ArrayList<>();
+        ArrayList<ActualActiveWorkout> newWorkouts = new ArrayList<>();
         Identifiable.intersectIndexed(arrayToList(ids),
                 arrayToList(getActiveWorkouts()), (a, ai, b, bi) -> Unit.INSTANCE,
                 (a, ai) -> Unit.INSTANCE,
                 (b, bi) -> {
-                    newWorkouts.add((ActiveWorkout) b);
+                    newWorkouts.add((ActualActiveWorkout) b);
                     return Unit.INSTANCE;
                 });
         setActiveWorkouts(newWorkouts);
@@ -288,15 +282,15 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         removeActiveWorkouts(iids);
     }
 
-    public void addActiveWorkouts(@NotNull ActiveWorkout[] workouts) {
+    public void addActiveWorkouts(@NotNull ActualActiveWorkout[] workouts) {
         if (activeWorkouts.length == 0) return;
-        List<ActiveWorkout> toAppend = new ArrayList<>();
+        List<ActualActiveWorkout> toAppend = new ArrayList<>();
         Identifiable.intersectIndexed(arrayToList(workouts), arrayToList(getActiveWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
                     updateDatabaseMapRaw("activeWorkouts[" + userIndex + "]", toMap(userWk));
                     return Unit.INSTANCE;
                 }, (addedWorkout, index) -> {
-                    toAppend.add((ActiveWorkout) addedWorkout);
+                    toAppend.add(addedWorkout);
                     return Unit.INSTANCE;
                 });
         if (!toAppend.isEmpty()) addActiveWorkoutsRaw(toAppend);

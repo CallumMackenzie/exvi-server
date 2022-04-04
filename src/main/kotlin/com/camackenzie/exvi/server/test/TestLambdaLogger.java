@@ -7,11 +7,11 @@ import static com.camackenzie.exvi.core.util.LoggingKt.getExviLogger;
 public class TestLambdaLogger implements LambdaLogger {
     @Override
     public void log(String s) {
-        getExviLogger().i(s, null, null);
+        System.out.println(s);
     }
 
     @Override
     public void log(byte[] bytes) {
-        getExviLogger().i(bytes.toString(), null, null);
+        System.out.println(bytes);
     }
 }

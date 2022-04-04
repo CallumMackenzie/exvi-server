@@ -6,7 +6,6 @@
 package com.camackenzie.exvi.server.lambdas;
 
 import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
 import com.camackenzie.exvi.core.api.LoginRequest;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
@@ -25,7 +24,7 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
 
     @Override
     @NotNull
-    public AccountAccessKeyResult handleBodyRequest(@NotNull LoginRequest in, @NotNull Context context) {
+    public AccountAccessKeyResult handleBodyRequest(@NotNull LoginRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
@@ -35,7 +34,7 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
         }
 
         // Retrieve resources
-        DocumentDatabase database = new AWSDynamoDB();
+        DocumentDatabase database = getResourceManager().getDatabase();
         Table userTable = database.getTable("exvi-user-login");
         UserLoginEntry entry = database.getObjectFromTable("exvi-user-login", "username", in.getUsername().get(), UserLoginEntry.class);
 

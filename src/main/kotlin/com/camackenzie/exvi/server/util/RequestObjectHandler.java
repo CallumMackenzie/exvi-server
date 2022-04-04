@@ -81,7 +81,8 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             if (requestBody == null) {
                 throw new ApiException(400, "Cannot parse request body");
             }
-            getLogger().log("Request body is valid: " + (System.currentTimeMillis() - start) + " ms");
+            getLogger().i("Request body is valid: " + (System.currentTimeMillis() - start) + " ms",
+                    null, "OBJECT_HANDLER");
             start = System.currentTimeMillis();
 
             // Pass the headers to a new api request object with the proper body format
@@ -90,34 +91,34 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                     requestBody,
                     headers);
             // Call inheriting class for response
-            APIResult<OUT> response = this.handleObjectRequest(req, resourceManager.context);
+            APIResult<OUT> response = this.handleObjectRequest(req, resourceManager);
 
-            getLogger().log("Response formed: " + (System.currentTimeMillis() - start) + " ms");
+            getLogger().i("Response formed: " + (System.currentTimeMillis() - start) + " ms",
+                    null, "OBJECT_HANDLER");
 
             // Get JSON response
             strResponse = new APIResult<>(response.getStatusCode(),
                     gson.toJson(response.getBody()),
                     response.getHeaders());
 
-            getLogger().log("Response formatted");
+            getLogger().i("Response formatted", null, "OBJECT_HANDLER");
         } catch (ApiException e) {
-            getLogger().log("Returning API exception: " + e.getMessage());
+            getLogger().w("Returning API exception", e, "OBJECT_HANDLER");
             strResponse = new APIResult<>(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
         } catch (Throwable e) {
-            getLogger().log("Uncaught Exception: " + e
-                    + "\nStack Trace: \n\t"
-                    + Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining("\n\t")));
+            getLogger().e("Fatal uncaught exception", e, "OBJECT_HANDLER");
             strResponse = new APIResult<>(500, "Internal server error.", APIRequest.jsonHeaders());
         }
 
         // Encode & return
-        getLogger().log("Response: " + strResponse.getBody());
+        getLogger().i("Response (code " + strResponse.getStatusCode() + "): " + strResponse.getBody(),
+                null, "OBJECT_HANDLER");
         strResponse.setBody(CryptographyUtils.encodeString(strResponse.getBody()));
         pw.write(gson.toJson(strResponse));
     }
 
     @NotNull
-    public abstract APIResult<OUT> handleObjectRequest(@NotNull APIRequest<IN> in, @NotNull Context context);
+    public abstract APIResult<OUT> handleObjectRequest(@NotNull APIRequest<IN> in, @NotNull AWSResourceManager resourceManager);
 
     @NotNull
     public final Gson getGson() {

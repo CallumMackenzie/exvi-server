@@ -7,14 +7,10 @@ package com.camackenzie.exvi.server.lambdas;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.lambda.runtime.Context;
-import com.camackenzie.exvi.server.util.DocumentDatabase;
-import com.camackenzie.exvi.server.util.RequestBodyHandler;
+import com.camackenzie.exvi.server.util.*;
 import com.camackenzie.exvi.core.api.AccountSaltResult;
 import com.camackenzie.exvi.core.api.RetrieveSaltRequest;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
-import com.camackenzie.exvi.server.util.AWSDynamoDB;
-import com.camackenzie.exvi.server.util.ApiException;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.StandardCharsets;
@@ -32,14 +28,14 @@ public class RetrieveSaltAction
 
     @Override
     @NotNull
-    public AccountSaltResult handleBodyRequest(@NotNull RetrieveSaltRequest in, @NotNull Context context) {
+    public AccountSaltResult handleBodyRequest(@NotNull RetrieveSaltRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
         }
 
         // Retrieve resources
-        DocumentDatabase database = new AWSDynamoDB();
+        DocumentDatabase database = getResourceManager().getDatabase();
         Table accountTable = database.getTable("exvi-user-login");
         Item item = accountTable.getItem("username", in.getUsername().get());
 

@@ -7,7 +7,6 @@ package com.camackenzie.exvi.server.lambdas;
 
 import com.camackenzie.exvi.server.util.*;
 import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.server.database.DatabaseEntry;
@@ -32,7 +31,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
 
     @Override
     @NotNull
-    public AccountAccessKeyResult handleBodyRequest(@NotNull AccountCreationRequest in, @NotNull Context context) {
+    public AccountAccessKeyResult handleBodyRequest(@NotNull AccountCreationRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
@@ -45,7 +44,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         }
 
         // Retrieve resources
-        DocumentDatabase database = new AWSDynamoDB();
+        DocumentDatabase database = getResourceManager().getDatabase();
         Table userTable = database.getTable("exvi-user-login");
 
         VerificationDatabaseEntry dbEntry = DatabaseEntry.fromItem(
@@ -84,7 +83,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
                 passwordHash,
                 salt
         ));
-        UserDataEntry.ensureUserHasData(database, getLogger(), ac.getUsername().get());
+        UserDataEntry.ensureUserHasData(database, ac.getUsername().get());
     }
 
     private boolean verificationCodeValid(@NotNull String inputCode, @NotNull String actualCode, long creation) {

@@ -7,7 +7,6 @@ package com.camackenzie.exvi.server.lambdas;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.NoneResult;
 import com.camackenzie.exvi.core.api.VerificationRequest;
 import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
@@ -28,7 +27,7 @@ public class VerificationAction
 
     @Override
     @NotNull
-    public NoneResult handleBodyRequest(@NotNull VerificationRequest in, @NotNull Context context) {
+    public NoneResult handleBodyRequest(@NotNull VerificationRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
@@ -45,7 +44,7 @@ public class VerificationAction
         }
 
         // Retrieve resources
-        DocumentDatabase dynamoDB = new AWSDynamoDB();
+        DocumentDatabase dynamoDB = getResourceManager().getDatabase();
         Table userTable = dynamoDB.getTable("exvi-user-login");
 
         // Ensure user credentials are valid
@@ -90,7 +89,7 @@ public class VerificationAction
             }
             return false;
         } catch (Exception e) {
-            this.getLogger().log("Phone validation error: " + e);
+            this.getLogger().e("Phone validation error", e, null);
             return true;
         }
     }
@@ -107,7 +106,7 @@ public class VerificationAction
             }
             return false;
         } catch (Exception e) {
-            this.getLogger().log("Email validation error: " + e);
+            this.getLogger().e("Email validation error: ", e, null);
             return true;
         }
     }
@@ -144,7 +143,7 @@ public class VerificationAction
                 .append(code)
                 .append(".");
         try {
-            EmailClient emailClient = new AWSEmailClient();
+            EmailClient emailClient = getResourceManager().getEmailClient();
             emailClient.sendEmail("exvi@camackenzie.com",
                     user.getEmail().get(),
                     "Exvi Verification Code",
@@ -152,8 +151,7 @@ public class VerificationAction
                     textBody.toString());
             return true;
         } catch (Exception ex) {
-            this.getLogger().log("Verification code email was not sent. Error message: "
-                    + ex.getMessage());
+            this.getLogger().e("Verification code email was not sent.", ex, null);
         }
         return false;
     }
@@ -166,13 +164,13 @@ public class VerificationAction
                 .append(code)
                 .append(".");
         try {
-            SMSClient smsc = new AWSSMSClient();
+            SMSClient smsc = getResourceManager().getSMSClient();
             smsc.sendText(user.getPhone().get(), textContent.toString());
             return true;
         } catch (SnsException e) {
-            this.getLogger().log("SNS WARNING: " + e.awsErrorDetails().errorMessage() + "\n");
+            this.getLogger().e("SNS error", e, null);
         } catch (Exception e) {
-            this.getLogger().log("SNS CLIENT WARNING: " + e);
+            this.getLogger().e("SNS client warning", e, null);
         }
         return false;
     }

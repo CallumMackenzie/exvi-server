@@ -5,15 +5,11 @@
  */
 package com.camackenzie.exvi.server.lambdas;
 
-import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.*;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
-import com.camackenzie.exvi.server.util.AWSDynamoDB;
-import com.camackenzie.exvi.server.util.DocumentDatabase;
-import com.camackenzie.exvi.server.util.RequestBodyHandler;
-import com.camackenzie.exvi.server.util.ApiException;
+import com.camackenzie.exvi.server.util.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -28,15 +24,15 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
 
     @Override
     @NotNull
-    public GenericDataResult handleBodyRequest(@NotNull GenericDataRequest in, @NotNull Context context) {
+    public GenericDataResult handleBodyRequest(@NotNull GenericDataRequest in) {
         // Preconditions
         if (in.getRequester().get().isBlank()) {
             throw new ApiException(400, "No requester provided");
         }
 
         // Retrieve resources
-        DocumentDatabase database = new AWSDynamoDB();
-        this.getLogger().log("Requester: " + in.getRequester().get());
+        DocumentDatabase database = getResourceManager().getDatabase();
+        this.getLogger().i("Requester: " + in.getRequester().get(), null, null);
 
         // Determine behaviour based on request
         switch (in.getRequester().get()) {
@@ -96,6 +92,6 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                                              @NotNull EncodedStringCache username,
                                              @NotNull EncodedStringCache accessKey) {
         UserLoginEntry.ensureAccessKeyValid(database, username, accessKey);
-        return UserDataEntry.ensureUserHasData(database, getLogger(), username);
+        return UserDataEntry.ensureUserHasData(database, username);
     }
 }
