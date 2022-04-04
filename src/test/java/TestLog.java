@@ -1,5 +1,4 @@
 import com.amazonaws.util.StringInputStream;
-import com.camackenzie.exvi.server.lambdas.LoginAction;
 import com.camackenzie.exvi.server.test.TestContext;
 import com.camackenzie.exvi.server.util.AWSResourceManager;
 import com.camackenzie.exvi.server.util.RequestStreamHandlerWrapper;

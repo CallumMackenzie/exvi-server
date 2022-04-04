@@ -10,6 +10,7 @@ import com.amazonaws.services.dynamodbv2.waiters.AmazonDynamoDBWaiters;
 import java.util.List;
 import java.util.Map;
 
+// TODO: Make this usable for tests?
 public class TestAWSDynamoDB implements AmazonDynamoDB {
     private String endpoint = "";
     private Region region;

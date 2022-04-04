@@ -32,7 +32,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
 
         // Retrieve resources
         DocumentDatabase database = getResourceManager().getDatabase();
-        this.getLogger().i("Requester: " + in.getRequester().get(), null, null);
+        this.getLogger().i("Requester: " + in.getRequester().get(), null, "DATA_LAMBDA");
 
         // Determine behaviour based on request
         switch (in.getRequester().get()) {
@@ -81,6 +81,10 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 user.setBodyStats(request.getBodyStats());
                 return NoneResult.INSTANCE;
+            }
+            case CompatibleVersionRequest.uid: {
+                var request = this.getRequestBodyAs(CompatibleVersionRequest.class);
+                return new BooleanResult(true);
             }
             default:
                 throw new ApiException(400, "Could not recognize requester");

@@ -187,6 +187,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     /////////////////////////
 
     public String getWorkoutsJSON() {
+        getExviLogger().i(getUserJSON("workouts"), null, "USER_DATA");
         return getUserJSON("workouts");
     }
 
