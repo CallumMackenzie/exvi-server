@@ -50,7 +50,6 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
     }
 
     public final <Z> Z getRequestBodyAs(@NotNull Class<Z> cls) {
-        getLogger().v("Getting request as \"" + cls.getCanonicalName() + "\"", null, "OBJECT_HANDLER");
         return this.getGson().fromJson(this.getRawRequestBody(), cls);
     }
 

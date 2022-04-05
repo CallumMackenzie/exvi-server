@@ -78,7 +78,7 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
                             .append(formatToElapsedTime(timeDiff)).append(": ");
                     if (tag != null) log.append(tag).append(": ");
                     if (message != null) log.append(message);
-                    if (throwable != null) log.append("\n\t")
+                    if (throwable != null) log.append("\n\t").append(throwable.getMessage()).append("\n\t")
                             .append(Arrays.stream(throwable.getStackTrace()).map(it -> it.toString())
                                     .collect(Collectors.joining("\n\t\t")));
 
