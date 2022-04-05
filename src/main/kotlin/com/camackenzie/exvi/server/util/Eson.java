@@ -13,7 +13,11 @@ public class Eson {
 
     public Eson() {
         GsonBuilder builder = new GsonBuilder();
+        // Configure GSON
         this.registerGenericDataRequest(builder);
+        builder.setLenient();
+
+        // Create GSON
         this.gson = builder.create();
     }
 

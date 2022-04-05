@@ -74,8 +74,8 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
 
                     // Build final message
                     StringBuilder log = new StringBuilder()
-                            .append(formatToElapsedTime(timeDiff)).append(": ")
-                            .append(logLevelStringMap.get(logLevel)).append(" ");
+                            .append(logLevelStringMap.get(logLevel)).append(" ")
+                            .append(formatToElapsedTime(timeDiff)).append(": ");
                     if (tag != null) log.append(tag).append(": ");
                     if (message != null) log.append(message);
                     if (throwable != null) log.append("\n\t")
