@@ -57,8 +57,6 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
     public void handleRequestWrapped(@NotNull BufferedReader bf,
                                      @NotNull PrintWriter pw,
                                      @NotNull AWSResourceManager resourceManager) {
-        long start = System.currentTimeMillis();
-
         Gson gson = eson.getGson();
         APIResult<String> strResponse;
         try {
@@ -68,7 +66,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             JsonObject requestObject = JsonParser.parseString(rawRequest).getAsJsonObject();
             JsonElement requestBodyObject = requestObject.get("body");
 
-            // Parse request
+            // Dynamically parse request to input type
             IN requestBody = null;
             if (requestBodyObject.isJsonPrimitive()) {
                 if (requestBodyObject.getAsJsonPrimitive().isString()) {
@@ -81,9 +79,8 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             if (requestBody == null) {
                 throw new ApiException(400, "Cannot parse request body");
             }
-            getLogger().i("Request body is valid: " + (System.currentTimeMillis() - start) + " ms",
-                    null, "OBJECT_HANDLER");
-            start = System.currentTimeMillis();
+            getLogger().i("Request body is valid", null, "OBJECT_HANDLER");
+            getLogger().v("Body: " + getRawRequestBody(), null, "OBJECT_HANDLER");
 
             // Pass the headers to a new api request object with the proper body format
             HashMap headers = gson.fromJson(requestObject.get("headers"), HashMap.class);
@@ -92,11 +89,9 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                     headers);
             // Call inheriting class for response
             APIResult<OUT> response = this.handleObjectRequest(req, resourceManager);
+            getLogger().i("Response formed", null, "OBJECT_HANDLER");
 
-            getLogger().i("Response formed: " + (System.currentTimeMillis() - start) + " ms",
-                    null, "OBJECT_HANDLER");
-
-            // Get JSON response
+            // Convert response to JSON
             strResponse = new APIResult<>(response.getStatusCode(),
                     gson.toJson(response.getBody()),
                     response.getHeaders());
@@ -107,11 +102,11 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             strResponse = new APIResult<>(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
         } catch (Throwable e) {
             getLogger().e("Fatal uncaught exception", e, "OBJECT_HANDLER");
-            strResponse = new APIResult<>(500, "Internal server error.", APIRequest.jsonHeaders());
+            strResponse = new APIResult<>(500, "Internal server error", APIRequest.jsonHeaders());
         }
 
-        // Encode & return
-        getLogger().i("Response (code " + strResponse.getStatusCode() + "): " + strResponse.getBody(),
+        // Encode & write response
+        getLogger().v("Response (code " + strResponse.getStatusCode() + "): " + strResponse.getBody(),
                 null, "OBJECT_HANDLER");
         strResponse.setBody(CryptographyUtils.encodeString(strResponse.getBody()));
         pw.write(gson.toJson(strResponse));
