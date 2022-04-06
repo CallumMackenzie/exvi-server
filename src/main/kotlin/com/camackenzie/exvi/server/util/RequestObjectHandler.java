@@ -8,6 +8,8 @@ package com.camackenzie.exvi.server.util;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
+import com.camackenzie.exvi.core.model.ActualWorkout;
+import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.SelfSerializable;
@@ -15,6 +17,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import kotlinx.serialization.DeserializationStrategy;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -49,8 +52,8 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         return rawBody;
     }
 
-    public final <Z> Z getRequestBodyAs(@NotNull Class<Z> cls) {
-        return this.getGson().fromJson(this.getRawRequestBody(), cls);
+    public final <Z> Z getRequestBodyAs(@NotNull DeserializationStrategy<Z> deserializer) {
+        return ExviSerializer.INSTANCE.fromJson(deserializer, rawBody);
     }
 
     @Override
@@ -64,6 +67,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             rawRequest = bf.lines().collect(Collectors.joining(""));
             // Parse request to json
             JsonObject requestObject = JsonParser.parseString(rawRequest).getAsJsonObject();
+
             JsonElement requestBodyObject = requestObject.get("body");
 
             // Dynamically parse request to input type
@@ -73,6 +77,9 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                     rawBody = EncodedStringCache.fromEncoded(requestBodyObject.getAsString()).get();
                     requestBody = gson.fromJson(rawBody, this.inClass);
                 }
+            } else if (requestBodyObject.isJsonObject()) {
+                rawBody = requestBodyObject.getAsJsonObject().toString();
+                requestBody = gson.fromJson(rawBody, this.inClass);
             }
 
             // Ensure a valid request body has been parsed
@@ -84,19 +91,18 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
 
             // Pass the headers to a new api request object with the proper body format
             HashMap headers = gson.fromJson(requestObject.get("headers"), HashMap.class);
+            if (headers == null) headers = new HashMap(); // Kotlin expects the headers variable to be not null
             APIRequest<IN> req = new APIRequest<>("",
                     requestBody,
                     headers);
             // Call inheriting class for response
             APIResult<OUT> response = this.handleObjectRequest(req, resourceManager);
-            getLogger().i("Response formed", null, "OBJECT_HANDLER");
 
             // Convert response to JSON
             strResponse = new APIResult<>(response.getStatusCode(),
                     gson.toJson(response.getBody()),
                     response.getHeaders());
-
-            getLogger().i("Response formatted", null, "OBJECT_HANDLER");
+            getLogger().i("Response formed", null, "OBJECT_HANDLER");
         } catch (ApiException e) {
             getLogger().w("Returning API exception", e, "OBJECT_HANDLER");
             strResponse = new APIResult<>(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());

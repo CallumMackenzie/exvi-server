@@ -37,7 +37,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
         // Determine behaviour based on request
         switch (in.getRequester().get()) {
             case WorkoutListRequest.uid: {
-                var request = this.getRequestBodyAs(WorkoutListRequest.class);
+                var request = this.getRequestBodyAs(WorkoutListRequest.Companion.serializer());
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 switch (request.getType()) {
                     case ListAllTemplates:
@@ -47,19 +47,19 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                 }
             }
             case WorkoutPutRequest.uid: {
-                var request = this.getRequestBodyAs(WorkoutPutRequest.class);
+                var request = this.getRequestBodyAs(WorkoutPutRequest.Companion.serializer());
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 user.addWorkouts(request.getWorkouts());
                 return NoneResult.INSTANCE;
             }
             case ActiveWorkoutPutRequest.uid: {
-                var request = this.getRequestBodyAs(ActiveWorkoutPutRequest.class);
+                var request = this.getRequestBodyAs(ActiveWorkoutPutRequest.Companion.serializer());
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 user.addActiveWorkouts(request.getWorkouts());
                 return NoneResult.INSTANCE;
             }
             case DeleteWorkoutsRequest.uid: {
-                var request = this.getRequestBodyAs(DeleteWorkoutsRequest.class);
+                var request = this.getRequestBodyAs(DeleteWorkoutsRequest.Companion.serializer());
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 switch (request.getWorkoutType()) {
                     case Workout:
@@ -72,18 +72,18 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
                 return NoneResult.INSTANCE;
             }
             case GetBodyStatsRequest.uid: {
-                var request = this.getRequestBodyAs(GetBodyStatsRequest.class);
+                var request = this.getRequestBodyAs(GetBodyStatsRequest.Companion.serializer());
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 return new GetBodyStatsResponse(user.getBodyStats());
             }
             case SetBodyStatsRequest.uid: {
-                var request = this.getRequestBodyAs(SetBodyStatsRequest.class);
+                var request = this.getRequestBodyAs(SetBodyStatsRequest.Companion.serializer());
                 var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
                 user.setBodyStats(request.getBodyStats());
                 return NoneResult.INSTANCE;
             }
             case CompatibleVersionRequest.uid: {
-                var request = this.getRequestBodyAs(CompatibleVersionRequest.class);
+                var request = this.getRequestBodyAs(CompatibleVersionRequest.Companion.serializer());
                 return new BooleanResult(true);
             }
             default:

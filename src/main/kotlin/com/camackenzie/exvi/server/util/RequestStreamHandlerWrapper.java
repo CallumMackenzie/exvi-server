@@ -73,17 +73,17 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
                     UnitValue<TimeUnit> timeDiff = TimeUnit.now().minus(execStart);
 
                     // Build final message
-                    StringBuilder log = new StringBuilder()
+                    StringBuilder msg = new StringBuilder()
                             .append(logLevelStringMap.get(logLevel)).append(" ")
                             .append(formatToElapsedTime(timeDiff)).append(": ");
-                    if (tag != null) log.append(tag).append(": ");
-                    if (message != null) log.append(message);
-                    if (throwable != null) log.append("\n\t").append(throwable.getMessage()).append("\n\t")
-                            .append(Arrays.stream(throwable.getStackTrace()).map(it -> it.toString())
+                    if (tag != null) msg.append(tag).append(": ");
+                    if (message != null) msg.append(message);
+                    if (throwable != null) msg.append("\n\t").append(throwable.getMessage()).append("\n\t")
+                            .append(Arrays.stream(throwable.getStackTrace()).map(StackTraceElement::toString)
                                     .collect(Collectors.joining("\n\t\t")));
 
                     // Log the completed log
-                    lambdaLogger.log(log.toString());
+                    lambdaLogger.log(msg.toString());
                 }
             });
 
@@ -103,6 +103,8 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
             writer.close();
         } catch (Throwable t) {
             getLogger().e("Uncaught fatal response", t, "ROOT_HANDLER");
+        } finally {
+            getLogger().takeLogarithm();
         }
     }
 
