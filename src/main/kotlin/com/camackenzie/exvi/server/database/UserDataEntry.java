@@ -11,7 +11,6 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.camackenzie.exvi.core.model.*;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.Identifiable;
@@ -22,8 +21,6 @@ import com.camackenzie.exvi.server.util.DocumentDatabase;
 import com.google.gson.Gson;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
-
-import static com.camackenzie.exvi.core.util.LoggingKt.getExviLogger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +40,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     @NotNull
     public final String username;
     private ActualWorkout[] workouts;
-    private ActualActiveWorkout[] activeWorkouts;
+    private ActiveWorkoutArray activeWorkouts;
     private ActualBodyStats bodyStats;
 
     @NotNull
@@ -52,7 +49,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     private UserDataEntry(@NotNull DocumentDatabase database,
                           @NotNull String username,
                           ActualWorkout[] workouts,
-                          ActualActiveWorkout[] activeWorkouts,
+                          ActiveWorkoutArray activeWorkouts,
                           ActualBodyStats bodyStats) {
         this.username = username;
         this.bodyStats = bodyStats;
@@ -68,7 +65,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     @NotNull
     private static UserDataEntry defaultData(@NotNull DocumentDatabase database,
                                              @NotNull String username) {
-        return new UserDataEntry(database, username, new ActualWorkout[0], new ActualActiveWorkout[0], ActualBodyStats.average());
+        return new UserDataEntry(database, username, new ActualWorkout[0], new ActiveWorkoutArray(new ActiveWorkout[0]),
+                ActualBodyStats.average());
     }
 
     @NotNull
@@ -174,7 +172,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public ActualBodyStats getBodyStats() {
-        return this.bodyStats = gson.fromJson(getBodyStatsJSON(), ActualBodyStats.class);
+        return this.bodyStats = ExviSerializer.INSTANCE.fromJson(ActualBodyStats.Companion.serializer(), getBodyStatsJSON());
     }
 
     public void setBodyStats(@NotNull ActualBodyStats bs) {
@@ -187,7 +185,6 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     /////////////////////////
 
     public String getWorkoutsJSON() {
-        getExviLogger().i(getUserJSON("workouts"), null, "USER_DATA");
         return getUserJSON("workouts");
     }
 
@@ -252,7 +249,9 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public ActualActiveWorkout[] getActiveWorkouts() {
-        return activeWorkouts = gson.fromJson(getActiveWorkoutsJSON(), ActualActiveWorkout[].class);
+        activeWorkouts = ExviSerializer.INSTANCE.fromJson(ActiveWorkoutArray.Companion.serializer(),
+                getActiveWorkoutsJSON());
+        return (ActualActiveWorkout[]) activeWorkouts.getArray();
     }
 
     public void setActiveWorkouts(@NotNull List<ActualActiveWorkout> workoutList) {
@@ -284,7 +283,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public void addActiveWorkouts(@NotNull ActualActiveWorkout[] workouts) {
-        if (activeWorkouts.length == 0) return;
+        if (activeWorkouts.getArray().length == 0) return;
         List<ActualActiveWorkout> toAppend = new ArrayList<>();
         Identifiable.intersectIndexed(arrayToList(workouts), arrayToList(getActiveWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {

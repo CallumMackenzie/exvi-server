@@ -5,10 +5,8 @@
  */
 package com.camackenzie.exvi.server.util;
 
-import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
-import com.camackenzie.exvi.core.model.ActualWorkout;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
@@ -22,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -120,10 +117,5 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
 
     @NotNull
     public abstract APIResult<OUT> handleObjectRequest(@NotNull APIRequest<IN> in, @NotNull AWSResourceManager resourceManager);
-
-    @NotNull
-    public final Gson getGson() {
-        return this.eson.getGson();
-    }
 
 }

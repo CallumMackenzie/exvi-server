@@ -5,8 +5,10 @@ import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.Identifiable;
 import com.camackenzie.exvi.server.test.TestContext;
 import com.camackenzie.exvi.server.util.AWSResourceManager;
+import com.camackenzie.exvi.server.util.Eson;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import com.camackenzie.exvi.server.util.RequestStreamHandlerWrapper;
+import com.google.gson.Gson;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -94,7 +96,9 @@ public class LambdaCallTests {
                 + new WorkoutListRequest("name", "", WorkoutListRequest.Type.ListAllTemplates).toJson()
                 + "}");
 
-        var fn = handler.getGson().fromJson(o1, APIResult.class);
+        Gson gson = new Eson().getGson();
+
+        var fn = gson.fromJson(o1, APIResult.class);
         assertTrue(fn.getBody() instanceof String);
         var decodedBody = APIResult.decodeBody((String) fn.getBody());
         System.out.println(decodedBody);
