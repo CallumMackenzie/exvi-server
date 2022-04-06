@@ -64,6 +64,8 @@ public class LambdaCallTests {
             public GenericDataResult handleBodyRequest(@NotNull GenericDataRequest genericDataRequest) {
                 switch (genericDataRequest.getRequester().get()) {
                     case WorkoutListRequest.uid: {
+                        var request = getRequestBodyAs(WorkoutListRequest.Companion.serializer());
+                        assertEquals(request.getUsername().get(), "name");
                         return new WorkoutListResult(new ActualWorkout[0]);
                     }
                     default:
@@ -89,7 +91,7 @@ public class LambdaCallTests {
         };
 
         var o1 = testInput.apply("{\"body\":"
-                + new WorkoutListRequest("", "", WorkoutListRequest.Type.ListAllTemplates).toJson()
+                + new WorkoutListRequest("name", "", WorkoutListRequest.Type.ListAllTemplates).toJson()
                 + "}");
 
         var fn = handler.getGson().fromJson(o1, APIResult.class);
