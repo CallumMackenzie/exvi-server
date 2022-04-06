@@ -1,9 +1,15 @@
 package com.camackenzie.exvi.server.util;
 
 import com.camackenzie.exvi.core.api.GenericDataRequest;
+import com.camackenzie.exvi.core.model.ActualExercise;
+import com.camackenzie.exvi.core.model.ActualExerciseSet;
+import com.camackenzie.exvi.core.model.Exercise;
+import com.camackenzie.exvi.core.model.ExerciseSet;
 import com.google.gson.InstanceCreator;
 import org.jetbrains.annotations.NotNull;
 import com.google.gson.*;
+
+import java.util.ArrayList;
 
 public class Eson {
 
@@ -13,7 +19,7 @@ public class Eson {
 
     public Eson() {
         GsonBuilder builder = new GsonBuilder();
-        this.registerGenericDataRequest(builder);
+        this.registerTypeAdapters(builder);
         this.gson = builder.create();
     }
 
@@ -22,7 +28,7 @@ public class Eson {
         return this.gson;
     }
 
-    private void registerGenericDataRequest(@NotNull GsonBuilder builder) {
+    private void registerTypeAdapters(@NotNull GsonBuilder builder) {
         builder.registerTypeAdapter(GenericDataRequest.class,
                 (InstanceCreator) type -> new GenericDataRequest("GenericDataRequest") {
                     @NotNull
