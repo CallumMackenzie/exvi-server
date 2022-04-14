@@ -42,7 +42,8 @@ public class LambdaCallTests {
 
     @Test
     public void testBodyHandler() throws IOException {
-        var handler = new RequestBodyHandler<WorkoutPutRequest, ActualWorkout>(WorkoutPutRequest.class) {
+        var handler = new RequestBodyHandler<>(WorkoutPutRequest.Companion.serializer(),
+                ActualWorkout.Companion.serializer()) {
             @NotNull
             @Override
             public ActualWorkout handleBodyRequest(@NotNull WorkoutPutRequest workoutPutRequest) {
@@ -60,13 +61,14 @@ public class LambdaCallTests {
 
     @Test
     public void testGenericDataReq() throws IOException {
-        var handler = new RequestBodyHandler<GenericDataRequest, GenericDataResult>(GenericDataRequest.class) {
+        var handler = new RequestBodyHandler<>(GenericDataRequest.Companion.serializer(),
+                GenericDataResult.Companion.serializer()) {
             @NotNull
             @Override
             public GenericDataResult handleBodyRequest(@NotNull GenericDataRequest genericDataRequest) {
                 switch (genericDataRequest.getRequester().get()) {
                     case WorkoutListRequest.uid: {
-                        var request = getRequestBodyAs(WorkoutListRequest.Companion.serializer());
+                        var request = (WorkoutListRequest) genericDataRequest;
                         assertEquals(request.getUsername().get(), "name");
                         return new WorkoutListResult(new ActualWorkout[0]);
                     }

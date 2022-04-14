@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
 import com.camackenzie.exvi.core.util.SelfSerializable;
+import kotlinx.serialization.KSerializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -20,8 +21,9 @@ import java.util.HashMap;
 public abstract class RequestBodyHandler<IN extends SelfSerializable, OUT extends SelfSerializable>
         extends RequestObjectHandler<IN, OUT> {
 
-    public RequestBodyHandler(@NotNull Class<IN> inClass) {
-        super(inClass);
+    public RequestBodyHandler(@NotNull KSerializer<IN> inSerializer,
+                              @NotNull KSerializer<OUT> outSerializer) {
+        super(inSerializer, outSerializer);
     }
 
     @Override

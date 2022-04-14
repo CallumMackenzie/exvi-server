@@ -5,23 +5,25 @@
  */
 package com.camackenzie.exvi.server.util;
 
-import com.camackenzie.exvi.core.api.APIRequest;
-import com.camackenzie.exvi.core.api.APIResult;
+import com.camackenzie.exvi.core.api.*;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.SelfSerializable;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import kotlinx.serialization.DeserializationStrategy;
+import kotlinx.serialization.KSerializer;
+import kotlinx.serialization.json.JsonElement;
+import kotlinx.serialization.json.JsonObject;
+import kotlinx.serialization.json.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+
+import static kotlinx.serialization.json.JsonElementKt.getJsonObject;
+import static kotlinx.serialization.json.JsonElementKt.getJsonPrimitive;
 
 /**
  * @author callum
@@ -31,52 +33,41 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         extends RequestStreamHandlerWrapper {
 
     @NotNull
-    private final Class<IN> inClass;
+    private final KSerializer<IN> inSerializer;
+
     @NotNull
-    private final Eson eson;
-    private String rawRequest, rawBody;
+    private final KSerializer<OUT> outSerializer;
 
-    public RequestObjectHandler(@NotNull Class<IN> inClass) {
-        this.inClass = inClass;
-        this.eson = new Eson();
-    }
-
-    public final String getRawRequest() {
-        return rawRequest;
-    }
-
-    public final String getRawRequestBody() {
-        return rawBody;
-    }
-
-    public final <Z> Z getRequestBodyAs(@NotNull DeserializationStrategy<Z> deserializer) {
-        return ExviSerializer.INSTANCE.fromJson(deserializer, rawBody);
+    public RequestObjectHandler(@NotNull KSerializer<IN> inSerializer,
+                                @NotNull KSerializer<OUT> outSerializer) {
+        this.inSerializer = inSerializer;
+        this.outSerializer = outSerializer;
     }
 
     @Override
     public void handleRequestWrapped(@NotNull BufferedReader bf,
                                      @NotNull PrintWriter pw,
                                      @NotNull AWSResourceManager resourceManager) {
-        Gson gson = eson.getGson();
         APIResult<String> strResponse;
         try {
             // Get raw request as string
-            rawRequest = bf.lines().collect(Collectors.joining(""));
+            final var rawRequest = bf.lines().collect(Collectors.joining(""));
             // Parse request to json
-            JsonObject requestObject = JsonParser.parseString(rawRequest).getAsJsonObject();
+            JsonObject requestObject = getJsonObject(ExviSerializer.getSerializer().parseToJsonElement(rawRequest));
+
 
             JsonElement requestBodyObject = requestObject.get("body");
 
             // Dynamically parse request to input type
             IN requestBody = null;
-            if (requestBodyObject.isJsonPrimitive()) {
-                if (requestBodyObject.getAsJsonPrimitive().isString()) {
-                    rawBody = EncodedStringCache.fromEncoded(requestBodyObject.getAsString()).get();
-                    requestBody = gson.fromJson(rawBody, this.inClass);
+            final var primitive = getJsonPrimitive(requestBodyObject);
+            if (requestBodyObject instanceof JsonPrimitive) {
+                if (primitive.isString()) {
+                    requestBody = ExviSerializer
+                            .fromJson(this.inSerializer, EncodedStringCache.fromEncoded(primitive.getContent()).get());
                 }
-            } else if (requestBodyObject.isJsonObject()) {
-                rawBody = requestBodyObject.getAsJsonObject().toString();
-                requestBody = gson.fromJson(rawBody, this.inClass);
+            } else if (requestBodyObject instanceof JsonObject) {
+                requestBody = ExviSerializer.getSerializer().decodeFromJsonElement(this.inSerializer, requestBodyObject);
             }
 
             // Ensure a valid request body has been parsed
@@ -84,11 +75,15 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
                 throw new ApiException(400, "Cannot parse request body");
             }
             getLogger().i("Request body is valid", null, "OBJECT_HANDLER");
-            getLogger().v("Body: " + getRawRequestBody(), null, "OBJECT_HANDLER");
+            getLogger().v("Body: " + rawRequest, null, "OBJECT_HANDLER");
 
             // Pass the headers to a new api request object with the proper body format
-            HashMap headers = gson.fromJson(requestObject.get("headers"), HashMap.class);
-            if (headers == null) headers = new HashMap(); // Kotlin expects the headers variable to be not null
+            // Get request headers if they are present
+            final var headersJsonElement = requestObject.get("headers");
+            final HashMap headers;
+            if (headersJsonElement == null) headers = new HashMap();
+            else headers = new HashMap(getJsonObject(headersJsonElement));
+            // Construct as an APIRequest object
             APIRequest<IN> req = new APIRequest<>("",
                     requestBody,
                     headers);
@@ -97,7 +92,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
 
             // Convert response to JSON
             strResponse = new APIResult<>(response.getStatusCode(),
-                    gson.toJson(response.getBody()),
+                    ExviSerializer.toJson(this.outSerializer, response.getBody()),
                     response.getHeaders());
             getLogger().i("Response formed", null, "OBJECT_HANDLER");
         } catch (ApiException e) {
@@ -112,7 +107,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         getLogger().v("Response (code " + strResponse.getStatusCode() + "): " + strResponse.getBody(),
                 null, "OBJECT_HANDLER");
         strResponse.setBody(CryptographyUtils.encodeString(strResponse.getBody()));
-        pw.write(gson.toJson(strResponse));
+        pw.write(APIResultKt.toJson(strResponse));
     }
 
     @NotNull
