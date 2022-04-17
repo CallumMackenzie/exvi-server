@@ -118,7 +118,7 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
         return resourceManager;
     }
 
-    public abstract void handleRequestWrapped(@NotNull BufferedReader bf,
+    protected abstract void handleRequestWrapped(@NotNull BufferedReader bf,
                                               @NotNull PrintWriter pw,
                                               @NotNull AWSResourceManager resourceManager) throws IOException;
 

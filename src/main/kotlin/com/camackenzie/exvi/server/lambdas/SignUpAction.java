@@ -31,7 +31,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
 
     @Override
     @NotNull
-    public AccountAccessKeyResult handleBodyRequest(@NotNull AccountCreationRequest in) {
+    protected AccountAccessKeyResult handleBodyRequest(@NotNull AccountCreationRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");

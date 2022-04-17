@@ -24,7 +24,7 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
 
     @Override
     @NotNull
-    public AccountAccessKeyResult handleBodyRequest(@NotNull LoginRequest in) {
+    protected AccountAccessKeyResult handleBodyRequest(@NotNull LoginRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");

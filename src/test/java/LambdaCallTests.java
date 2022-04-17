@@ -3,6 +3,8 @@ import com.camackenzie.exvi.core.api.*;
 import com.camackenzie.exvi.core.model.ActualWorkout;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.Identifiable;
+import com.camackenzie.exvi.server.lambdas.LoginAction;
+import com.camackenzie.exvi.server.lambdas.RetrieveSaltAction;
 import com.camackenzie.exvi.server.test.TestContext;
 import com.camackenzie.exvi.server.util.AWSResourceManager;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
@@ -16,7 +18,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -77,27 +78,12 @@ public class LambdaCallTests {
             }
         };
 
-        Function<String, String> testInput = in -> {
-            try {
-                StringInputStream inputStream = new StringInputStream(in);
-                var outputStream = new ByteArrayOutputStream();
-                handler.handleRequest(inputStream, outputStream, new TestContext());
-                var ret = String.valueOf(outputStream);
-                outputStream.close();
-                inputStream.close();
-                return ret;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        };
-
         Gson gson = new Gson();
 
-        var o1 = testInput.apply(
-                        new APIRequest<>(
-                                new WorkoutListRequest("name", "", WorkoutListRequest.Type.ListAllTemplates)
-                        ).toJson(WorkoutListRequest.Companion.serializer()));
+        var o1 = RequestTester.testRequest(handler,
+                new APIRequest<>(
+                        new WorkoutListRequest("name", "", WorkoutListRequest.Type.ListAllTemplates)
+                ).toJson(WorkoutListRequest.Companion.serializer()));
 
         var fn = gson.fromJson(o1, APIResult.class);
         assertTrue(fn.getBody() instanceof String);
@@ -106,6 +92,30 @@ public class LambdaCallTests {
         var result = ExviSerializer.fromJson(GenericDataResult.Companion.serializer(), decodedBody);
         assertTrue(result instanceof WorkoutListResult);
         assertEquals(((WorkoutListResult) result).getWorkouts().length, 0);
+    }
+
+    @Test
+    public void testLoginAction() {
+        var loginAction = new LoginAction();
+
+        APIResult<String> output = RequestTester.testAPIRequest(loginAction, new LoginRequest(
+                "", ""
+        ), LoginRequest.Companion.serializer());
+        assertEquals(output.getStatusCode(), 400);
+
+        output = RequestTester.testAPIRequest(loginAction, new LoginRequest("sdakdsdkja", ""),
+                LoginRequest.Companion.serializer());
+        assertEquals(output.getStatusCode(), 400);
+    }
+
+    @Test
+    public void testRetrieveSaltAction() {
+        var action = new RetrieveSaltAction();
+
+        APIResult<String> output = RequestTester.testAPIRequest(action, new RetrieveSaltRequest(
+                ""
+        ), RetrieveSaltRequest.Companion.serializer());
+        assertEquals(output.getStatusCode(), 400);
     }
 
 }

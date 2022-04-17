@@ -46,7 +46,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
     }
 
     @Override
-    public void handleRequestWrapped(@NotNull BufferedReader bf,
+    protected void handleRequestWrapped(@NotNull BufferedReader bf,
                                      @NotNull PrintWriter pw,
                                      @NotNull AWSResourceManager resourceManager) {
         APIResult<String> strResponse;
@@ -113,6 +113,6 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
     }
 
     @NotNull
-    public abstract APIResult<OUT> handleObjectRequest(@NotNull APIRequest<IN> in, @NotNull AWSResourceManager resourceManager);
+    protected abstract APIResult<OUT> handleObjectRequest(@NotNull APIRequest<IN> in, @NotNull AWSResourceManager resourceManager);
 
 }

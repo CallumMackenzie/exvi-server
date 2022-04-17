@@ -27,7 +27,7 @@ public class VerificationAction
 
     @Override
     @NotNull
-    public NoneResult handleBodyRequest(@NotNull VerificationRequest in) {
+    protected NoneResult handleBodyRequest(@NotNull VerificationRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");

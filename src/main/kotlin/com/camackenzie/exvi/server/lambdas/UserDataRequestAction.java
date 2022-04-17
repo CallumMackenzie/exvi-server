@@ -28,7 +28,7 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
 
     @Override
     @NotNull
-    public GenericDataResult handleBodyRequest(@NotNull GenericDataRequest in) {
+    protected GenericDataResult handleBodyRequest(@NotNull GenericDataRequest in) {
         // Retrieve resources
         DocumentDatabase database = getResourceManager().getDatabase();
 

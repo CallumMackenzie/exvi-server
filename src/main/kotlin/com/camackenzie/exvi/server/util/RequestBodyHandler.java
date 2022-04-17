@@ -25,7 +25,7 @@ public abstract class RequestBodyHandler<IN extends SelfSerializable, OUT extend
 
     @Override
     @NotNull
-    public APIResult<OUT> handleObjectRequest(@NotNull APIRequest<IN> in, @NotNull AWSResourceManager resourceManager) {
+    protected APIResult<OUT> handleObjectRequest(@NotNull APIRequest<IN> in, @NotNull AWSResourceManager resourceManager) {
         OUT out = this.handleBodyRequest(in.getBody());
         return new APIResult<>(200,
                 out,
@@ -33,6 +33,6 @@ public abstract class RequestBodyHandler<IN extends SelfSerializable, OUT extend
     }
 
     @NotNull
-    public abstract OUT handleBodyRequest(@NotNull IN in);
+    protected abstract OUT handleBodyRequest(@NotNull IN in);
 
 }

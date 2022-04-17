@@ -28,7 +28,7 @@ public class RetrieveSaltAction
 
     @Override
     @NotNull
-    public AccountSaltResult handleBodyRequest(@NotNull RetrieveSaltRequest in) {
+    protected AccountSaltResult handleBodyRequest(@NotNull RetrieveSaltRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
