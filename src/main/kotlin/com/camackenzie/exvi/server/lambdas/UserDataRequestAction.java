@@ -9,7 +9,9 @@ import com.camackenzie.exvi.core.api.*;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
-import com.camackenzie.exvi.server.util.*;
+import com.camackenzie.exvi.server.util.ApiException;
+import com.camackenzie.exvi.server.util.DocumentDatabase;
+import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -19,76 +21,64 @@ import org.jetbrains.annotations.NotNull;
 public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest, GenericDataResult> {
 
     public UserDataRequestAction() {
-        super(GenericDataRequest.class);
+        super(GenericDataRequest.Companion.serializer(), GenericDataResult.Companion.serializer());
     }
+
+    private static final int LATEST_COMPATIBLE_VERSION = 2;
 
     @Override
     @NotNull
     public GenericDataResult handleBodyRequest(@NotNull GenericDataRequest in) {
-        // Preconditions
-        if (in.getRequester().get().isBlank()) {
-            throw new ApiException(400, "No requester provided");
-        }
-
         // Retrieve resources
         DocumentDatabase database = getResourceManager().getDatabase();
-        this.getLogger().i("Requester: " + in.getRequester().get(), null, "DATA_LAMBDA");
 
         // Determine behaviour based on request
-        switch (in.getRequester().get()) {
-            case WorkoutListRequest.uid: {
-                var request = this.getRequestBodyAs(WorkoutListRequest.Companion.serializer());
-                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                switch (request.getType()) {
-                    case ListAllTemplates:
-                        return new WorkoutListResult(user.getWorkouts());
-                    case ListAllActive:
-                        return new ActiveWorkoutListResult(user.getActiveWorkouts());
-                }
+        if (in instanceof WorkoutListRequest) {
+            var request = (WorkoutListRequest) in;
+            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+            switch (request.getType()) {
+                case ListAllTemplates:
+                    return new WorkoutListResult(user.getWorkouts());
+                case ListAllActive:
+                    return new ActiveWorkoutListResult(user.getActiveWorkouts());
             }
-            case WorkoutPutRequest.uid: {
-                var request = this.getRequestBodyAs(WorkoutPutRequest.Companion.serializer());
-                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                user.addWorkouts(request.getWorkouts());
-                return NoneResult.INSTANCE;
+        } else if (in instanceof WorkoutPutRequest) {
+            var request = (WorkoutPutRequest) in;
+            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+            user.addWorkouts(request.getWorkouts());
+            return new NoneResult();
+        } else if (in instanceof ActiveWorkoutPutRequest) {
+            var request = (ActiveWorkoutPutRequest) in;
+            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+            user.addActiveWorkouts(request.getWorkouts());
+            return new NoneResult();
+        } else if (in instanceof DeleteWorkoutsRequest) {
+            var request = (DeleteWorkoutsRequest) in;
+            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+            switch (request.getWorkoutType()) {
+                case Workout:
+                    user.removeWorkouts(request.getWorkoutIds());
+                    break;
+                case ActiveWorkout:
+                    user.removeActiveWorkouts(request.getWorkoutIds());
+                    break;
             }
-            case ActiveWorkoutPutRequest.uid: {
-                var request = this.getRequestBodyAs(ActiveWorkoutPutRequest.Companion.serializer());
-                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                user.addActiveWorkouts(request.getWorkouts());
-                return NoneResult.INSTANCE;
-            }
-            case DeleteWorkoutsRequest.uid: {
-                var request = this.getRequestBodyAs(DeleteWorkoutsRequest.Companion.serializer());
-                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                switch (request.getWorkoutType()) {
-                    case Workout:
-                        user.removeWorkouts(request.getWorkoutIds());
-                        break;
-                    case ActiveWorkout:
-                        user.removeActiveWorkouts(request.getWorkoutIds());
-                        break;
-                }
-                return NoneResult.INSTANCE;
-            }
-            case GetBodyStatsRequest.uid: {
-                var request = this.getRequestBodyAs(GetBodyStatsRequest.Companion.serializer());
-                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                return new GetBodyStatsResponse(user.getBodyStats());
-            }
-            case SetBodyStatsRequest.uid: {
-                var request = this.getRequestBodyAs(SetBodyStatsRequest.Companion.serializer());
-                var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-                user.setBodyStats(request.getBodyStats());
-                return NoneResult.INSTANCE;
-            }
-            case CompatibleVersionRequest.uid: {
-                var request = this.getRequestBodyAs(CompatibleVersionRequest.Companion.serializer());
-                return new BooleanResult(true);
-            }
-            default:
-                throw new ApiException(400, "Could not recognize requester");
+            return new NoneResult();
+        } else if (in instanceof GetBodyStatsRequest) {
+            var request = (GetBodyStatsRequest) in;
+            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+            return new GetBodyStatsResponse(user.getBodyStats());
+        } else if (in instanceof SetBodyStatsRequest) {
+            var request = (SetBodyStatsRequest) in;
+            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
+            user.setBodyStats(request.getBodyStats());
+            return new NoneResult();
+        } else if (in instanceof CompatibleVersionRequest) {
+            var request = (CompatibleVersionRequest) in;
+            return new BooleanResult(request.getVersion() >= LATEST_COMPATIBLE_VERSION);
         }
+
+        throw new ApiException(400, "Could not recognize requester");
     }
 
     @NotNull

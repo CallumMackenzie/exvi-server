@@ -23,7 +23,7 @@ public class RetrieveSaltAction
         extends RequestBodyHandler<RetrieveSaltRequest, AccountSaltResult> {
 
     public RetrieveSaltAction() {
-        super(RetrieveSaltRequest.class);
+        super(RetrieveSaltRequest.Companion.serializer(), AccountSaltResult.Companion.serializer());
     }
 
     @Override
@@ -45,7 +45,7 @@ public class RetrieveSaltAction
             throw new ApiException(400, "No valid user login entry");
         } else {
             return new AccountSaltResult(CryptographyUtils.bytesToBase64String(item.getString("salt")
-                            .getBytes(StandardCharsets.UTF_8)));
+                    .getBytes(StandardCharsets.UTF_8)));
         }
     }
 }

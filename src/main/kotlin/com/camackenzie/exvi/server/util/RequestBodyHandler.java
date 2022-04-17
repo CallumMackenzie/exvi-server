@@ -5,14 +5,11 @@
  */
 package com.camackenzie.exvi.server.util;
 
-import com.amazonaws.services.lambda.runtime.Context;
 import com.camackenzie.exvi.core.api.APIRequest;
 import com.camackenzie.exvi.core.api.APIResult;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import kotlinx.serialization.KSerializer;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.HashMap;
 
 /**
  * @author callum

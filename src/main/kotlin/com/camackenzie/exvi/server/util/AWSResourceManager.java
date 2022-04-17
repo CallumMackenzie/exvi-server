@@ -9,10 +9,10 @@ import java.util.function.Supplier;
 
 public final class AWSResourceManager {
 
-    private final Supplier<DocumentDatabase> databaseSupplier;
-    private final Supplier<SMSClient> smsSupplier;
-    private final Supplier<EmailClient> emailClientSupplier;
-    private final Supplier<LambdaLogger> lambdaLoggerSupplier;
+    private final CachedSupplier<DocumentDatabase> databaseSupplier;
+    private final CachedSupplier<SMSClient> smsSupplier;
+    private final CachedSupplier<EmailClient> emailClientSupplier;
+    private final CachedSupplier<LambdaLogger> lambdaLoggerSupplier;
     public final Context context;
 
     private AWSResourceManager(@NotNull Context context,
@@ -20,11 +20,11 @@ public final class AWSResourceManager {
                                @NotNull Supplier<SMSClient> smsSupplier,
                                @NotNull Supplier<EmailClient> emailClientSupplier,
                                @NotNull Supplier<LambdaLogger> lambdaLoggerSupplier) {
-        this.databaseSupplier = databaseSupplier;
-        this.smsSupplier = smsSupplier;
-        this.emailClientSupplier = emailClientSupplier;
+        this.databaseSupplier = new CachedSupplier<>(databaseSupplier);
+        this.smsSupplier = new CachedSupplier<>(smsSupplier);
+        this.emailClientSupplier = new CachedSupplier<>(emailClientSupplier);
+        this.lambdaLoggerSupplier = new CachedSupplier<>(lambdaLoggerSupplier);
         this.context = context;
-        this.lambdaLoggerSupplier = lambdaLoggerSupplier;
     }
 
     public DocumentDatabase getDatabase() {

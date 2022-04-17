@@ -22,7 +22,7 @@ public class VerificationAction
         extends RequestBodyHandler<VerificationRequest, NoneResult> {
 
     public VerificationAction() {
-        super(VerificationRequest.class);
+        super(VerificationRequest.Companion.serializer(), NoneResult.Companion.serializer());
     }
 
     @Override
@@ -68,7 +68,7 @@ public class VerificationAction
             if (codeSent) {
                 dynamoDB.putObjectInTable(userTable,
                         new VerificationDatabaseEntry(in, code));
-                return NoneResult.INSTANCE;
+                return new NoneResult();
             } else {
                 throw new ApiException(500, "Verification code could not be sent");
             }

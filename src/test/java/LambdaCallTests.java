@@ -5,14 +5,16 @@ import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.Identifiable;
 import com.camackenzie.exvi.server.test.TestContext;
 import com.camackenzie.exvi.server.util.AWSResourceManager;
-import com.camackenzie.exvi.server.util.Eson;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import com.camackenzie.exvi.server.util.RequestStreamHandlerWrapper;
 import com.google.gson.Gson;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -52,7 +54,7 @@ public class LambdaCallTests {
         };
 
         var input = new WorkoutPutRequest("", "", new ActualWorkout[]{
-                new ActualWorkout("name", "desc", new ArrayList(), Identifiable.generateId())
+                new ActualWorkout("name", "desc", new ArrayList<>(), Identifiable.generateId())
         });
         var inputStream = new StringInputStream("{\"body\":" + input.toJson() + "}");
         var outputStream = new ByteArrayOutputStream();
@@ -66,14 +68,10 @@ public class LambdaCallTests {
             @NotNull
             @Override
             public GenericDataResult handleBodyRequest(@NotNull GenericDataRequest genericDataRequest) {
-                switch (genericDataRequest.getRequester().get()) {
-                    case WorkoutListRequest.uid: {
-                        var request = (WorkoutListRequest) genericDataRequest;
-                        assertEquals(request.getUsername().get(), "name");
-                        return new WorkoutListResult(new ActualWorkout[0]);
-                    }
-                    default:
-                        break;
+                if (genericDataRequest instanceof WorkoutListRequest) {
+                    var request = (WorkoutListRequest) genericDataRequest;
+                    assertEquals(request.getUsername().get(), "name");
+                    return new WorkoutListResult(new ActualWorkout[0]);
                 }
                 return null;
             }
@@ -94,18 +92,20 @@ public class LambdaCallTests {
             return null;
         };
 
-        var o1 = testInput.apply("{\"body\":"
-                + new WorkoutListRequest("name", "", WorkoutListRequest.Type.ListAllTemplates).toJson()
-                + "}");
+        Gson gson = new Gson();
 
-        Gson gson = new Eson().getGson();
+        var o1 = testInput.apply(
+                        new APIRequest<>(
+                                new WorkoutListRequest("name", "", WorkoutListRequest.Type.ListAllTemplates)
+                        ).toJson(WorkoutListRequest.Companion.serializer()));
 
         var fn = gson.fromJson(o1, APIResult.class);
         assertTrue(fn.getBody() instanceof String);
         var decodedBody = APIResult.decodeBody((String) fn.getBody());
         System.out.println(decodedBody);
-        var result = ExviSerializer.INSTANCE.fromJson(WorkoutListResult.Companion.serializer(), decodedBody);
-        assertEquals(result.getWorkouts().length, 0);
+        var result = ExviSerializer.fromJson(GenericDataResult.Companion.serializer(), decodedBody);
+        assertTrue(result instanceof WorkoutListResult);
+        assertEquals(((WorkoutListResult) result).getWorkouts().length, 0);
     }
 
 }

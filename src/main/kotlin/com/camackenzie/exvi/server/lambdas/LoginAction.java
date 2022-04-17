@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessKeyResult> {
 
     public LoginAction() {
-        super(LoginRequest.class);
+        super(LoginRequest.Companion.serializer(), AccountAccessKeyResult.Companion.serializer());
     }
 
     @Override

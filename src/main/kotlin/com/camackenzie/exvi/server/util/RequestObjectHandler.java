@@ -5,12 +5,13 @@
  */
 package com.camackenzie.exvi.server.util;
 
-import com.camackenzie.exvi.core.api.*;
+import com.camackenzie.exvi.core.api.APIRequest;
+import com.camackenzie.exvi.core.api.APIResult;
+import com.camackenzie.exvi.core.api.APIResultKt;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.SelfSerializable;
-import kotlinx.serialization.DeserializationStrategy;
 import kotlinx.serialization.KSerializer;
 import kotlinx.serialization.json.JsonElement;
 import kotlinx.serialization.json.JsonObject;
@@ -55,19 +56,20 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             // Parse request to json
             JsonObject requestObject = getJsonObject(ExviSerializer.getSerializer().parseToJsonElement(rawRequest));
 
-
             JsonElement requestBodyObject = requestObject.get("body");
 
             // Dynamically parse request to input type
             IN requestBody = null;
-            final var primitive = getJsonPrimitive(requestBodyObject);
-            if (requestBodyObject instanceof JsonPrimitive) {
-                if (primitive.isString()) {
-                    requestBody = ExviSerializer
-                            .fromJson(this.inSerializer, EncodedStringCache.fromEncoded(primitive.getContent()).get());
+            if (requestBodyObject != null) {
+                if (requestBodyObject instanceof JsonPrimitive) {
+                    final var primitive = getJsonPrimitive(requestBodyObject);
+                    if (primitive.isString()) {
+                        requestBody = ExviSerializer
+                                .fromJson(this.inSerializer, EncodedStringCache.fromEncoded(primitive.getContent()).get());
+                    }
+                } else if (requestBodyObject instanceof JsonObject) {
+                    requestBody = ExviSerializer.fromJsonElement(this.inSerializer, requestBodyObject);
                 }
-            } else if (requestBodyObject instanceof JsonObject) {
-                requestBody = ExviSerializer.getSerializer().decodeFromJsonElement(this.inSerializer, requestBodyObject);
             }
 
             // Ensure a valid request body has been parsed
