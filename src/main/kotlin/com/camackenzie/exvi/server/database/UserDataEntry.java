@@ -191,7 +191,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public ActualWorkout[] getWorkouts() {
-        return workouts = ExviSerializer.INSTANCE.fromJson(Serializers.workoutArray, getWorkoutsJSON());
+        return workouts = ExviSerializer.fromJson(Serializers.workoutArray, getWorkoutsJSON());
     }
 
     public void setWorkouts(@NotNull List<Workout> workoutList) {
