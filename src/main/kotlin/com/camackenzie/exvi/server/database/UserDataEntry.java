@@ -6,7 +6,6 @@
 package com.camackenzie.exvi.server.database;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
@@ -114,11 +113,11 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return item.getJSON(attr);
     }
 
-    private UpdateItemOutcome updateDatabaseRaw(@NotNull String key, @NotNull Function<UpdateItemSpec, UpdateItemSpec> spec) {
+    private void updateDatabaseRaw(@NotNull String key, @NotNull Function<UpdateItemSpec, UpdateItemSpec> spec) {
         UpdateItemSpec update = spec.apply(new UpdateItemSpec()
                 .withPrimaryKey("username", username)
                 .withReturnValues(ReturnValue.UPDATED_NEW));
-        return database.getTable("exvi-user-data").updateItem(update);
+        database.getTable("exvi-user-data").updateItem(update);
     }
 
     private void updateDatabaseMapRaw(@NotNull String key, Map<String, ?> value) {
@@ -174,7 +173,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public ActualBodyStats getBodyStats() {
-        return this.bodyStats = ExviSerializer.INSTANCE.fromJson(ActualBodyStats.Companion.serializer(), getBodyStatsJSON());
+        return this.bodyStats = ExviSerializer.fromJson(ActualBodyStats.Companion.serializer(), getBodyStatsJSON());
     }
 
     public void setBodyStats(@NotNull ActualBodyStats bs) {
