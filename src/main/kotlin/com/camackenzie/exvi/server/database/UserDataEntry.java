@@ -14,11 +14,9 @@ import com.camackenzie.exvi.core.model.*;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.Identifiable;
 import com.camackenzie.exvi.core.util.RawIdentifiable;
-import com.camackenzie.exvi.core.util.SelfSerializable;
 import com.camackenzie.exvi.server.util.ApiException;
 import com.camackenzie.exvi.server.util.DocumentDatabase;
 import com.camackenzie.exvi.server.util.Serializers;
-import com.google.gson.Gson;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,9 +31,6 @@ import java.util.function.Function;
  */
 @SuppressWarnings("unused")
 public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
-
-    @NotNull
-    private static final Gson gson = new Gson();
 
     @NotNull
     public final String username;
@@ -139,32 +134,6 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     /////////////////////////
-    // General helper methods
-    /////////////////////////
-
-    @NotNull
-    private static <T> Map<String, ?> toMap(@NotNull T in) {
-        return gson.fromJson(gson.toJson(in), Map.class);
-    }
-
-    @NotNull
-    @SuppressWarnings("unused")
-    private <T> List<T> arrayToList(@NotNull T[] arr) {
-        return new ArrayList<>() {{
-            addAll(List.of(arr));
-        }};
-    }
-
-    @NotNull
-    private static <T extends SelfSerializable> List<Map<?, ?>> toMapList(@NotNull List<T> l) {
-        List<Map<?, ?>> ret = new ArrayList<>();
-        for (var li : l) {
-            ret.add(toMap(li));
-        }
-        return ret;
-    }
-
-    /////////////////////////
     // Body stats methods
     /////////////////////////
 
@@ -178,12 +147,20 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
 
     public void setBodyStats(@NotNull ActualBodyStats bs) {
         this.bodyStats = bs;
-        updateDatabaseMapRaw("bodyStats", toMap(bs));
+        updateDatabaseMapRaw("bodyStats", Serializers.toMap(ActualBodyStats.Companion.serializer(), bs));
     }
 
     /////////////////////////
     // Workout methods
     /////////////////////////
+
+    private static Map<String, ?> workoutToMap(ActualWorkout w) {
+        return Serializers.toMap(ActualWorkout.Companion.serializer(), w);
+    }
+
+    private static List<Map<String, ?>> workoutToMapList(List<ActualWorkout> list) {
+        return Serializers.toMapList(ActualWorkout.Companion.serializer(), list);
+    }
 
     public String getWorkoutsJSON() {
         return getUserJSON("workouts");
@@ -193,8 +170,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         return workouts = ExviSerializer.fromJson(Serializers.workoutArray, getWorkoutsJSON());
     }
 
-    public void setWorkouts(@NotNull List<Workout> workoutList) {
-        updateDatabaseListRaw("workouts", toMapList(workoutList));
+    public void setWorkouts(@NotNull List<ActualWorkout> workoutList) {
+        updateDatabaseListRaw("workouts", workoutToMapList(workoutList));
     }
 
     /**
@@ -203,18 +180,18 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
      *
      * @param workoutList the workouts to add
      */
-    private void addWorkoutsRaw(@NotNull List<Workout> workoutList) {
-        appendToDatabaseList("workouts", toMapList(workoutList));
+    private void addWorkoutsRaw(@NotNull List<ActualWorkout> workoutList) {
+        appendToDatabaseList("workouts", workoutToMapList(workoutList));
     }
 
     public void removeWorkouts(@NotNull Identifiable[] ids) {
         if (ids.length == 0) return;
-        ArrayList<Workout> newWorkouts = new ArrayList<>();
-        Identifiable.intersectIndexed(arrayToList(ids), arrayToList(getWorkouts()),
+        ArrayList<ActualWorkout> newWorkouts = new ArrayList<>();
+        Identifiable.intersectIndexed(List.of(ids), List.of(getWorkouts()),
                 (a, ai, b, bi) -> Unit.INSTANCE,
                 (a, ai) -> Unit.INSTANCE,
                 (b, bi) -> {
-                    newWorkouts.add((Workout) b);
+                    newWorkouts.add((ActualWorkout) b);
                     return Unit.INSTANCE;
                 });
         setWorkouts(newWorkouts);
@@ -227,12 +204,12 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         removeWorkouts(iids);
     }
 
-    public void addWorkouts(@NotNull Workout[] workoutsToAdd) {
+    public void addWorkouts(@NotNull ActualWorkout[] workoutsToAdd) {
         if (workoutsToAdd.length == 0) return;
-        List<Workout> toAdd = new ArrayList<>();
-        Identifiable.intersectIndexed(arrayToList(workoutsToAdd), arrayToList(getWorkouts()),
+        List<ActualWorkout> toAdd = new ArrayList<>();
+        Identifiable.intersectIndexed(List.of(workoutsToAdd), List.of(getWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
-                    updateDatabaseMapRaw("workouts[" + userIndex + "]", toMap(addedWk));
+                    updateDatabaseMapRaw("workouts[" + userIndex + "]", workoutToMap(addedWk));
                     return Unit.INSTANCE;
                 }, (addedWk, index) -> {
                     toAdd.add(addedWk);
@@ -245,27 +222,35 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     // Active workout methods
     /////////////////////////
 
+    private static Map<String, ?> activeWorkoutToMap(ActualActiveWorkout w) {
+        return Serializers.toMap(ActualActiveWorkout.Companion.serializer(), w);
+    }
+
+    private static List<Map<String, ?>> activeWorkoutToMapList(List<ActualActiveWorkout> list) {
+        return Serializers.toMapList(ActualActiveWorkout.Companion.serializer(), list);
+    }
+
     public String getActiveWorkoutsJSON() {
         return getUserJSON("activeWorkouts");
     }
 
     public ActualActiveWorkout[] getActiveWorkouts() {
-        return activeWorkouts = ExviSerializer.INSTANCE.fromJson(Serializers.activeWorkoutArray, getActiveWorkoutsJSON());
+        return activeWorkouts = ExviSerializer.fromJson(Serializers.activeWorkoutArray, getActiveWorkoutsJSON());
     }
 
     public void setActiveWorkouts(@NotNull List<ActualActiveWorkout> workoutList) {
-        updateDatabaseListRaw("activeWorkouts", toMapList(workoutList));
+        updateDatabaseListRaw("activeWorkouts", activeWorkoutToMapList(workoutList));
     }
 
     private void addActiveWorkoutsRaw(@NotNull List<ActualActiveWorkout> workoutList) {
-        appendToDatabaseList("activeWorkouts", toMapList(workoutList));
+        appendToDatabaseList("activeWorkouts", activeWorkoutToMapList(workoutList));
     }
 
     public void removeActiveWorkouts(@NotNull Identifiable[] ids) {
         if (ids.length == 0) return;
         ArrayList<ActualActiveWorkout> newWorkouts = new ArrayList<>();
-        Identifiable.intersectIndexed(arrayToList(ids),
-                arrayToList(getActiveWorkouts()), (a, ai, b, bi) -> Unit.INSTANCE,
+        Identifiable.intersectIndexed(List.of(ids), List.of(getActiveWorkouts()),
+                (a, ai, b, bi) -> Unit.INSTANCE,
                 (a, ai) -> Unit.INSTANCE,
                 (b, bi) -> {
                     newWorkouts.add((ActualActiveWorkout) b);
@@ -275,18 +260,18 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public void removeActiveWorkouts(@NotNull EncodedStringCache[] ids) {
-        Identifiable[] iids = Arrays.stream(ids)
+        Identifiable[] iIds = Arrays.stream(ids)
                 .map(RawIdentifiable::new)
                 .toArray(Identifiable[]::new);
-        removeActiveWorkouts(iids);
+        removeActiveWorkouts(iIds);
     }
 
     public void addActiveWorkouts(@NotNull ActualActiveWorkout[] workouts) {
         if (workouts.length == 0) return;
         List<ActualActiveWorkout> toAppend = new ArrayList<>();
-        Identifiable.intersectIndexed(arrayToList(workouts), arrayToList(getActiveWorkouts()),
+        Identifiable.intersectIndexed(List.of(workouts), List.of(getActiveWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
-                    updateDatabaseMapRaw("activeWorkouts[" + userIndex + "]", toMap(userWk));
+                    updateDatabaseMapRaw("activeWorkouts[" + userIndex + "]", activeWorkoutToMap(userWk));
                     return Unit.INSTANCE;
                 }, (addedWorkout, index) -> {
                     toAppend.add(addedWorkout);
