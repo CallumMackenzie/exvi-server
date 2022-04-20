@@ -18,6 +18,10 @@ import com.camackenzie.exvi.server.util.ApiException;
 import com.camackenzie.exvi.server.util.DocumentDatabase;
 import com.camackenzie.exvi.server.util.Serializers;
 import kotlin.Unit;
+import kotlinx.serialization.KSerializer;
+import kotlinx.serialization.descriptors.SerialDescriptor;
+import kotlinx.serialization.encoding.Decoder;
+import kotlinx.serialization.encoding.Encoder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -25,6 +29,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSerialDescriptor;
 
 /**
  * @author callum
@@ -52,6 +58,18 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         this.activeWorkouts = activeWorkouts;
         this.database = database;
     }
+
+    private static final SerialDescriptor descriptor = buildClassSerialDescriptor(
+            "com.camackenzie.exvi.server.database.UserDataEntry",
+            new SerialDescriptor[0],
+            bt -> {
+                bt.element("username", Serializers.stringDescriptor(), List.of(), false);
+                bt.element("workouts", Serializers.workoutArray.getDescriptor(), List.of(), false);
+                bt.element("activeWorkouts", Serializers.activeWorkoutArray.getDescriptor(), List.of(), false);
+                bt.element("bodyStats", Serializers.bodyStats.getDescriptor(), List.of(), false);
+                return Unit.INSTANCE;
+            }
+    );
 
     /////////////////////////
     // Database helper methods
@@ -142,12 +160,12 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     }
 
     public ActualBodyStats getBodyStats() {
-        return this.bodyStats = ExviSerializer.fromJson(ActualBodyStats.Companion.serializer(), getBodyStatsJSON());
+        return this.bodyStats = ExviSerializer.fromJson(Serializers.bodyStats, getBodyStatsJSON());
     }
 
     public void setBodyStats(@NotNull ActualBodyStats bs) {
         this.bodyStats = bs;
-        updateDatabaseMapRaw("bodyStats", Serializers.toMap(ActualBodyStats.Companion.serializer(), bs));
+        updateDatabaseMapRaw("bodyStats", Serializers.toMap(Serializers.bodyStats, bs));
     }
 
     /////////////////////////
@@ -155,11 +173,11 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     /////////////////////////
 
     private static Map<String, ?> workoutToMap(ActualWorkout w) {
-        return Serializers.toMap(ActualWorkout.Companion.serializer(), w);
+        return Serializers.toMap(Serializers.workout, w);
     }
 
     private static List<Map<String, ?>> workoutToMapList(List<ActualWorkout> list) {
-        return Serializers.toMapList(ActualWorkout.Companion.serializer(), list);
+        return Serializers.toMapList(Serializers.workout, list);
     }
 
     public String getWorkoutsJSON() {
@@ -223,11 +241,11 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     /////////////////////////
 
     private static Map<String, ?> activeWorkoutToMap(ActualActiveWorkout w) {
-        return Serializers.toMap(ActualActiveWorkout.Companion.serializer(), w);
+        return Serializers.toMap(Serializers.activeWorkout, w);
     }
 
     private static List<Map<String, ?>> activeWorkoutToMapList(List<ActualActiveWorkout> list) {
-        return Serializers.toMapList(ActualActiveWorkout.Companion.serializer(), list);
+        return Serializers.toMapList(Serializers.activeWorkout, list);
     }
 
     public String getActiveWorkoutsJSON() {
@@ -279,5 +297,29 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
                 });
         if (!toAppend.isEmpty()) addActiveWorkoutsRaw(toAppend);
     }
+
+    /////////////////////////
+    // Serializer
+    /////////////////////////
+
+    private static final KSerializer<UserDataEntry> serializer = new KSerializer<>() {
+
+        @NotNull
+        @Override
+        public SerialDescriptor getDescriptor() {
+            return descriptor;
+        }
+
+        @Override
+        public UserDataEntry deserialize(@NotNull Decoder decoder) {
+            // TODO ADD DESERIALIZATION LOGIC
+            return null;
+        }
+
+        @Override
+        public void serialize(@NotNull Encoder encoder, UserDataEntry userDataEntry) {
+            // TODO ADD SERIALIZATION LOGIC
+        }
+    };
 
 }

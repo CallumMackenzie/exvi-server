@@ -1,10 +1,13 @@
 package com.camackenzie.exvi.server.util;
 
 import com.camackenzie.exvi.core.model.ActualActiveWorkout;
+import com.camackenzie.exvi.core.model.ActualBodyStats;
 import com.camackenzie.exvi.core.model.ActualWorkout;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import kotlinx.serialization.KSerializer;
+import kotlinx.serialization.descriptors.PrimitiveKind;
+import kotlinx.serialization.descriptors.SerialDescriptor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -13,15 +16,21 @@ import java.util.Map;
 
 import static kotlin.jvm.JvmClassMappingKt.getKotlinClass;
 import static kotlinx.serialization.builtins.BuiltinSerializersKt.ArraySerializer;
+import static kotlinx.serialization.descriptors.SerialDescriptorsKt.PrimitiveSerialDescriptor;
 import static kotlinx.serialization.json.JsonElementKt.getJsonObject;
 
 public class Serializers {
 
+    public static final KSerializer<ActualWorkout> workout = ActualWorkout.Companion.serializer();
+    public static final KSerializer<ActualActiveWorkout> activeWorkout = ActualActiveWorkout.Companion.serializer();
+
     public static final KSerializer<ActualWorkout[]> workoutArray =
-            ArraySerializer(getKotlinClass(ActualWorkout.class), ActualWorkout.Companion.serializer());
+            ArraySerializer(getKotlinClass(ActualWorkout.class), workout);
 
     public static final KSerializer<ActualActiveWorkout[]> activeWorkoutArray =
-            ArraySerializer(getKotlinClass(ActualActiveWorkout.class), ActualActiveWorkout.Companion.serializer());
+            ArraySerializer(getKotlinClass(ActualActiveWorkout.class), activeWorkout);
+
+    public static final KSerializer<ActualBodyStats> bodyStats = ActualBodyStats.Companion.serializer();
 
 
     @NotNull
@@ -36,6 +45,11 @@ public class Serializers {
                 add(toMap(inSerializer, li));
             }
         }};
+    }
+
+    @NotNull
+    public static SerialDescriptor stringDescriptor() {
+        return PrimitiveSerialDescriptor("string", PrimitiveKind.STRING.INSTANCE);
     }
 
 }
