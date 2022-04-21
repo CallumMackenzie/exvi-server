@@ -3,6 +3,8 @@ import com.camackenzie.exvi.core.model.ActualActiveWorkout;
 import com.camackenzie.exvi.core.model.ActualWorkout;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.server.database.UserDataEntry;
+import com.camackenzie.exvi.server.database.UserLoginEntry;
+import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
 import com.camackenzie.exvi.server.test.TestContext;
 import com.camackenzie.exvi.server.util.AWSResourceManager;
 import com.camackenzie.exvi.server.util.Serializers;
@@ -56,7 +58,26 @@ public class SerializationTests {
         var rm = AWSResourceManager.get(new TestContext());
         var base = UserDataEntry.defaultData(rm.getDatabase(), "TEST");
         var ser = ExviSerializer.toJson(UserDataEntry.serializer, base);
+        System.out.println(ser);
         assertTrue(ser.length() > 10);
         assertTrue(ser.contains("TEST"));
+    }
+
+    @Test
+    public void testSerializeUserLoginEntry() {
+        var base = new UserLoginEntry("TESTER", "asdsa", "ad", "21313", "asdsa");
+        var ser = ExviSerializer.toJson(UserLoginEntry.serializer, base);
+        System.out.println(ser);
+        assertTrue(ser.length() > 10);
+        assertTrue(ser.contains("TESTER"));
+    }
+
+    @Test
+    public void testSerializeUserVerificationEntry() {
+        var base = new VerificationDatabaseEntry("s", "AS0idsajd8sad7sad", "2", "dassadsa");
+        var ser = ExviSerializer.toJson(VerificationDatabaseEntry.serializer, base);
+        System.out.println(ser);
+        assertTrue(ser.length() > 10);
+        assertTrue(ser.contains("AS0idsajd8sad7sad"));
     }
 }

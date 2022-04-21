@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static com.camackenzie.exvi.core.model.ExviSerializer.Builtin.element;
 import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSerialDescriptor;
 
 /**
@@ -49,6 +50,18 @@ public class UserDataEntry {
     @NotNull
     private transient final DocumentDatabase database;
 
+    private static final SerialDescriptor descriptor = buildClassSerialDescriptor(
+            "com.camackenzie.exvi.server.database.UserDataEntry",
+            new SerialDescriptor[0],
+            bt -> {
+                element(bt, "username", Serializers.string.getDescriptor());
+                element(bt, "workouts", Serializers.workoutArray.getDescriptor());
+                element(bt, "activeWorkouts", Serializers.activeWorkoutArray.getDescriptor());
+                element(bt, "bodyStats", Serializers.bodyStats.getDescriptor());
+                return Unit.INSTANCE;
+            }
+    );
+
     private UserDataEntry(@NotNull DocumentDatabase database,
                           @NotNull String username,
                           ActualWorkout[] workouts,
@@ -60,18 +73,6 @@ public class UserDataEntry {
         this.activeWorkouts = activeWorkouts;
         this.database = database;
     }
-
-    private static final SerialDescriptor descriptor = buildClassSerialDescriptor(
-            "com.camackenzie.exvi.server.database.UserDataEntry",
-            new SerialDescriptor[0],
-            bt -> {
-                bt.element("username", ExviSerializer.Builtin.getString_().getDescriptor(), List.of(), false);
-                bt.element("workouts", Serializers.workoutArray.getDescriptor(), List.of(), false);
-                bt.element("activeWorkouts", Serializers.activeWorkoutArray.getDescriptor(), List.of(), false);
-                bt.element("bodyStats", Serializers.bodyStats.getDescriptor(), List.of(), false);
-                return Unit.INSTANCE;
-            }
-    );
 
     /////////////////////////
     // Database helper methods

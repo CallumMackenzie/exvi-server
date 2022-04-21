@@ -5,17 +5,83 @@
  */
 package com.camackenzie.exvi.server.database;
 
-import com.camackenzie.exvi.core.api.GenericDataResult;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
-import com.camackenzie.exvi.server.util.AWSDynamoDB;
 import com.camackenzie.exvi.server.util.ApiException;
 import com.camackenzie.exvi.server.util.DocumentDatabase;
+import com.camackenzie.exvi.server.util.Serializers;
+import kotlin.Unit;
+import kotlinx.serialization.SerializationStrategy;
+import kotlinx.serialization.descriptors.SerialDescriptor;
+import kotlinx.serialization.encoding.Encoder;
 import org.jetbrains.annotations.NotNull;
+
+import static com.camackenzie.exvi.core.model.ExviSerializer.Builtin.element;
+import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSerialDescriptor;
 
 /**
  * @author callum
  */
 public class UserLoginEntry {
+
+    @NotNull
+    public String username;
+    @NotNull
+    public String phone;
+    @NotNull
+    public String email;
+    @NotNull
+    private String passwordHash;
+    @NotNull
+    public String salt;
+    private String[] accessKeys;
+
+    private static final SerialDescriptor descriptor = buildClassSerialDescriptor(
+            "com.camackenzie.exvi.server.database.UserLoginEntry",
+            new SerialDescriptor[0],
+            bt -> {
+                var des = Serializers.string.getDescriptor();
+                element(bt, "username", des);
+                element(bt, "phone", des);
+                element(bt, "email", des);
+                element(bt, "passwordHash", des);
+                element(bt, "salt", des);
+                return Unit.INSTANCE;
+            }
+    );
+
+    public UserLoginEntry(@NotNull String username,
+                          @NotNull String phone,
+                          @NotNull String email,
+                          @NotNull String passwordHash,
+                          @NotNull String salt) {
+        this.username = username;
+        this.phone = phone;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.salt = salt;
+        this.accessKeys = new String[0];
+    }
+
+    @NotNull
+    public String[] getAccessKeys() {
+        return this.accessKeys;
+    }
+
+    @NotNull
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void addAccessKey(@NotNull String key) {
+        if (this.accessKeys == null) {
+            this.accessKeys = new String[]{key};
+        } else {
+            String[] newKeys = new String[this.accessKeys.length + 1];
+            newKeys[0] = key;
+            System.arraycopy(this.accessKeys, 0, newKeys, 1, this.accessKeys.length);
+            this.accessKeys = newKeys;
+        }
+    }
 
     public static void ensureAccessKeyValid(@NotNull DocumentDatabase database,
                                             @NotNull String user,
@@ -43,131 +109,23 @@ public class UserLoginEntry {
         ensureAccessKeyValid(database, user.get(), key.get());
     }
 
-    @NotNull
-    private String username;
-    @NotNull
-    private String phone;
-    @NotNull
-    private String email;
-    @NotNull
-    private String passwordHash;
-    @NotNull
-    private String salt;
-    private String[] accessKeys;
+    public static final SerializationStrategy<UserLoginEntry> serializer = new SerializationStrategy<>() {
 
-    public UserLoginEntry(@NotNull String username,
-                          @NotNull String phone,
-                          @NotNull String email,
-                          @NotNull String passwordHash,
-                          @NotNull String salt) {
-        this.username = username;
-        this.phone = phone;
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.salt = salt;
-        this.accessKeys = new String[0];
-    }
-
-    @NotNull
-    public String[] getAccessKeys() {
-        return this.accessKeys;
-    }
-
-    public void addAccessKey(@NotNull String key) {
-        if (this.accessKeys == null) {
-            this.accessKeys = new String[]{key};
-        } else {
-            String[] newKeys = new String[this.accessKeys.length + 1];
-            newKeys[0] = key;
-            System.arraycopy(this.accessKeys, 0, newKeys, 1, this.accessKeys.length);
-            this.accessKeys = newKeys;
+        @NotNull
+        @Override
+        public SerialDescriptor getDescriptor() {
+            return descriptor;
         }
-    }
 
-    //    public void removeAccessKey(String key) {
-//        int toRemove = -1;
-//        for (int i = 0; i < this.accessKeys.length; ++i) {
-//            if (this.accessKeys[i].equals(key)) {
-//                toRemove = i;
-//                break;
-//            }
-//        }
-//        if (toRemove != -1) {
-//            String[] newKeys = new String[this.accessKeys.length - 1];
-//            System.arraycopy(this.accessKeys, 0, newKeys, 0, toRemove);
-//            System.arraycopy(this.accessKeys, toRemove + 1, newKeys, toRemove + 1, this.accessKeys.length - toRemove);
-//        }
-//    }
-    @NotNull
-    public String getUsername() {
-        return username;
-    }
-
-    /**
-     * @param username the username to set
-     */
-    public void setUsername(@NotNull String username) {
-        this.username = username;
-    }
-
-    /**
-     * @return the phone
-     */
-    @NotNull
-    public String getPhone() {
-        return phone;
-    }
-
-    /**
-     * @param phone the phone to set
-     */
-    public void setPhone(@NotNull String phone) {
-        this.phone = phone;
-    }
-
-    /**
-     * @return the email
-     */
-    @NotNull
-    public String getEmail() {
-        return email;
-    }
-
-    /**
-     * @param email the email to set
-     */
-    public void setEmail(@NotNull String email) {
-        this.email = email;
-    }
-
-    /**
-     * @return the passwordHash
-     */
-    @NotNull
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    /**
-     * @param passwordHash the passwordHash to set
-     */
-    public void setPasswordHash(@NotNull String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    /**
-     * @return the salt
-     */
-    @NotNull
-    public String getSalt() {
-        return salt;
-    }
-
-    /**
-     * @param salt the salt to set
-     */
-    public void setSalt(@NotNull String salt) {
-        this.salt = salt;
-    }
-
+        @Override
+        public void serialize(@NotNull Encoder encoder, UserLoginEntry e) {
+            var struct = encoder.beginStructure(descriptor);
+            struct.encodeStringElement(descriptor, 0, e.username);
+            struct.encodeStringElement(descriptor, 1, e.phone);
+            struct.encodeStringElement(descriptor, 2, e.email);
+            struct.encodeStringElement(descriptor, 3, e.passwordHash);
+            struct.encodeStringElement(descriptor, 4, e.salt);
+            struct.endStructure(descriptor);
+        }
+    };
 }
