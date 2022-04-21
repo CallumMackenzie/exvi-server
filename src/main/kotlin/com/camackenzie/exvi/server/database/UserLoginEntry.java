@@ -46,6 +46,7 @@ public class UserLoginEntry {
                 element(bt, "email", des);
                 element(bt, "passwordHash", des);
                 element(bt, "salt", des);
+                element(bt, "accessKeys", Serializers.stringArray.getDescriptor());
                 return Unit.INSTANCE;
             }
     );
@@ -139,6 +140,9 @@ public class UserLoginEntry {
                     case 4:
                         ret.salt = struct.decodeStringElement(descriptor, 4);
                         break;
+		    case 5:
+			ret.accessKeys = struct.decodeSerializableElement(descriptor, 5, Serializers.stringArray);
+			break;
                     default:
                         break SerializerLoop;
                 }
@@ -161,6 +165,7 @@ public class UserLoginEntry {
             struct.encodeStringElement(descriptor, 2, e.email);
             struct.encodeStringElement(descriptor, 3, e.passwordHash);
             struct.encodeStringElement(descriptor, 4, e.salt);
+            struct.encodeSerializableElement(descriptor, 5, e.accessKeys);
             struct.endStructure(descriptor);
         }
     };

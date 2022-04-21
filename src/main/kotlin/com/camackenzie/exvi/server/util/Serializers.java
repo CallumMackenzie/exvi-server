@@ -31,6 +31,7 @@ public class Serializers {
     public static final KSerializer<ActualBodyStats> bodyStats = ActualBodyStats.Companion.serializer();
 
     public static final KSerializer<String> string = ExviSerializer.Builtin.getString();
+    public static final KSerializer<String[]> stringArrat = ArraySerializer(getKotlinClass(String.class), string);
     public static final KSerializer<Long> longType = ExviSerializer.Builtin.getLong();
 
 
