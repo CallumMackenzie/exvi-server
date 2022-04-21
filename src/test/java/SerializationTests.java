@@ -79,5 +79,9 @@ public class SerializationTests {
         System.out.println(ser);
         assertTrue(ser.length() > 10);
         assertTrue(ser.contains("AS0idsajd8sad7sad"));
+
+        var des = ExviSerializer.fromJson(VerificationDatabaseEntry.serializer, ser);
+        assertEquals(base.getEmail(), des.getEmail());
+        assertEquals(base.getVerificationCode(), des.getVerificationCode());
     }
 }

@@ -5,7 +5,6 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.api.BatchGetItemApi;
 import com.amazonaws.services.dynamodbv2.document.api.BatchWriteItemApi;
 import com.amazonaws.services.dynamodbv2.document.api.ListTablesApi;
-import com.camackenzie.exvi.server.database.DatabaseEntry;
 import com.google.gson.Gson;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +27,8 @@ public interface DocumentDatabase extends ListTablesApi, BatchGetItemApi, BatchW
 
     default <T> T getObjectFromTable(@NotNull Table table, @NotNull String hashKey,
                                                               @NotNull String value, @NotNull Class<T> cls) {
-        return DatabaseEntry.fromItem(table.getItem(hashKey, value), cls);
+//        return DatabaseEntry.fromItem(table.getItem(hashKey, value), cls);
+        throw new UnsupportedOperationException();
     }
 
     default <T> T getObjectFromTable(@NotNull String table, @NotNull String hashKey,

@@ -8,8 +8,10 @@ package com.camackenzie.exvi.server.database;
 import com.camackenzie.exvi.core.api.VerificationRequest;
 import com.camackenzie.exvi.server.util.Serializers;
 import kotlin.Unit;
-import kotlinx.serialization.SerializationStrategy;
+import kotlinx.serialization.KSerializer;
 import kotlinx.serialization.descriptors.SerialDescriptor;
+import kotlinx.serialization.encoding.CompositeDecoder;
+import kotlinx.serialization.encoding.Decoder;
 import kotlinx.serialization.encoding.Encoder;
 import org.jetbrains.annotations.NotNull;
 
@@ -71,6 +73,9 @@ public class VerificationDatabaseEntry {
                 uvd.getEmail().get(),
                 uvd.getPhone().get(),
                 code);
+    }
+
+    private VerificationDatabaseEntry() {
     }
 
     /**
@@ -147,7 +152,38 @@ public class VerificationDatabaseEntry {
         this.verificationCodeUTC = verificationCodeUTC;
     }
 
-    public static final SerializationStrategy<VerificationDatabaseEntry> serializer = new SerializationStrategy<>() {
+    public static final KSerializer<VerificationDatabaseEntry> serializer = new KSerializer<>() {
+
+        @Override
+        public VerificationDatabaseEntry deserialize(@NotNull Decoder decoder) {
+            var ret = new VerificationDatabaseEntry();
+            var struct = decoder.beginStructure(descriptor);
+            SerializerLoop:
+            while (true) {
+                var index = struct.decodeElementIndex(descriptor);
+                switch (index) {
+                    case 0:
+                        ret.verificationCode = struct.decodeStringElement(descriptor, 0);
+                        break;
+                    case 1:
+                        ret.username = struct.decodeStringElement(descriptor, 1);
+                        break;
+                    case 2:
+                        ret.email = struct.decodeStringElement(descriptor, 2);
+                        break;
+                    case 3:
+                        ret.phone = struct.decodeStringElement(descriptor, 3);
+                        break;
+                    case 4:
+                        ret.verificationCodeUTC = struct.decodeLongElement(descriptor, 4);
+                        break;
+                    case CompositeDecoder.DECODE_DONE:
+                        break SerializerLoop;
+                }
+            }
+            struct.endStructure(descriptor);
+            return ret;
+        }
 
         @NotNull
         @Override

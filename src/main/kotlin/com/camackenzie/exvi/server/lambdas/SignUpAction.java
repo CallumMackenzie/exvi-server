@@ -5,16 +5,19 @@
  */
 package com.camackenzie.exvi.server.lambdas;
 
-import com.camackenzie.exvi.server.util.*;
+import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
+import com.camackenzie.exvi.core.api.AccountCreationRequest;
+import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
-import com.camackenzie.exvi.server.database.DatabaseEntry;
+import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
-import com.camackenzie.exvi.core.api.AccountCreationRequest;
-import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.util.ApiException;
+import com.camackenzie.exvi.server.util.AuthUtils;
+import com.camackenzie.exvi.server.util.DocumentDatabase;
+import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -47,11 +50,12 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         DocumentDatabase database = getResourceManager().getDatabase();
         Table userTable = database.getTable("exvi-user-login");
 
-        VerificationDatabaseEntry dbEntry = DatabaseEntry.fromItem(
-                userTable.getItem("username", in.getUsername().get()),
-                VerificationDatabaseEntry.class);
+        // Check if user has verification data
+        Item userItem = userTable.getItem("username", in.getUsername().get());
+        boolean hasVerificationData = userItem.get("verificationCodeUTC") != null;
 
-        if (dbEntry != null) {
+        if (hasVerificationData) {
+            var dbEntry = ExviSerializer.fromJson(VerificationDatabaseEntry.serializer, userItem.toJSON());
             if (this.verificationCodeValid(in.getVerificationCode().get(),
                     dbEntry.getVerificationCode(),
                     dbEntry.getVerificationCodeUTC()

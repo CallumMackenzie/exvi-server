@@ -9,13 +9,8 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.camackenzie.exvi.server.database.DatabaseEntry;
 import com.google.gson.Gson;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.HashMap;
 
 /**
  * @author callum
