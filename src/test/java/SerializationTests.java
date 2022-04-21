@@ -8,7 +8,6 @@ import com.camackenzie.exvi.server.database.UserVerificationEntry;
 import com.camackenzie.exvi.server.test.TestContext;
 import com.camackenzie.exvi.server.util.AWSResourceManager;
 import com.camackenzie.exvi.server.util.Serializers;
-import com.google.gson.Gson;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -22,16 +21,12 @@ public class SerializationTests {
                 new ActualWorkout(),
                 new ActualWorkout()
         };
-        Gson gson = new Gson();
-        var gsonSerialized = gson.toJson(og);
         var exviSerialized = ExviSerializer.toJson(Serializers.workoutArray, og);
-        var deserializedGson = ExviSerializer.fromJson(Serializers.workoutArray, gsonSerialized);
         var deserializedExvi = ExviSerializer.fromJson(Serializers.workoutArray, exviSerialized);
 
-        assertEquals(deserializedGson.length, og.length, deserializedExvi.length);
-        assertEquals(deserializedGson[0].getName(), og[0].getName(), deserializedExvi[0].getName());
-        assertEquals(deserializedGson[2].getId().get(), og[2].getId().get(),
-                deserializedExvi[2].getId().get());
+        assertEquals(og.length, deserializedExvi.length);
+        assertEquals(og[0].getName(), deserializedExvi[0].getName());
+        assertEquals(og[2].getId().get(), deserializedExvi[2].getId().get());
     }
 
     @Test
@@ -41,16 +36,12 @@ public class SerializationTests {
                 ActiveWorkout.invoke(base),
                 ActiveWorkout.invoke(base)
         };
-        Gson gson = new Gson();
-        var gsonSerialized = gson.toJson(og);
         var exviSerialized = ExviSerializer.toJson(Serializers.activeWorkoutArray, og);
-        var deserializedGson = ExviSerializer.fromJson(Serializers.activeWorkoutArray, gsonSerialized);
         var deserializedExvi = ExviSerializer.fromJson(Serializers.activeWorkoutArray, exviSerialized);
 
-        assertEquals(deserializedGson.length, og.length, deserializedExvi.length);
-        assertEquals(deserializedGson[0].getName(), og[0].getName(), deserializedExvi[0].getName());
-        assertEquals(deserializedGson[1].getActiveWorkoutId().get(), og[1].getActiveWorkoutId().get(),
-                deserializedExvi[1].getActiveWorkoutId().get());
+        assertEquals(og.length, deserializedExvi.length);
+        assertEquals(og[0].getName(), deserializedExvi[0].getName());
+        assertEquals(og[1].getActiveWorkoutId().get(), deserializedExvi[1].getActiveWorkoutId().get());
     }
 
     @Test
