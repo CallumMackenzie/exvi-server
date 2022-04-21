@@ -6,7 +6,6 @@
 package com.camackenzie.exvi.server.database;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Table;
 import com.google.gson.Gson;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +22,7 @@ public abstract class DatabaseEntry<T extends DatabaseEntry<?>> {
     @NotNull
     private static final Gson gson = new Gson();
 
-    public static boolean matchesItem(Item item, @NotNull Class<? extends DatabaseEntry<?>> cls) {
+    public static boolean matchesItem(Item item, @NotNull Class<?> cls) {
         if (item == null) {
             return false;
         }
@@ -50,7 +49,7 @@ public abstract class DatabaseEntry<T extends DatabaseEntry<?>> {
         return true;
     }
 
-    public static <T extends DatabaseEntry<?>> T fromItem(Item item, @NotNull Class<T> cls) {
+    public static <T> T fromItem(Item item, @NotNull Class<T> cls) {
         if (DatabaseEntry.matchesItem(item, cls)) {
             return gson.fromJson(item.toJSON(), cls);
         }

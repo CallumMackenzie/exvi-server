@@ -2,11 +2,15 @@ import com.camackenzie.exvi.core.model.ActiveWorkout;
 import com.camackenzie.exvi.core.model.ActualActiveWorkout;
 import com.camackenzie.exvi.core.model.ActualWorkout;
 import com.camackenzie.exvi.core.model.ExviSerializer;
+import com.camackenzie.exvi.server.database.UserDataEntry;
+import com.camackenzie.exvi.server.test.TestContext;
+import com.camackenzie.exvi.server.util.AWSResourceManager;
 import com.camackenzie.exvi.server.util.Serializers;
 import com.google.gson.Gson;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SerializationTests {
     @Test
@@ -45,5 +49,14 @@ public class SerializationTests {
         assertEquals(deserializedGson[0].getName(), og[0].getName(), deserializedExvi[0].getName());
         assertEquals(deserializedGson[1].getActiveWorkoutId().get(), og[1].getActiveWorkoutId().get(),
                 deserializedExvi[1].getActiveWorkoutId().get());
+    }
+
+    @Test
+    public void testSerializeUserDataEntry() {
+        var rm = AWSResourceManager.get(new TestContext());
+        var base = UserDataEntry.defaultData(rm.getDatabase(), "TEST");
+        var ser = ExviSerializer.toJson(UserDataEntry.serializer, base);
+        assertTrue(ser.length() > 10);
+        assertTrue(ser.contains("TEST"));
     }
 }

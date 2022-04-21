@@ -6,8 +6,7 @@ import com.camackenzie.exvi.core.model.ActualWorkout;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.SelfSerializable;
 import kotlinx.serialization.KSerializer;
-import kotlinx.serialization.descriptors.PrimitiveKind;
-import kotlinx.serialization.descriptors.SerialDescriptor;
+import kotlinx.serialization.SerializationStrategy;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import java.util.Map;
 
 import static kotlin.jvm.JvmClassMappingKt.getKotlinClass;
 import static kotlinx.serialization.builtins.BuiltinSerializersKt.ArraySerializer;
-import static kotlinx.serialization.descriptors.SerialDescriptorsKt.PrimitiveSerialDescriptor;
 import static kotlinx.serialization.json.JsonElementKt.getJsonObject;
 
 public class Serializers {
@@ -34,22 +32,17 @@ public class Serializers {
 
 
     @NotNull
-    public static <T> Map<String, ?> toMap(@NotNull KSerializer<T> inSerializer, @NotNull T in) {
+    public static <T> Map<String, ?> toMap(@NotNull SerializationStrategy<T> inSerializer, @NotNull T in) {
         return getJsonObject(ExviSerializer.toJsonElement(inSerializer, in));
     }
 
     @NotNull
-    public static <T extends SelfSerializable> List<Map<String, ?>> toMapList(@NotNull KSerializer<T> inSerializer, @NotNull List<T> l) {
+    public static <T extends SelfSerializable> List<Map<String, ?>> toMapList(@NotNull SerializationStrategy<T> inSerializer, @NotNull List<T> l) {
         return new ArrayList<>() {{
             for (var li : l) {
                 add(toMap(inSerializer, li));
             }
         }};
-    }
-
-    @NotNull
-    public static SerialDescriptor stringDescriptor() {
-        return PrimitiveSerialDescriptor("string", PrimitiveKind.STRING.INSTANCE);
     }
 
 }

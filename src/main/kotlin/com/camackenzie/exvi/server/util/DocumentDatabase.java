@@ -18,25 +18,25 @@ public interface DocumentDatabase extends ListTablesApi, BatchGetItemApi, BatchW
 
     Table getTable(@NotNull String table);
 
-    default <T extends DatabaseEntry<?>> void putObjectInTable(@NotNull String table, T object) {
+    default <T> void putObjectInTable(@NotNull String table, T object) {
         this.putObjectInTable(this.getTable(table), object);
     }
 
-    default <T extends DatabaseEntry<?>> void putObjectInTable(@NotNull Table table, T object) {
+    default <T> void putObjectInTable(@NotNull Table table, T object) {
         table.putItem(Item.fromJSON(this.getGson().toJson(object)));
     }
 
-    default <T extends DatabaseEntry<?>> T getObjectFromTable(@NotNull Table table, @NotNull String hashKey,
+    default <T> T getObjectFromTable(@NotNull Table table, @NotNull String hashKey,
                                                               @NotNull String value, @NotNull Class<T> cls) {
         return DatabaseEntry.fromItem(table.getItem(hashKey, value), cls);
     }
 
-    default <T extends DatabaseEntry<?>> T getObjectFromTable(@NotNull String table, @NotNull String hashKey,
+    default <T> T getObjectFromTable(@NotNull String table, @NotNull String hashKey,
                                                               @NotNull String value, @NotNull Class<T> cls) {
         return this.getObjectFromTable(this.getTable(table), hashKey, value, cls);
     }
 
-    default <T extends DatabaseEntry<?>> T getObjectFromTableOr(@NotNull Table table, @NotNull String hashKey,
+    default <T> T getObjectFromTableOr(@NotNull Table table, @NotNull String hashKey,
                                                                 @NotNull String value, @NotNull Class<T> cls,
                                                                 T def) {
         T ret = this.getObjectFromTable(table, hashKey, value, cls);

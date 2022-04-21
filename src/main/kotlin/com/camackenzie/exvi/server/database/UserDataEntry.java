@@ -10,7 +10,10 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
-import com.camackenzie.exvi.core.model.*;
+import com.camackenzie.exvi.core.model.ActualActiveWorkout;
+import com.camackenzie.exvi.core.model.ActualBodyStats;
+import com.camackenzie.exvi.core.model.ActualWorkout;
+import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.Identifiable;
 import com.camackenzie.exvi.core.util.RawIdentifiable;
@@ -18,9 +21,8 @@ import com.camackenzie.exvi.server.util.ApiException;
 import com.camackenzie.exvi.server.util.DocumentDatabase;
 import com.camackenzie.exvi.server.util.Serializers;
 import kotlin.Unit;
-import kotlinx.serialization.KSerializer;
+import kotlinx.serialization.SerializationStrategy;
 import kotlinx.serialization.descriptors.SerialDescriptor;
-import kotlinx.serialization.encoding.Decoder;
 import kotlinx.serialization.encoding.Encoder;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +38,7 @@ import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSe
  * @author callum
  */
 @SuppressWarnings("unused")
-public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
+public class UserDataEntry {
 
     @NotNull
     public final String username;
@@ -63,7 +65,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
             "com.camackenzie.exvi.server.database.UserDataEntry",
             new SerialDescriptor[0],
             bt -> {
-                bt.element("username", Serializers.stringDescriptor(), List.of(), false);
+                bt.element("username", ExviSerializer.Builtin.getString_().getDescriptor(), List.of(), false);
                 bt.element("workouts", Serializers.workoutArray.getDescriptor(), List.of(), false);
                 bt.element("activeWorkouts", Serializers.activeWorkoutArray.getDescriptor(), List.of(), false);
                 bt.element("bodyStats", Serializers.bodyStats.getDescriptor(), List.of(), false);
@@ -76,8 +78,8 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     /////////////////////////
 
     @NotNull
-    private static UserDataEntry defaultData(@NotNull DocumentDatabase database,
-                                             @NotNull String username) {
+    public static UserDataEntry defaultData(@NotNull DocumentDatabase database,
+                                            @NotNull String username) {
         return new UserDataEntry(database, username, new ActualWorkout[0],
                 new ActualActiveWorkout[0],
                 ActualBodyStats.average());
@@ -302,7 +304,7 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
     // Serializer
     /////////////////////////
 
-    private static final KSerializer<UserDataEntry> serializer = new KSerializer<>() {
+    public static final SerializationStrategy<UserDataEntry> serializer = new SerializationStrategy<>() {
 
         @NotNull
         @Override
@@ -311,14 +313,13 @@ public class UserDataEntry extends DatabaseEntry<UserDataEntry> {
         }
 
         @Override
-        public UserDataEntry deserialize(@NotNull Decoder decoder) {
-            // TODO ADD DESERIALIZATION LOGIC
-            return null;
-        }
-
-        @Override
         public void serialize(@NotNull Encoder encoder, UserDataEntry userDataEntry) {
-            // TODO ADD SERIALIZATION LOGIC
+            var struct = encoder.beginStructure(descriptor);
+            struct.encodeStringElement(descriptor, 0, userDataEntry.username);
+            struct.encodeSerializableElement(descriptor, 1, Serializers.workoutArray, userDataEntry.workouts);
+            struct.encodeSerializableElement(descriptor, 2, Serializers.activeWorkoutArray, userDataEntry.activeWorkouts);
+            struct.encodeSerializableElement(descriptor, 3, Serializers.bodyStats, userDataEntry.bodyStats);
+            struct.endStructure(descriptor);
         }
     };
 
