@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author callum
  */
-public class UserLoginEntry extends DatabaseEntry<UserLoginEntry> {
+public class UserLoginEntry {
 
     public static void ensureAccessKeyValid(@NotNull DocumentDatabase database,
                                             @NotNull String user,

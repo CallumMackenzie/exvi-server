@@ -12,8 +12,7 @@ import org.jetbrains.annotations.NotNull;
  * @author callum
  */
 @SuppressWarnings("unused")
-public class VerificationDatabaseEntry
-        extends DatabaseEntry<VerificationDatabaseEntry> {
+public class VerificationDatabaseEntry {
 
     @NotNull
     private String verificationCode,
