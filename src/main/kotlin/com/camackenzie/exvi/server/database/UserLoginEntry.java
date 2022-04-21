@@ -10,8 +10,9 @@ import com.camackenzie.exvi.server.util.ApiException;
 import com.camackenzie.exvi.server.util.DocumentDatabase;
 import com.camackenzie.exvi.server.util.Serializers;
 import kotlin.Unit;
-import kotlinx.serialization.SerializationStrategy;
+import kotlinx.serialization.KSerializer;
 import kotlinx.serialization.descriptors.SerialDescriptor;
+import kotlinx.serialization.encoding.Decoder;
 import kotlinx.serialization.encoding.Encoder;
 import org.jetbrains.annotations.NotNull;
 
@@ -62,6 +63,10 @@ public class UserLoginEntry {
         this.accessKeys = new String[0];
     }
 
+    private UserLoginEntry() {
+        this("", "", "", "", "");
+    }
+
     @NotNull
     public String[] getAccessKeys() {
         return this.accessKeys;
@@ -87,7 +92,7 @@ public class UserLoginEntry {
                                             @NotNull String user,
                                             @NotNull String key) {
         UserLoginEntry authData = database.getObjectFromTable("exvi-user-login",
-                "username", user, UserLoginEntry.class);
+                "username", user, UserLoginEntry.serializer);
         if (authData == null) {
             throw new ApiException(400, "User does not exist");
         }
@@ -109,7 +114,38 @@ public class UserLoginEntry {
         ensureAccessKeyValid(database, user.get(), key.get());
     }
 
-    public static final SerializationStrategy<UserLoginEntry> serializer = new SerializationStrategy<>() {
+    public static final KSerializer<UserLoginEntry> serializer = new KSerializer<>() {
+
+        @Override
+        public UserLoginEntry deserialize(@NotNull Decoder decoder) {
+            var ret = new UserLoginEntry();
+            var struct = decoder.beginStructure(descriptor);
+            SerializerLoop:
+            while (true) {
+                var index = struct.decodeElementIndex(descriptor);
+                switch (index) {
+                    case 0:
+                        ret.username = struct.decodeStringElement(descriptor, 0);
+                        break;
+                    case 1:
+                        ret.phone = struct.decodeStringElement(descriptor, 1);
+                        break;
+                    case 2:
+                        ret.email = struct.decodeStringElement(descriptor, 2);
+                        break;
+                    case 3:
+                        ret.passwordHash = struct.decodeStringElement(descriptor, 3);
+                        break;
+                    case 4:
+                        ret.salt = struct.decodeStringElement(descriptor, 4);
+                        break;
+                    default:
+                        break SerializerLoop;
+                }
+            }
+            struct.endStructure(descriptor);
+            return ret;
+        }
 
         @NotNull
         @Override

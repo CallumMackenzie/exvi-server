@@ -13,7 +13,7 @@ import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
-import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
+import com.camackenzie.exvi.server.database.UserVerificationEntry;
 import com.camackenzie.exvi.server.util.ApiException;
 import com.camackenzie.exvi.server.util.AuthUtils;
 import com.camackenzie.exvi.server.util.DocumentDatabase;
@@ -55,7 +55,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         boolean hasVerificationData = userItem.get("verificationCodeUTC") != null;
 
         if (hasVerificationData) {
-            var dbEntry = ExviSerializer.fromJson(VerificationDatabaseEntry.serializer, userItem.toJSON());
+            var dbEntry = ExviSerializer.fromJson(UserVerificationEntry.serializer, userItem.toJSON());
             if (this.verificationCodeValid(in.getVerificationCode().get(),
                     dbEntry.getVerificationCode(),
                     dbEntry.getVerificationCodeUTC()
@@ -75,13 +75,13 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
 
     private void registerAccountData(@NotNull DocumentDatabase database,
                                      @NotNull AccountCreationRequest ac,
-                                     @NotNull VerificationDatabaseEntry entry) {
+                                     @NotNull UserVerificationEntry entry) {
         Table userTable = database.getTable("exvi-user-login");
         String salt = CryptographyUtils.generateSalt(32),
                 passwordHash = CryptographyUtils.hashSHA256(salt
                         + AuthUtils.decryptPasswordHash(ac.getPassword().get()));
         userTable.deleteItem("username", entry.getUsername());
-        database.putObjectInTable(userTable, new UserLoginEntry(ac.getUsername().get(),
+        database.putObjectInTable(userTable, UserLoginEntry.serializer, new UserLoginEntry(ac.getUsername().get(),
                 entry.getPhone(),
                 entry.getEmail(),
                 passwordHash,

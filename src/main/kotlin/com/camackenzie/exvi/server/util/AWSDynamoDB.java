@@ -18,8 +18,6 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("unused")
 public class AWSDynamoDB extends DynamoDB implements DocumentDatabase {
 
-    private final Gson gson = new Gson();
-
     public AWSDynamoDB(AmazonDynamoDB db) {
         super(db);
     }
@@ -29,11 +27,5 @@ public class AWSDynamoDB extends DynamoDB implements DocumentDatabase {
                 .standard()
                 .withRegion(Regions.US_EAST_2)
                 .build());
-    }
-
-    @NotNull
-    @Override
-    public Gson getGson() {
-        return gson;
     }
 }

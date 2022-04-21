@@ -96,13 +96,13 @@ public class UserDataEntry {
     public static UserDataEntry ensureUserHasData(@NotNull DocumentDatabase database,
                                                   @NotNull String user) throws ApiException {
         if (database.getObjectFromTable("exvi-user-login", "username",
-                user, UserLoginEntry.class) == null) {
+                user, UserLoginEntry.serializer) == null) {
             throw new ApiException(400, "User does not have an account");
         }
         Item item = database.getTable("exvi-user-data").getItem("username", user);
         if (item == null) {
             UserDataEntry entry = UserDataEntry.defaultData(database, user);
-            database.putObjectInTable("exvi-user-data", entry);
+            database.putObjectInTable("exvi-user-data", UserDataEntry.serializer, entry);
             return entry;
         } else {
             return UserDataEntry.registeredUser(database, user);

@@ -4,7 +4,7 @@ import com.camackenzie.exvi.core.model.ActualWorkout;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
-import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
+import com.camackenzie.exvi.server.database.UserVerificationEntry;
 import com.camackenzie.exvi.server.test.TestContext;
 import com.camackenzie.exvi.server.util.AWSResourceManager;
 import com.camackenzie.exvi.server.util.Serializers;
@@ -70,17 +70,21 @@ public class SerializationTests {
         System.out.println(ser);
         assertTrue(ser.length() > 10);
         assertTrue(ser.contains("TESTER"));
+
+        var des = ExviSerializer.fromJson(UserLoginEntry.serializer, ser);
+        assertEquals(des.email, base.email);
+        assertEquals(des.username, base.username);
     }
 
     @Test
     public void testSerializeUserVerificationEntry() {
-        var base = new VerificationDatabaseEntry("s", "AS0idsajd8sad7sad", "2", "dassadsa");
-        var ser = ExviSerializer.toJson(VerificationDatabaseEntry.serializer, base);
+        var base = new UserVerificationEntry("s", "AS0idsajd8sad7sad", "2", "dassadsa");
+        var ser = ExviSerializer.toJson(UserVerificationEntry.serializer, base);
         System.out.println(ser);
         assertTrue(ser.length() > 10);
         assertTrue(ser.contains("AS0idsajd8sad7sad"));
 
-        var des = ExviSerializer.fromJson(VerificationDatabaseEntry.serializer, ser);
+        var des = ExviSerializer.fromJson(UserVerificationEntry.serializer, ser);
         assertEquals(base.getEmail(), des.getEmail());
         assertEquals(base.getVerificationCode(), des.getVerificationCode());
     }

@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.charset.StandardCharsets;
 
 /**
- *
  * @author callum
  */
 public class AuthUtils {
@@ -22,7 +21,7 @@ public class AuthUtils {
         UserLoginEntry entry = database.getObjectFromTable("exvi-user-login",
                 "username",
                 username,
-                UserLoginEntry.class);
+                UserLoginEntry.serializer);
 
         if (entry.getAccessKeys().length >= 4) {
             return entry.getAccessKeys()[0];
@@ -30,7 +29,7 @@ public class AuthUtils {
 
         entry.addAccessKey(accessKey);
         database.deleteObjectFromTable("exvi-user-login", "username", username);
-        database.putObjectInTable("exvi-user-login", entry);
+        database.putObjectInTable("exvi-user-login", UserLoginEntry.serializer, entry);
         return accessKey;
     }
 

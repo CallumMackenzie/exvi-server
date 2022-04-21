@@ -9,7 +9,7 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.camackenzie.exvi.core.api.NoneResult;
 import com.camackenzie.exvi.core.api.VerificationRequest;
-import com.camackenzie.exvi.server.database.VerificationDatabaseEntry;
+import com.camackenzie.exvi.server.database.UserVerificationEntry;
 import com.camackenzie.exvi.server.util.*;
 import org.jetbrains.annotations.NotNull;
 import software.amazon.awssdk.services.sns.model.SnsException;
@@ -66,8 +66,8 @@ public class VerificationAction
             }
 
             if (codeSent) {
-                dynamoDB.putObjectInTable(userTable,
-                        new VerificationDatabaseEntry(in, code));
+                dynamoDB.putObjectInTable(userTable, UserVerificationEntry.serializer,
+                        new UserVerificationEntry(in, code));
                 return new NoneResult();
             } else {
                 throw new ApiException(500, "Verification code could not be sent");

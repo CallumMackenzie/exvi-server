@@ -5,45 +5,33 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.api.BatchGetItemApi;
 import com.amazonaws.services.dynamodbv2.document.api.BatchWriteItemApi;
 import com.amazonaws.services.dynamodbv2.document.api.ListTablesApi;
-import com.google.gson.Gson;
+import com.camackenzie.exvi.core.model.ExviSerializer;
+import kotlinx.serialization.DeserializationStrategy;
+import kotlinx.serialization.SerializationStrategy;
 import org.jetbrains.annotations.NotNull;
 
 // For convenience
 @SuppressWarnings("unused")
 public interface DocumentDatabase extends ListTablesApi, BatchGetItemApi, BatchWriteItemApi {
 
-    @NotNull
-    Gson getGson();
-
     Table getTable(@NotNull String table);
 
-    default <T> void putObjectInTable(@NotNull String table, T object) {
-        this.putObjectInTable(this.getTable(table), object);
+    default <T> void putObjectInTable(@NotNull String table, @NotNull SerializationStrategy<T> serializer, T object) {
+        this.putObjectInTable(this.getTable(table), serializer, object);
     }
 
-    default <T> void putObjectInTable(@NotNull Table table, T object) {
-        table.putItem(Item.fromJSON(this.getGson().toJson(object)));
+    default <T> void putObjectInTable(@NotNull Table table, @NotNull SerializationStrategy<T> serializer, T object) {
+        table.putItem(Item.fromJSON(ExviSerializer.toJson(serializer, object)));
     }
 
     default <T> T getObjectFromTable(@NotNull Table table, @NotNull String hashKey,
-                                                              @NotNull String value, @NotNull Class<T> cls) {
-//        return DatabaseEntry.fromItem(table.getItem(hashKey, value), cls);
-        throw new UnsupportedOperationException();
+                                     @NotNull String value, @NotNull DeserializationStrategy<T> serializer) {
+        return ExviSerializer.fromJson(serializer, table.getItem(hashKey, value).toJSON());
     }
 
     default <T> T getObjectFromTable(@NotNull String table, @NotNull String hashKey,
-                                                              @NotNull String value, @NotNull Class<T> cls) {
-        return this.getObjectFromTable(this.getTable(table), hashKey, value, cls);
-    }
-
-    default <T> T getObjectFromTableOr(@NotNull Table table, @NotNull String hashKey,
-                                                                @NotNull String value, @NotNull Class<T> cls,
-                                                                T def) {
-        T ret = this.getObjectFromTable(table, hashKey, value, cls);
-        if (ret == null) {
-            return def;
-        }
-        return ret;
+                                     @NotNull String value, @NotNull DeserializationStrategy<T> serializer) {
+        return this.getObjectFromTable(this.getTable(table), hashKey, value, serializer);
     }
 
     default void deleteObjectFromTable(@NotNull Table table, @NotNull String hashKey, @NotNull String value) {

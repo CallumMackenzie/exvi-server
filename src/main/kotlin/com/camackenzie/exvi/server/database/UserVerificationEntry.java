@@ -10,7 +10,6 @@ import com.camackenzie.exvi.server.util.Serializers;
 import kotlin.Unit;
 import kotlinx.serialization.KSerializer;
 import kotlinx.serialization.descriptors.SerialDescriptor;
-import kotlinx.serialization.encoding.CompositeDecoder;
 import kotlinx.serialization.encoding.Decoder;
 import kotlinx.serialization.encoding.Encoder;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +21,7 @@ import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSe
  * @author callum
  */
 @SuppressWarnings("unused")
-public class VerificationDatabaseEntry {
+public class UserVerificationEntry {
 
     @NotNull
     private String verificationCode,
@@ -32,7 +31,7 @@ public class VerificationDatabaseEntry {
     private long verificationCodeUTC;
 
     private static final SerialDescriptor descriptor = buildClassSerialDescriptor(
-            "com.camackenzie.exvi.server.database.VerificationDatabaseEntry",
+            "com.camackenzie.exvi.server.database.UserVerificationEntry",
             new SerialDescriptor[0],
             bt -> {
                 var des = Serializers.string.getDescriptor();
@@ -45,11 +44,11 @@ public class VerificationDatabaseEntry {
             }
     );
 
-    public VerificationDatabaseEntry(@NotNull String username,
-                                     @NotNull String email,
-                                     @NotNull String phone,
-                                     @NotNull String verificationCode,
-                                     long verificationCodeUTC) {
+    public UserVerificationEntry(@NotNull String username,
+                                 @NotNull String email,
+                                 @NotNull String phone,
+                                 @NotNull String verificationCode,
+                                 long verificationCodeUTC) {
         this.username = username;
         this.email = email;
         this.phone = phone;
@@ -57,10 +56,10 @@ public class VerificationDatabaseEntry {
         this.verificationCodeUTC = verificationCodeUTC;
     }
 
-    public VerificationDatabaseEntry(@NotNull String username,
-                                     @NotNull String email,
-                                     @NotNull String phone,
-                                     @NotNull String verificationCode) {
+    public UserVerificationEntry(@NotNull String username,
+                                 @NotNull String email,
+                                 @NotNull String phone,
+                                 @NotNull String verificationCode) {
         this(username,
                 email,
                 phone,
@@ -68,14 +67,15 @@ public class VerificationDatabaseEntry {
                 System.currentTimeMillis());
     }
 
-    public VerificationDatabaseEntry(@NotNull VerificationRequest uvd, @NotNull String code) {
+    public UserVerificationEntry(@NotNull VerificationRequest uvd, @NotNull String code) {
         this(uvd.getUsername().get(),
                 uvd.getEmail().get(),
                 uvd.getPhone().get(),
                 code);
     }
 
-    private VerificationDatabaseEntry() {
+    private UserVerificationEntry() {
+        this("", "", "", "", 0);
     }
 
     /**
@@ -152,11 +152,11 @@ public class VerificationDatabaseEntry {
         this.verificationCodeUTC = verificationCodeUTC;
     }
 
-    public static final KSerializer<VerificationDatabaseEntry> serializer = new KSerializer<>() {
+    public static final KSerializer<UserVerificationEntry> serializer = new KSerializer<>() {
 
         @Override
-        public VerificationDatabaseEntry deserialize(@NotNull Decoder decoder) {
-            var ret = new VerificationDatabaseEntry();
+        public UserVerificationEntry deserialize(@NotNull Decoder decoder) {
+            var ret = new UserVerificationEntry();
             var struct = decoder.beginStructure(descriptor);
             SerializerLoop:
             while (true) {
@@ -177,7 +177,7 @@ public class VerificationDatabaseEntry {
                     case 4:
                         ret.verificationCodeUTC = struct.decodeLongElement(descriptor, 4);
                         break;
-                    case CompositeDecoder.DECODE_DONE:
+                    default:
                         break SerializerLoop;
                 }
             }
@@ -192,7 +192,7 @@ public class VerificationDatabaseEntry {
         }
 
         @Override
-        public void serialize(@NotNull Encoder encoder, VerificationDatabaseEntry e) {
+        public void serialize(@NotNull Encoder encoder, UserVerificationEntry e) {
             var struct = encoder.beginStructure(descriptor);
             struct.encodeStringElement(descriptor, 0, e.verificationCode);
             struct.encodeStringElement(descriptor, 1, e.username);
