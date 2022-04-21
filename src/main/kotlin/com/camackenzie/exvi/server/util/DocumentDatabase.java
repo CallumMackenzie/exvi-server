@@ -26,7 +26,11 @@ public interface DocumentDatabase extends ListTablesApi, BatchGetItemApi, BatchW
 
     default <T> T getObjectFromTable(@NotNull Table table, @NotNull String hashKey,
                                      @NotNull String value, @NotNull DeserializationStrategy<T> serializer) {
-        return ExviSerializer.fromJson(serializer, table.getItem(hashKey, value).toJSON());
+        var item = table.getItem(hashKey, value);
+        if (item == null) {
+            return null;
+        }
+        return ExviSerializer.fromJson(serializer, item.toJSON());
     }
 
     default <T> T getObjectFromTable(@NotNull String table, @NotNull String hashKey,
