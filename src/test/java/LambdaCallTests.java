@@ -6,10 +6,7 @@ import com.camackenzie.exvi.core.util.Identifiable;
 import com.camackenzie.exvi.server.lambdas.LoginAction;
 import com.camackenzie.exvi.server.lambdas.RetrieveSaltAction;
 import com.camackenzie.exvi.server.test.TestContext;
-import com.camackenzie.exvi.server.util.AWSResourceManager;
-import com.camackenzie.exvi.server.util.RequestBodyHandler;
-import com.camackenzie.exvi.server.util.RequestStreamHandlerWrapper;
-import com.camackenzie.exvi.server.util.Serializers;
+import com.camackenzie.exvi.server.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -73,8 +70,10 @@ public class LambdaCallTests {
                     var request = (WorkoutListRequest) genericDataRequest;
                     assertEquals(request.getUsername().get(), "name");
                     return new WorkoutListResult(new ActualWorkout[0]);
+                } else if (genericDataRequest instanceof VerificationRequest) {
+                    return new AccountAccessKeyResult("");
                 }
-                return null;
+                throw new ApiException(0, "");
             }
         };
 
