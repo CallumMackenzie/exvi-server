@@ -57,6 +57,7 @@ public class SerializationTests {
     @Test
     public void testSerializeUserLoginEntry() {
         var base = new UserLoginEntry("TESTER", "asdsa", "ad", "21313", "asdsa");
+        base.addAccessKey("DJSAIKDJK");
         var ser = ExviSerializer.toJson(UserLoginEntry.serializer, base);
         System.out.println(ser);
         assertTrue(ser.length() > 10);
@@ -65,6 +66,7 @@ public class SerializationTests {
         var des = ExviSerializer.fromJson(UserLoginEntry.serializer, ser);
         assertEquals(des.email, base.email);
         assertEquals(des.username, base.username);
+        assertEquals(des.getAccessKeys()[0], base.getAccessKeys()[0]);
     }
 
     @Test

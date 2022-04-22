@@ -89,6 +89,10 @@ public class UserLoginEntry {
         }
     }
 
+    public void resetAccessKeys() {
+        this.accessKeys = new String[0];
+    }
+
     public static void ensureAccessKeyValid(@NotNull DocumentDatabase database,
                                             @NotNull String user,
                                             @NotNull String key) {
@@ -140,9 +144,9 @@ public class UserLoginEntry {
                     case 4:
                         ret.salt = struct.decodeStringElement(descriptor, 4);
                         break;
-		    case 5:
-			ret.accessKeys = struct.decodeSerializableElement(descriptor, 5, Serializers.stringArray);
-			break;
+                    case 5:
+                        ret.accessKeys = struct.decodeSerializableElement(descriptor, 5, Serializers.stringArray, null);
+                        break;
                     default:
                         break SerializerLoop;
                 }
@@ -165,7 +169,7 @@ public class UserLoginEntry {
             struct.encodeStringElement(descriptor, 2, e.email);
             struct.encodeStringElement(descriptor, 3, e.passwordHash);
             struct.encodeStringElement(descriptor, 4, e.salt);
-            struct.encodeSerializableElement(descriptor, 5, e.accessKeys);
+            struct.encodeSerializableElement(descriptor, 5, Serializers.stringArray, e.accessKeys);
             struct.endStructure(descriptor);
         }
     };
