@@ -29,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import static com.camackenzie.exvi.core.model.ExviSerializer.Builtin.element;
@@ -136,22 +135,22 @@ public class UserDataEntry {
         database.getTable("exvi-user-data").updateItem(update);
     }
 
-    private void updateDatabaseMapRaw(@NotNull String key, Map<String, ?> value) {
+    private void updateDatabaseMapRaw(@NotNull String key, String json) {
         updateDatabaseRaw(key, item -> item
                 .withUpdateExpression("set " + key + " = :a")
-                .withValueMap(new ValueMap().withMap(":a", value)));
+                .withValueMap(new ValueMap().withJSON(":a", json)));
     }
 
-    private void updateDatabaseListRaw(@NotNull String key, List<?> value) {
+    private void updateDatabaseListRaw(@NotNull String key, String json) {
         updateDatabaseRaw(key, item -> item
                 .withUpdateExpression("set " + key + " = :a")
-                .withValueMap(new ValueMap().withList(":a", value)));
+                .withValueMap(new ValueMap().withJSON(":a", json)));
     }
 
-    private void appendToDatabaseList(@NotNull String key, List<?> value) {
+    private void appendToDatabaseList(@NotNull String key, String json) {
         updateDatabaseRaw(key, spec -> spec
                 .withUpdateExpression("set " + key + " = list_append(:a, " + key + ")")
-                .withValueMap(new ValueMap().withList(":a", value)));
+                .withValueMap(new ValueMap().withJSON(":a", json)));
     }
 
     /////////////////////////
@@ -168,20 +167,12 @@ public class UserDataEntry {
 
     public void setBodyStats(@NotNull ActualBodyStats bs) {
         this.bodyStats = bs;
-        updateDatabaseMapRaw("bodyStats", Serializers.toMap(Serializers.bodyStats, bs));
+        updateDatabaseMapRaw("bodyStats", ExviSerializer.toJson(Serializers.bodyStats, bs));
     }
 
     /////////////////////////
     // Workout methods
     /////////////////////////
-
-    private static Map<String, ?> workoutToMap(ActualWorkout w) {
-        return Serializers.toMap(Serializers.workout, w);
-    }
-
-    private static List<Map<String, ?>> workoutToMapList(List<ActualWorkout> list) {
-        return Serializers.toMapList(Serializers.workout, list);
-    }
 
     public String getWorkoutsJSON() {
         return getUserJSON("workouts");
@@ -192,7 +183,7 @@ public class UserDataEntry {
     }
 
     public void setWorkouts(@NotNull List<ActualWorkout> workoutList) {
-        updateDatabaseListRaw("workouts", workoutToMapList(workoutList));
+        updateDatabaseListRaw("workouts", ExviSerializer.toJson(Serializers.workoutList, workoutList));
     }
 
     /**
@@ -202,7 +193,7 @@ public class UserDataEntry {
      * @param workoutList the workouts to add
      */
     private void addWorkoutsRaw(@NotNull List<ActualWorkout> workoutList) {
-        appendToDatabaseList("workouts", workoutToMapList(workoutList));
+        appendToDatabaseList("workouts", ExviSerializer.toJson(Serializers.workoutList, workoutList));
     }
 
     public void removeWorkouts(@NotNull Identifiable[] ids) {
@@ -230,7 +221,8 @@ public class UserDataEntry {
         List<ActualWorkout> toAdd = new ArrayList<>();
         Identifiable.intersectIndexed(List.of(workoutsToAdd), List.of(getWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
-                    updateDatabaseMapRaw("workouts[" + userIndex + "]", workoutToMap(addedWk));
+                    updateDatabaseMapRaw("workouts[" + userIndex + "]",
+                            ExviSerializer.toJson(Serializers.workout, addedWk));
                     return Unit.INSTANCE;
                 }, (addedWk, index) -> {
                     toAdd.add(addedWk);
@@ -243,14 +235,6 @@ public class UserDataEntry {
     // Active workout methods
     /////////////////////////
 
-    private static Map<String, ?> activeWorkoutToMap(ActualActiveWorkout w) {
-        return Serializers.toMap(Serializers.activeWorkout, w);
-    }
-
-    private static List<Map<String, ?>> activeWorkoutToMapList(List<ActualActiveWorkout> list) {
-        return Serializers.toMapList(Serializers.activeWorkout, list);
-    }
-
     public String getActiveWorkoutsJSON() {
         return getUserJSON("activeWorkouts");
     }
@@ -260,11 +244,11 @@ public class UserDataEntry {
     }
 
     public void setActiveWorkouts(@NotNull List<ActualActiveWorkout> workoutList) {
-        updateDatabaseListRaw("activeWorkouts", activeWorkoutToMapList(workoutList));
+        updateDatabaseListRaw("activeWorkouts", ExviSerializer.toJson(Serializers.activeWorkoutList, workoutList));
     }
 
     private void addActiveWorkoutsRaw(@NotNull List<ActualActiveWorkout> workoutList) {
-        appendToDatabaseList("activeWorkouts", activeWorkoutToMapList(workoutList));
+        appendToDatabaseList("activeWorkouts", ExviSerializer.toJson(Serializers.activeWorkoutList, workoutList));
     }
 
     public void removeActiveWorkouts(@NotNull Identifiable[] ids) {
@@ -292,7 +276,8 @@ public class UserDataEntry {
         List<ActualActiveWorkout> toAppend = new ArrayList<>();
         Identifiable.intersectIndexed(List.of(workouts), List.of(getActiveWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
-                    updateDatabaseMapRaw("activeWorkouts[" + userIndex + "]", activeWorkoutToMap(userWk));
+                    updateDatabaseMapRaw("activeWorkouts[" + userIndex + "]",
+                            ExviSerializer.toJson(Serializers.activeWorkout, userWk));
                     return Unit.INSTANCE;
                 }, (addedWorkout, index) -> {
                     toAppend.add(addedWorkout);
