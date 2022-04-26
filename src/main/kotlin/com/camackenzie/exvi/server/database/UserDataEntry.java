@@ -277,7 +277,7 @@ public class UserDataEntry {
         Identifiable.intersectIndexed(List.of(workouts), List.of(getActiveWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
                     updateDatabaseMapRaw("activeWorkouts[" + userIndex + "]",
-                            ExviSerializer.toJson(Serializers.activeWorkout, userWk));
+                            ExviSerializer.toJson(Serializers.activeWorkout, addedWk));
                     return Unit.INSTANCE;
                 }, (addedWorkout, index) -> {
                     toAppend.add(addedWorkout);
