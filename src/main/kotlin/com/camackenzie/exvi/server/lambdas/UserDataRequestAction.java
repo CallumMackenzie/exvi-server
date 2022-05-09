@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("unused")
 public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest, GenericDataResult> {
 
-    private static final int LATEST_COMPATIBLE_VERSION = 3;
+    private static final int LATEST_COMPATIBLE_VERSION = 5;
 
     public UserDataRequestAction() {
         super(GenericDataRequest.Companion.serializer(), GenericDataResult.Companion.serializer());
