@@ -34,47 +34,7 @@ jobs:
 
         ############################# Build and deploy individual lambdas
         #############################
-      - name: Deploy verification lambda
-        run: mvn -B package --file pom.xml -P verification-lambda
-      - uses: appleboy/lambda-action@v0.1.5
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: ${{ secrets.AWS_REGION }}
-          function_name: ExviUserVerification
-          zip_file: target/verification-lambda.jar
-        #############################
-      - name: Deploy sign up lambda
-        run: mvn -B package --file pom.xml -P sign-up-lambda
-      - uses: appleboy/lambda-action@v0.1.5
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: ${{ secrets.AWS_REGION }}
-          function_name: ExviSignUp
-          zip_file: target/sign-up-lambda.jar
-        #############################
-      - name: Deploy salt retrieval lambda
-        run: mvn -B package --file pom.xml -P retrieve-salt-lambda
-      - uses: appleboy/lambda-action@v0.1.5
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: ${{ secrets.AWS_REGION }}
-          function_name: ExviRetrieveSalt
-          zip_file: target/retrieve-salt-lambda.jar
-        #############################
-      - name: Deploy login lambda
-        run: mvn -B package --file pom.xml -P login-lambda
-      - uses: appleboy/lambda-action@v0.1.5
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: ${{ secrets.AWS_REGION }}
-          function_name: ExviLogin
-          zip_file: target/login-lambda.jar
-        #############################
-      - name: Deploy login lambda
+      - name: Deploy data lambda
         run: mvn -B package --file pom.xml -P user-data-lambda
       - uses: appleboy/lambda-action@v0.1.5
         with:
@@ -113,38 +73,6 @@ jobs:
           zip_file: exvi-deps.zip
 
         ############################# Update individual lambda dependencies
-        #############################
-      - name: Update verification lambda deps
-        uses: callummackenzie/latest-lambda-layer-action@v0.11
-        with:
-          aws_region: ${{ secrets.AWS_REGION }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          function_name: ExviUserVerification
-        #############################
-      - name: Update sign up lambda deps
-        uses: callummackenzie/latest-lambda-layer-action@v0.11
-        with:
-          aws_region: ${{ secrets.AWS_REGION }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          function_name: ExviSignUp
-        #############################
-      - name: Update salt retrieval lambda deps
-        uses: callummackenzie/latest-lambda-layer-action@v0.11
-        with:
-          aws_region: ${{ secrets.AWS_REGION }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          function_name: ExviRetrieveSalt
-        #############################
-      - name: Update login lambda deps
-        uses: callummackenzie/latest-lambda-layer-action@v0.11
-        with:
-          aws_region: ${{ secrets.AWS_REGION }}
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          function_name: ExviLogin
         #############################
       - name: Update user data lambda deps
         uses: callummackenzie/latest-lambda-layer-action@v0.11

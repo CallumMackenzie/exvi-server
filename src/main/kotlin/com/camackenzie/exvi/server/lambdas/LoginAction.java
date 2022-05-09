@@ -7,6 +7,7 @@ package com.camackenzie.exvi.server.lambdas;
 
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
+import com.camackenzie.exvi.core.api.AccountCreationRequest;
 import com.camackenzie.exvi.core.api.LoginRequest;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.ApiException;
@@ -19,15 +20,9 @@ import org.jetbrains.annotations.NotNull;
  * @author callum
  */
 @SuppressWarnings("unused")
-public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessKeyResult> {
-
-    public LoginAction() {
-        super(LoginRequest.Companion.serializer(), AccountAccessKeyResult.Companion.serializer());
-    }
-
-    @Override
+public class LoginAction {
     @NotNull
-    protected AccountAccessKeyResult handleBodyRequest(@NotNull LoginRequest in) {
+    public static AccountAccessKeyResult enact(@NotNull LoginRequest in, @NotNull RequestBodyHandler context) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
@@ -37,7 +32,7 @@ public class LoginAction extends RequestBodyHandler<LoginRequest, AccountAccessK
         }
 
         // Retrieve resources
-        DocumentDatabase database = getResourceManager().getDatabase();
+        DocumentDatabase database = context.getResourceManager().getDatabase();
         Table userTable = database.getTable("exvi-user-login");
         UserLoginEntry entry = database.getObjectFromTable("exvi-user-login", "username",
                 in.getUsername().get(), UserLoginEntry.serializer);

@@ -18,16 +18,9 @@ import software.amazon.awssdk.services.sns.model.SnsException;
  * @author callum
  */
 @SuppressWarnings("unused")
-public class VerificationAction
-        extends RequestBodyHandler<VerificationRequest, NoneResult> {
+public class VerificationAction {
 
-    public VerificationAction() {
-        super(VerificationRequest.Companion.serializer(), NoneResult.Companion.serializer());
-    }
-
-    @Override
-    @NotNull
-    protected NoneResult handleBodyRequest(@NotNull VerificationRequest in) {
+    public static NoneResult enact(@NotNull VerificationRequest in, @NotNull RequestBodyHandler context) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
@@ -44,25 +37,25 @@ public class VerificationAction
         }
 
         // Retrieve resources
-        DocumentDatabase dynamoDB = getResourceManager().getDatabase();
+        DocumentDatabase dynamoDB = context.getResourceManager().getDatabase();
         Table userTable = dynamoDB.getTable("exvi-user-login");
 
         // Ensure user credentials are valid
-        if (this.hasUsernameErrors(userTable, in)) {
+        if (hasUsernameErrors(userTable, in)) {
             throw new ApiException(400, "Username is invalid");
-        } else if (this.hasEmailErrors(userTable, in)) {
+        } else if (hasEmailErrors(context, userTable, in)) {
             throw new ApiException(400, "Email is invalid");
-        } else if (this.hasPhoneErrors(userTable, in)) {
+        } else if (hasPhoneErrors(context, userTable, in)) {
             throw new ApiException(400, "Phone number is invalid");
         } else {
             // Generate verification code
-            String code = this.generateVerificationCode();
+            String code = generateVerificationCode();
 
             boolean codeSent;
-            if (this.trySendSMSMessage(in, code)) {
+            if (trySendSMSMessage(context, in, code)) {
                 codeSent = true;
             } else {
-                codeSent = this.trySendEmail(in, code);
+                codeSent = trySendEmail(context, in, code);
             }
 
             if (codeSent) {
@@ -75,7 +68,9 @@ public class VerificationAction
         }
     }
 
-    private boolean hasPhoneErrors(@NotNull Table userTable, @NotNull VerificationRequest user) {
+    private static boolean hasPhoneErrors(@NotNull RequestBodyHandler context,
+                                          @NotNull Table userTable,
+                                          @NotNull VerificationRequest user) {
         try {
             var itemIter = userTable.getIndex("phone-index")
                     .query("phone", user.getPhone().get()).iterator();
@@ -89,12 +84,14 @@ public class VerificationAction
             }
             return false;
         } catch (Exception e) {
-            this.getLogger().e("Phone validation error", e, null);
+            context.getLogger().e("Phone validation error", e, null);
             return true;
         }
     }
 
-    private boolean hasEmailErrors(@NotNull Table userTable, @NotNull VerificationRequest user) {
+    private static boolean hasEmailErrors(@NotNull RequestBodyHandler context,
+                                          @NotNull Table userTable,
+                                          @NotNull VerificationRequest user) {
         try {
             for (Item next : userTable.getIndex("email-index")
                     .query("email", user.getEmail().get())) {
@@ -106,12 +103,12 @@ public class VerificationAction
             }
             return false;
         } catch (Exception e) {
-            this.getLogger().e("Email validation error: ", e, null);
+            context.getLogger().e("Email validation error: ", e, null);
             return true;
         }
     }
 
-    private boolean hasUsernameErrors(@NotNull Table userTable, @NotNull VerificationRequest user) {
+    private static boolean hasUsernameErrors(@NotNull Table userTable, @NotNull VerificationRequest user) {
         Item outcome = userTable.getItem("username", user.getUsername().get());
         if (outcome != null) {
             return !outcome.hasAttribute("verificationCode");
@@ -121,13 +118,15 @@ public class VerificationAction
     }
 
     @NotNull
-    private String generateVerificationCode() {
+    private static String generateVerificationCode() {
         int intCode = (int) (Math.random() * 999999);
         String code = Integer.toString(intCode);
         return "0".repeat(6 - code.length()) + code;
     }
 
-    private boolean trySendEmail(@NotNull VerificationRequest user, @NotNull String code) {
+    private static boolean trySendEmail(@NotNull RequestBodyHandler context,
+                                        @NotNull VerificationRequest user,
+                                        @NotNull String code) {
         StringBuilder htmlBody = new StringBuilder()
                 .append("<h2>Hello ")
                 .append(user.getUsername().get())
@@ -143,7 +142,7 @@ public class VerificationAction
                 .append(code)
                 .append(".");
         try {
-            EmailClient emailClient = getResourceManager().getEmailClient();
+            EmailClient emailClient = context.getResourceManager().getEmailClient();
             emailClient.sendEmail("exvi@camackenzie.com",
                     user.getEmail().get(),
                     "Exvi Verification Code",
@@ -151,12 +150,14 @@ public class VerificationAction
                     textBody.toString());
             return true;
         } catch (Exception ex) {
-            this.getLogger().e("Verification code email was not sent.", ex, null);
+            context.getLogger().e("Verification code email was not sent.", ex, null);
         }
         return false;
     }
 
-    private boolean trySendSMSMessage(@NotNull VerificationRequest user, @NotNull String code) {
+    private static boolean trySendSMSMessage(@NotNull RequestBodyHandler context,
+                                             @NotNull VerificationRequest user,
+                                             @NotNull String code) {
         StringBuilder textContent = new StringBuilder()
                 .append("Hello ")
                 .append(user.getUsername().get())
@@ -164,13 +165,13 @@ public class VerificationAction
                 .append(code)
                 .append(".");
         try {
-            SMSClient smsc = getResourceManager().getSMSClient();
+            SMSClient smsc = context.getResourceManager().getSMSClient();
             smsc.sendText(user.getPhone().get(), textContent.toString());
             return true;
         } catch (SnsException e) {
-            this.getLogger().e("SNS error", e, null);
+            context.getLogger().e("SNS error", e, null);
         } catch (Exception e) {
-            this.getLogger().e("SNS client warning", e, null);
+            context.getLogger().e("SNS client warning", e, null);
         }
         return false;
     }

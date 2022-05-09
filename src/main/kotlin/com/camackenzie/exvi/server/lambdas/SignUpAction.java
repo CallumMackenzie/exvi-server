@@ -9,6 +9,8 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
 import com.camackenzie.exvi.core.api.AccountCreationRequest;
+import com.camackenzie.exvi.core.api.NoneResult;
+import com.camackenzie.exvi.core.api.VerificationRequest;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.server.database.UserDataEntry;
@@ -24,17 +26,12 @@ import org.jetbrains.annotations.NotNull;
  * @author callum
  */
 @SuppressWarnings("unused")
-public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, AccountAccessKeyResult> {
+public class SignUpAction {
 
     private static final long VERIFICATION_CODE_EXPIRY = 60 * 60 * 1000;
 
-    public SignUpAction() {
-        super(AccountCreationRequest.Companion.serializer(), AccountAccessKeyResult.Companion.serializer());
-    }
-
-    @Override
     @NotNull
-    protected AccountAccessKeyResult handleBodyRequest(@NotNull AccountCreationRequest in) {
+    public static AccountAccessKeyResult enact(@NotNull AccountCreationRequest in, @NotNull RequestBodyHandler context) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
@@ -47,7 +44,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         }
 
         // Retrieve resources
-        DocumentDatabase database = getResourceManager().getDatabase();
+        DocumentDatabase database = context.getResourceManager().getDatabase();
         Table userTable = database.getTable("exvi-user-login");
 
         // Check if user has verification data
@@ -56,12 +53,12 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
 
         if (hasVerificationData) {
             var dbEntry = ExviSerializer.fromJson(UserVerificationEntry.serializer, userItem.toJSON());
-            if (this.verificationCodeValid(in.getVerificationCode().get(),
+            if (verificationCodeValid(in.getVerificationCode().get(),
                     dbEntry.getVerificationCode(),
                     dbEntry.getVerificationCodeUTC()
             )) {
                 // Verification code is correct
-                this.registerAccountData(database, in, dbEntry);
+                registerAccountData(database, in, dbEntry);
                 String accessKey = AuthUtils.generateAccessKey(database, in.getUsername().get());
                 return new AccountAccessKeyResult(accessKey);
             } else {
@@ -73,9 +70,9 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         }
     }
 
-    private void registerAccountData(@NotNull DocumentDatabase database,
-                                     @NotNull AccountCreationRequest ac,
-                                     @NotNull UserVerificationEntry entry) {
+    private static void registerAccountData(@NotNull DocumentDatabase database,
+                                            @NotNull AccountCreationRequest ac,
+                                            @NotNull UserVerificationEntry entry) {
         Table userTable = database.getTable("exvi-user-login");
         String salt = CryptographyUtils.generateSalt(32),
                 passwordHash = CryptographyUtils.hashSHA256(salt
@@ -90,7 +87,7 @@ public class SignUpAction extends RequestBodyHandler<AccountCreationRequest, Acc
         UserDataEntry.ensureUserHasData(database, ac.getUsername().get());
     }
 
-    private boolean verificationCodeValid(@NotNull String inputCode, @NotNull String actualCode, long creation) {
+    private static boolean verificationCodeValid(@NotNull String inputCode, @NotNull String actualCode, long creation) {
         return System.currentTimeMillis() - creation < VERIFICATION_CODE_EXPIRY
                 && inputCode.equals(actualCode);
     }

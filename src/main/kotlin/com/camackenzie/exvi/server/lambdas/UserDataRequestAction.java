@@ -29,12 +29,13 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
     @Override
     @NotNull
     protected GenericDataResult handleBodyRequest(@NotNull GenericDataRequest in) {
-        // Retrieve resources
-        DocumentDatabase database = getResourceManager().getDatabase();
+
+        // TODO: Refactor database retrieval out
 
         // Determine behaviour based on request
         if (in instanceof WorkoutListRequest) {
             var request = (WorkoutListRequest) in;
+            DocumentDatabase database = getResourceManager().getDatabase();
             var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
             switch (request.getType()) {
                 case ListAllTemplates:
@@ -44,16 +45,19 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
             }
         } else if (in instanceof WorkoutPutRequest) {
             var request = (WorkoutPutRequest) in;
+            DocumentDatabase database = getResourceManager().getDatabase();
             var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
             user.addWorkouts(request.getWorkouts());
             return new NoneResult();
         } else if (in instanceof ActiveWorkoutPutRequest) {
             var request = (ActiveWorkoutPutRequest) in;
+            DocumentDatabase database = getResourceManager().getDatabase();
             var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
             user.addActiveWorkouts(request.getWorkouts());
             return new NoneResult();
         } else if (in instanceof DeleteWorkoutsRequest) {
             var request = (DeleteWorkoutsRequest) in;
+            DocumentDatabase database = getResourceManager().getDatabase();
             var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
             switch (request.getWorkoutType()) {
                 case Workout:
@@ -66,17 +70,25 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
             return new NoneResult();
         } else if (in instanceof GetBodyStatsRequest) {
             var request = (GetBodyStatsRequest) in;
+            DocumentDatabase database = getResourceManager().getDatabase();
             var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
             return new GetBodyStatsResponse(user.getBodyStats());
         } else if (in instanceof SetBodyStatsRequest) {
             var request = (SetBodyStatsRequest) in;
+            DocumentDatabase database = getResourceManager().getDatabase();
             var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
             user.setBodyStats(request.getBodyStats());
             return new NoneResult();
-        } else if (in instanceof CompatibleVersionRequest) {
-            var request = (CompatibleVersionRequest) in;
-            return new BooleanResult(request.getVersion() >= LATEST_COMPATIBLE_VERSION);
-        }
+        } else if (in instanceof CompatibleVersionRequest)
+            return new BooleanResult(((CompatibleVersionRequest) in).getVersion() >= LATEST_COMPATIBLE_VERSION);
+        else if (in instanceof VerificationRequest)
+            return VerificationAction.enact((VerificationRequest) in, this);
+        else if (in instanceof AccountCreationRequest)
+            return SignUpAction.enact((AccountCreationRequest) in, this);
+        else if (in instanceof LoginRequest)
+            return LoginAction.enact((LoginRequest) in, this);
+        else if (in instanceof RetrieveSaltRequest)
+            return RetrieveSaltAction.enact((RetrieveSaltRequest) in, this);
 
         throw new ApiException(400, "Could not recognize requester");
     }

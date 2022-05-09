@@ -7,6 +7,8 @@ package com.camackenzie.exvi.server.lambdas;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
+import com.camackenzie.exvi.core.api.LoginRequest;
 import com.camackenzie.exvi.server.util.*;
 import com.camackenzie.exvi.core.api.AccountSaltResult;
 import com.camackenzie.exvi.core.api.RetrieveSaltRequest;
@@ -19,23 +21,16 @@ import java.nio.charset.StandardCharsets;
  * @author callum
  */
 @SuppressWarnings("unused")
-public class RetrieveSaltAction
-        extends RequestBodyHandler<RetrieveSaltRequest, AccountSaltResult> {
-
-    public RetrieveSaltAction() {
-        super(RetrieveSaltRequest.Companion.serializer(), AccountSaltResult.Companion.serializer());
-    }
-
-    @Override
+public class RetrieveSaltAction {
     @NotNull
-    protected AccountSaltResult handleBodyRequest(@NotNull RetrieveSaltRequest in) {
+    public static AccountSaltResult enact(@NotNull RetrieveSaltRequest in, @NotNull RequestBodyHandler context) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
         }
 
         // Retrieve resources
-        DocumentDatabase database = getResourceManager().getDatabase();
+        DocumentDatabase database = context.getResourceManager().getDatabase();
         Table accountTable = database.getTable("exvi-user-login");
         Item item = accountTable.getItem("username", in.getUsername().get());
 
