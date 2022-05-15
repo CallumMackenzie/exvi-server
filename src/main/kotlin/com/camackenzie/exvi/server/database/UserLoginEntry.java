@@ -48,7 +48,7 @@ public class UserLoginEntry implements Identifiable {
 
     // Used to score importance of account for caching
     @Transient
-    private int accesses;
+    private transient int accesses;
 
     private static final SerialDescriptor descriptor = buildClassSerialDescriptor(
             "com.camackenzie.exvi.server.database.UserLoginEntry",

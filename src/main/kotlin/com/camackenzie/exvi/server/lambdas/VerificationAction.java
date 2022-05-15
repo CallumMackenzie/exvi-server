@@ -17,38 +17,28 @@ import software.amazon.awssdk.services.sns.model.SnsException;
 /**
  * @author callum
  */
-@SuppressWarnings("unused")
+// Class to send verification messages to users for account creation
 public class VerificationAction implements LambdaAction<VerificationRequest, NoneResult> {
 
     @Override
     public NoneResult enact(@NotNull RequestBodyHandler context, @NotNull VerificationRequest in) {
         // Preconditions
-        if (in.getUsername().get().isBlank()) {
-            throw new ApiException(400, "No username provided");
-        }
-        if (in.getEmail().get().isBlank()) {
-            throw new ApiException(400, "No email provided");
-        }
-        if (in.getPhone().get().isBlank()) {
-            throw new ApiException(400, "No phone number provided");
-        }
-        if (!in.getPhone().get().startsWith("+1")) {
+        if (in.getUsername().get().isBlank()) throw new ApiException(400, "No username provided");
+        if (in.getEmail().get().isBlank()) throw new ApiException(400, "No email provided");
+        if (in.getPhone().get().isBlank()) throw new ApiException(400, "No phone number provided");
+        if (!in.getPhone().get().startsWith("+1"))
             throw new ApiException(400, "Only Canadian phone numbers are currently supported. "
                     + "Please add '+1' in front of your number.");
-        }
 
         // Retrieve resources
         DocumentDatabase dynamoDB = context.getResourceManager().getDatabase();
         Table userTable = dynamoDB.getTable("exvi-user-login");
 
         // Ensure user credentials are valid
-        if (hasUsernameErrors(userTable, in)) {
-            throw new ApiException(400, "Username is invalid");
-        } else if (hasEmailErrors(context, userTable, in)) {
-            throw new ApiException(400, "Email is invalid");
-        } else if (hasPhoneErrors(context, userTable, in)) {
-            throw new ApiException(400, "Phone number is invalid");
-        } else {
+        if (hasUsernameErrors(userTable, in)) throw new ApiException(400, "Username is invalid");
+        else if (hasEmailErrors(context, userTable, in)) throw new ApiException(400, "Email is invalid");
+        else if (hasPhoneErrors(context, userTable, in)) throw new ApiException(400, "Phone number is invalid");
+        else {
             // Generate verification code
             String code = generateVerificationCode();
 

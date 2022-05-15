@@ -26,22 +26,17 @@ public class RetrieveSaltAction implements LambdaAction<RetrieveSaltRequest, Acc
     @Override
     public AccountSaltResult enact(@NotNull RequestBodyHandler context, @NotNull RetrieveSaltRequest in) {
         // Preconditions
-        if (in.getUsername().get().isBlank()) {
-            throw new ApiException(400, "No username provided");
-        }
+        if (in.getUsername().get().isBlank()) throw new ApiException(400, "No username provided");
 
         // Retrieve resources
         DocumentDatabase database = context.getResourceManager().getDatabase();
         Table accountTable = database.getTable("exvi-user-login");
         Item item = accountTable.getItem("username", in.getUsername().get());
 
-        if (item == null) {
-            throw new ApiException(400, "User not found");
-        } else if (!item.hasAttribute("salt")) {
-            throw new ApiException(400, "No valid user login entry");
-        } else {
+        if (item == null) throw new ApiException(400, "User not found");
+        else if (!item.hasAttribute("salt")) throw new ApiException(400, "No valid user login entry");
+        else // Encode and return salt
             return new AccountSaltResult(CryptographyUtils.bytesToBase64String(item.getString("salt")
                     .getBytes(StandardCharsets.UTF_8)));
-        }
     }
 }

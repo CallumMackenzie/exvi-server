@@ -28,15 +28,9 @@ public class SignUpAction implements LambdaAction<AccountCreationRequest, Accoun
     @Override
     public AccountAccessKeyResult enact(@NotNull RequestBodyHandler context, @NotNull AccountCreationRequest in) {
         // Preconditions
-        if (in.getUsername().get().isBlank()) {
-            throw new ApiException(400, "No username provided");
-        }
-        if (in.getPassword().get().isBlank()) {
-            throw new ApiException(400, "No password provided");
-        }
-        if (in.getVerificationCode().get().isBlank()) {
-            throw new ApiException(400, "No verification code provided");
-        }
+        if (in.getUsername().get().isBlank()) throw new ApiException(400, "No username provided");
+        if (in.getPassword().get().isBlank()) throw new ApiException(400, "No password provided");
+        if (in.getVerificationCode().get().isBlank()) throw new ApiException(400, "No verification code provided");
 
         // Retrieve resources
         DocumentDatabase database = context.getResourceManager().getDatabase();

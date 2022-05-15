@@ -20,12 +20,8 @@ public class LoginAction implements LambdaAction<LoginRequest, AccountAccessKeyR
     @Override
     public AccountAccessKeyResult enact(@NotNull RequestBodyHandler context, @NotNull LoginRequest in) {
         // Preconditions
-        if (in.getUsername().get().isBlank()) {
-            throw new ApiException(400, "No username provided");
-        }
-        if (in.getPasswordHash().get().isBlank()) {
-            throw new ApiException(400, "No password provided");
-        }
+        if (in.getUsername().get().isBlank()) throw new ApiException(400, "No username provided");
+        if (in.getPasswordHash().get().isBlank()) throw new ApiException(400, "No password provided");
 
         // Retrieve resources
         DocumentDatabase database = context.getResourceManager().getDatabase();
