@@ -6,15 +6,22 @@
 package com.camackenzie.exvi.server.database;
 
 import com.camackenzie.exvi.core.util.EncodedStringCache;
+import com.camackenzie.exvi.core.util.Identifiable;
+import com.camackenzie.exvi.core.util.RawIdentifiable;
 import com.camackenzie.exvi.server.util.ApiException;
 import com.camackenzie.exvi.server.util.DocumentDatabase;
 import com.camackenzie.exvi.server.util.Serializers;
+import com.camackenzie.exvi.server.util.SortedCache;
 import kotlin.Unit;
+import kotlin.jvm.Transient;
 import kotlinx.serialization.KSerializer;
 import kotlinx.serialization.descriptors.SerialDescriptor;
 import kotlinx.serialization.encoding.Decoder;
 import kotlinx.serialization.encoding.Encoder;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Comparator;
+import java.util.Objects;
 
 import static com.camackenzie.exvi.core.model.ExviSerializer.Builtin.element;
 import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSerialDescriptor;
@@ -22,7 +29,10 @@ import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSe
 /**
  * @author callum
  */
-public class UserLoginEntry {
+public class UserLoginEntry implements Identifiable {
+
+    private static final SortedCache<UserLoginEntry> userCache
+            = new SortedCache<>(Comparator.comparing(a -> a.accesses), 5);
 
     @NotNull
     public String username;
@@ -35,6 +45,10 @@ public class UserLoginEntry {
     @NotNull
     public String salt;
     private String[] accessKeys;
+
+    // Used to score importance of account for caching
+    @Transient
+    private int accesses;
 
     private static final SerialDescriptor descriptor = buildClassSerialDescriptor(
             "com.camackenzie.exvi.server.database.UserLoginEntry",
@@ -96,11 +110,16 @@ public class UserLoginEntry {
     public static void ensureAccessKeyValid(@NotNull DocumentDatabase database,
                                             @NotNull String user,
                                             @NotNull String key) {
-        UserLoginEntry authData = database.getObjectFromTable("exvi-user-login",
+        // Checked for cached user data
+        UserLoginEntry authData = userCache.matchFirst(u -> u.username.equalsIgnoreCase(user));
+        // Retrieve user data from database if it is not cached
+        if (authData == null) authData = database.getObjectFromTable("exvi-user-login",
                 "username", user, UserLoginEntry.serializer);
+        // If no user data found
         if (authData == null) {
             throw new ApiException(400, "User does not exist");
         }
+        // Validate the key
         boolean keyMatched = false;
         for (var akey : authData.getAccessKeys()) {
             if (akey.equals(key)) {
@@ -108,15 +127,46 @@ public class UserLoginEntry {
                 break;
             }
         }
-        if (!keyMatched) {
-            throw new ApiException(400, "Invalid credentials");
-        }
+        if (keyMatched) {
+            ++authData.accesses;
+            userCache.cache(authData);
+        } else throw new ApiException(400, "Invalid credentials");
     }
 
     public static void ensureAccessKeyValid(@NotNull DocumentDatabase database,
                                             @NotNull EncodedStringCache user,
                                             @NotNull EncodedStringCache key) {
         ensureAccessKeyValid(database, user.get(), key.get());
+    }
+
+    @Override
+    public int compareTo(@NotNull Identifiable identifiable) {
+        return this.username.compareTo(identifiable.getIdentifier().get());
+    }
+
+    @NotNull
+    @Override
+    public EncodedStringCache getIdentifier() {
+        return new EncodedStringCache(username);
+    }
+
+    @NotNull
+    @Override
+    public RawIdentifiable toRawIdentifiable() {
+        return new RawIdentifiable(username);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserLoginEntry that = (UserLoginEntry) o;
+        return username.equals(that.username);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(username);
     }
 
     public static final KSerializer<UserLoginEntry> serializer = new KSerializer<>() {

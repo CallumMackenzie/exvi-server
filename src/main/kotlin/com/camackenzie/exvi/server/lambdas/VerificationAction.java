@@ -18,9 +18,10 @@ import software.amazon.awssdk.services.sns.model.SnsException;
  * @author callum
  */
 @SuppressWarnings("unused")
-public class VerificationAction {
+public class VerificationAction implements LambdaAction<VerificationRequest, NoneResult> {
 
-    public static NoneResult enact(@NotNull VerificationRequest in, @NotNull RequestBodyHandler context) {
+    @Override
+    public NoneResult enact(@NotNull RequestBodyHandler context, @NotNull VerificationRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");

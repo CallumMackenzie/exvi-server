@@ -114,6 +114,14 @@ public class UserDataEntry {
         return ensureUserHasData(database, user.get());
     }
 
+    @NotNull
+    public static UserDataEntry ensureUserValidity(@NotNull DocumentDatabase database,
+                                                   @NotNull EncodedStringCache username,
+                                                   @NotNull EncodedStringCache accessKey) {
+        UserLoginEntry.ensureAccessKeyValid(database, username, accessKey);
+        return UserDataEntry.ensureUserHasData(database, username);
+    }
+
     private String getUserJSON(@NotNull String attr) {
         return getUserJSON(attr, attr);
     }

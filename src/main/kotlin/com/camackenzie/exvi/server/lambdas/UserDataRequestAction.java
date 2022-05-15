@@ -6,13 +6,13 @@
 package com.camackenzie.exvi.server.lambdas;
 
 import com.camackenzie.exvi.core.api.*;
-import com.camackenzie.exvi.core.util.EncodedStringCache;
-import com.camackenzie.exvi.server.database.UserDataEntry;
-import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.ApiException;
-import com.camackenzie.exvi.server.util.DocumentDatabase;
+import com.camackenzie.exvi.server.util.LambdaAction;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author callum
@@ -20,84 +20,31 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("unused")
 public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest, GenericDataResult> {
 
-    private static final int LATEST_COMPATIBLE_VERSION = 5;
-
     public UserDataRequestAction() {
         super(GenericDataRequest.Companion.serializer(), GenericDataResult.Companion.serializer());
     }
 
+    private final Map<Class, LambdaAction> actionMap = new HashMap<>() {{
+        put(WorkoutListRequest.class, new WorkoutListRequestAction());
+        put(WorkoutPutRequest.class, new WorkoutPutRequestAction());
+        put(ActiveWorkoutPutRequest.class, new ActiveWorkoutPutRequestAction());
+        put(DeleteWorkoutsRequest.class, new DeleteWorkoutsAction());
+        put(GetBodyStatsRequest.class, new MutateBodyStatsAction());
+        put(SetBodyStatsRequest.class, new MutateBodyStatsAction());
+        put(CompatibleVersionRequest.class, new VerifyVersionAction());
+        put(VerificationRequest.class, new VerificationAction());
+        put(AccountCreationRequest.class, new SignUpAction());
+        put(LoginRequest.class, new LoginAction());
+        put(RetrieveSaltRequest.class, new RetrieveSaltAction());
+    }};
+
     @Override
     @NotNull
     protected GenericDataResult handleBodyRequest(@NotNull GenericDataRequest in) {
+        final LambdaAction action = actionMap.get(in.getClass());
+        if (action == null) throw new ApiException(400, "Could not recognize requester");
 
-        // TODO: Refactor database retrieval out
-
-        // Determine behaviour based on request
-        if (in instanceof WorkoutListRequest) {
-            var request = (WorkoutListRequest) in;
-            DocumentDatabase database = getResourceManager().getDatabase();
-            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-            switch (request.getType()) {
-                case ListAllTemplates:
-                    return new WorkoutListResult(user.getWorkouts());
-                case ListAllActive:
-                    return new ActiveWorkoutListResult(user.getActiveWorkouts());
-            }
-        } else if (in instanceof WorkoutPutRequest) {
-            var request = (WorkoutPutRequest) in;
-            DocumentDatabase database = getResourceManager().getDatabase();
-            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-            user.addWorkouts(request.getWorkouts());
-            return new NoneResult();
-        } else if (in instanceof ActiveWorkoutPutRequest) {
-            var request = (ActiveWorkoutPutRequest) in;
-            DocumentDatabase database = getResourceManager().getDatabase();
-            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-            user.addActiveWorkouts(request.getWorkouts());
-            return new NoneResult();
-        } else if (in instanceof DeleteWorkoutsRequest) {
-            var request = (DeleteWorkoutsRequest) in;
-            DocumentDatabase database = getResourceManager().getDatabase();
-            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-            switch (request.getWorkoutType()) {
-                case Workout:
-                    user.removeWorkouts(request.getWorkoutIds());
-                    break;
-                case ActiveWorkout:
-                    user.removeActiveWorkouts(request.getWorkoutIds());
-                    break;
-            }
-            return new NoneResult();
-        } else if (in instanceof GetBodyStatsRequest) {
-            var request = (GetBodyStatsRequest) in;
-            DocumentDatabase database = getResourceManager().getDatabase();
-            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-            return new GetBodyStatsResponse(user.getBodyStats());
-        } else if (in instanceof SetBodyStatsRequest) {
-            var request = (SetBodyStatsRequest) in;
-            DocumentDatabase database = getResourceManager().getDatabase();
-            var user = ensureUserValidity(database, request.getUsername(), request.getAccessKey());
-            user.setBodyStats(request.getBodyStats());
-            return new NoneResult();
-        } else if (in instanceof CompatibleVersionRequest)
-            return new BooleanResult(((CompatibleVersionRequest) in).getVersion() >= LATEST_COMPATIBLE_VERSION);
-        else if (in instanceof VerificationRequest)
-            return VerificationAction.enact((VerificationRequest) in, this);
-        else if (in instanceof AccountCreationRequest)
-            return SignUpAction.enact((AccountCreationRequest) in, this);
-        else if (in instanceof LoginRequest)
-            return LoginAction.enact((LoginRequest) in, this);
-        else if (in instanceof RetrieveSaltRequest)
-            return RetrieveSaltAction.enact((RetrieveSaltRequest) in, this);
-
-        throw new ApiException(400, "Could not recognize requester");
+        return action.enact(this, in);
     }
 
-    @NotNull
-    private UserDataEntry ensureUserValidity(@NotNull DocumentDatabase database,
-                                             @NotNull EncodedStringCache username,
-                                             @NotNull EncodedStringCache accessKey) {
-        UserLoginEntry.ensureAccessKeyValid(database, username, accessKey);
-        return UserDataEntry.ensureUserHasData(database, username);
-    }
 }

@@ -9,29 +9,24 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
 import com.camackenzie.exvi.core.api.AccountCreationRequest;
-import com.camackenzie.exvi.core.api.NoneResult;
-import com.camackenzie.exvi.core.api.VerificationRequest;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.CryptographyUtils;
 import com.camackenzie.exvi.server.database.UserDataEntry;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.database.UserVerificationEntry;
-import com.camackenzie.exvi.server.util.ApiException;
-import com.camackenzie.exvi.server.util.AuthUtils;
-import com.camackenzie.exvi.server.util.DocumentDatabase;
-import com.camackenzie.exvi.server.util.RequestBodyHandler;
+import com.camackenzie.exvi.server.util.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author callum
  */
 @SuppressWarnings("unused")
-public class SignUpAction {
+public class SignUpAction implements LambdaAction<AccountCreationRequest, AccountAccessKeyResult> {
 
     private static final long VERIFICATION_CODE_EXPIRY = 60 * 60 * 1000;
 
-    @NotNull
-    public static AccountAccessKeyResult enact(@NotNull AccountCreationRequest in, @NotNull RequestBodyHandler context) {
+    @Override
+    public AccountAccessKeyResult enact(@NotNull RequestBodyHandler context, @NotNull AccountCreationRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");

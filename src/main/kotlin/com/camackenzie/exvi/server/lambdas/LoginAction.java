@@ -7,22 +7,18 @@ package com.camackenzie.exvi.server.lambdas;
 
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
-import com.camackenzie.exvi.core.api.AccountCreationRequest;
 import com.camackenzie.exvi.core.api.LoginRequest;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
-import com.camackenzie.exvi.server.util.ApiException;
-import com.camackenzie.exvi.server.util.AuthUtils;
-import com.camackenzie.exvi.server.util.DocumentDatabase;
-import com.camackenzie.exvi.server.util.RequestBodyHandler;
+import com.camackenzie.exvi.server.util.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author callum
  */
 @SuppressWarnings("unused")
-public class LoginAction {
-    @NotNull
-    public static AccountAccessKeyResult enact(@NotNull LoginRequest in, @NotNull RequestBodyHandler context) {
+public class LoginAction implements LambdaAction<LoginRequest, AccountAccessKeyResult> {
+    @Override
+    public AccountAccessKeyResult enact(@NotNull RequestBodyHandler context, @NotNull LoginRequest in) {
         // Preconditions
         if (in.getUsername().get().isBlank()) {
             throw new ApiException(400, "No username provided");
