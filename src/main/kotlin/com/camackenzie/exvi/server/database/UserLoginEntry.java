@@ -107,18 +107,32 @@ public class UserLoginEntry implements Identifiable {
         this.accessKeys = new String[0];
     }
 
-    public static void ensureAccessKeyValid(@NotNull DocumentDatabase database,
-                                            @NotNull String user,
-                                            @NotNull String key) {
+    public static void ensureUserExists(@NotNull DocumentDatabase database,
+                                        @NotNull String user) {
+        getUser(database, user);
+    }
+
+    @NotNull
+    public static UserLoginEntry getUser(@NotNull DocumentDatabase database,
+                                         @NotNull String user) {
         // Checked for cached user data
         UserLoginEntry authData = userCache.matchFirst(u -> u.username.equalsIgnoreCase(user));
         // Retrieve user data from database if it is not cached
-        if (authData == null) authData = database.getObjectFromTable("exvi-user-login",
-                "username", user, UserLoginEntry.serializer);
-        // If no user data found
         if (authData == null) {
-            throw new ApiException(400, "User does not exist");
+            authData = database.getObjectFromTable("exvi-user-login",
+                    "username", user, UserLoginEntry.serializer);
+            // If no user data found in database
+            if (authData == null) {
+                throw new ApiException(400, "User does not exist");
+            }
         }
+        return authData;
+    }
+
+    public static void ensureAccessKeyValid(@NotNull DocumentDatabase database,
+                                            @NotNull String user,
+                                            @NotNull String key) {
+        var authData = getUser(database, user);
         // Validate the key
         boolean keyMatched = false;
         for (var akey : authData.getAccessKeys()) {

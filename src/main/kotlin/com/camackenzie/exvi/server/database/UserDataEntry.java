@@ -20,7 +20,9 @@ import com.camackenzie.exvi.core.util.RawIdentifiable;
 import com.camackenzie.exvi.server.util.ApiException;
 import com.camackenzie.exvi.server.util.DocumentDatabase;
 import com.camackenzie.exvi.server.util.Serializers;
+import com.camackenzie.exvi.server.util.SortedCache;
 import kotlin.Unit;
+import kotlin.jvm.Transient;
 import kotlinx.serialization.SerializationStrategy;
 import kotlinx.serialization.descriptors.SerialDescriptor;
 import kotlinx.serialization.encoding.Encoder;
@@ -28,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
@@ -40,6 +43,9 @@ import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSe
 @SuppressWarnings("unused")
 public class UserDataEntry {
 
+    private static final SortedCache<UserDataEntry> userCache
+            = new SortedCache<>(Comparator.comparing(a -> a.accesses), 5);
+
     @NotNull
     public final String username;
     private ActualWorkout[] workouts;
@@ -47,7 +53,12 @@ public class UserDataEntry {
     private ActualBodyStats bodyStats;
 
     @NotNull
+    @Transient
     private transient final DocumentDatabase database;
+
+    // Used to score importance of account for caching
+    @Transient
+    private transient int accesses;
 
     private static final SerialDescriptor descriptor = buildClassSerialDescriptor(
             "com.camackenzie.exvi.server.database.UserDataEntry",
@@ -94,18 +105,22 @@ public class UserDataEntry {
     @NotNull
     public static UserDataEntry ensureUserHasData(@NotNull DocumentDatabase database,
                                                   @NotNull String user) throws ApiException {
-        if (database.getObjectFromTable("exvi-user-login", "username",
-                user, UserLoginEntry.serializer) == null) {
-            throw new ApiException(400, "User does not have an account");
+        UserLoginEntry.ensureUserExists(database, user);
+        // Checked for cached user data
+        UserDataEntry entry = userCache.matchFirst(it -> it.username.equalsIgnoreCase(user));
+        if (entry == null) {
+            // Check for database user data
+            Item item = database.getTable("exvi-user-data").getItem("username", user);
+            // Recreate user data object if needed
+            if (item == null) {
+                entry = UserDataEntry.defaultData(database, user);
+                database.putObjectInTable("exvi-user-data", UserDataEntry.serializer, entry);
+            } else // Use previous database data
+                entry = UserDataEntry.registeredUser(database, user);
         }
-        Item item = database.getTable("exvi-user-data").getItem("username", user);
-        if (item == null) {
-            UserDataEntry entry = UserDataEntry.defaultData(database, user);
-            database.putObjectInTable("exvi-user-data", UserDataEntry.serializer, entry);
-            return entry;
-        } else {
-            return UserDataEntry.registeredUser(database, user);
-        }
+        ++entry.accesses;
+        userCache.cache(entry);
+        return entry;
     }
 
     @NotNull
