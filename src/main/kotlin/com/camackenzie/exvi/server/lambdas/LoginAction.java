@@ -12,10 +12,7 @@ import com.camackenzie.exvi.server.database.UserLoginEntry;
 import com.camackenzie.exvi.server.util.*;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author callum
- */
-@SuppressWarnings("unused")
+// Action to log in an existing user
 public class LoginAction implements LambdaAction<LoginRequest, AccountAccessKeyResult> {
     @Override
     public AccountAccessKeyResult enact(@NotNull RequestBodyHandler context, @NotNull LoginRequest in) {
@@ -30,23 +27,17 @@ public class LoginAction implements LambdaAction<LoginRequest, AccountAccessKeyR
                 in.getUsername().get(), UserLoginEntry.serializer);
 
         // Ensure user can be logged in
-        if (entry == null) {
-            throw new ApiException(400, "Invalid credentials");
-        }
+        if (entry == null) throw new ApiException(400, "User does not exist");
 
         // Retrieve user data
         String passwordHashDecrypted = AuthUtils.decryptPasswordHash(in.getPasswordHash().get());
         String databasePasswordHash = entry.getPasswordHash();
 
         // Check if input password matches database
-        if (!databasePasswordHash.equals(passwordHashDecrypted)) {
-            throw new ApiException(400, "Invalid credentials");
-        }
+        if (!databasePasswordHash.equals(passwordHashDecrypted)) throw new ApiException(400, "Incorrect password");
 
-        // Generate & store access key
-        String accessKey = AuthUtils.generateAccessKey(database, in.getUsername().get());
-
-        // Return access key
+        // Retrieve and return access key
+        String accessKey = AuthUtils.getAccessKey(database, in.getUsername().get());
         return new AccountAccessKeyResult(accessKey);
     }
 }

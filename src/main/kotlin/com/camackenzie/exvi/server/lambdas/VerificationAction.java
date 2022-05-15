@@ -17,7 +17,7 @@ import software.amazon.awssdk.services.sns.model.SnsException;
 /**
  * @author callum
  */
-// Class to send verification messages to users for account creation
+// Action to send verification messages to users for account creation
 public class VerificationAction implements LambdaAction<VerificationRequest, NoneResult> {
 
     @Override
@@ -42,20 +42,19 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
             // Generate verification code
             String code = generateVerificationCode();
 
+            // Send SMS message
             boolean codeSent;
-            if (trySendSMSMessage(context, in, code)) {
-                codeSent = true;
-            } else {
+            if (trySendSMSMessage(context, in, code)) codeSent = true;
+            else // Code could not be sent via SMS
                 codeSent = trySendEmail(context, in, code);
-            }
 
             if (codeSent) {
+                // Create a user verification entry in database for later account creation
                 dynamoDB.putObjectInTable(userTable, UserVerificationEntry.serializer,
                         new UserVerificationEntry(in, code));
                 return new NoneResult();
-            } else {
+            } else // Code could not be sent via SMS or email
                 throw new ApiException(500, "Verification code could not be sent");
-            }
         }
     }
 
@@ -63,16 +62,22 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
                                           @NotNull Table userTable,
                                           @NotNull VerificationRequest user) {
         try {
+            // Query global secondary index on login entries by phone number
             var itemIter = userTable.getIndex("phone-index")
                     .query("phone", user.getPhone().get()).iterator();
+            // For each query response
             while (itemIter.hasNext()) {
                 Item next = itemIter.next();
+                // Check if phone numbers are equal
                 if (next.getString("phone").equalsIgnoreCase(user.getPhone().get())) {
+                    // Retrieve user with phone number
                     String phoneUser = itemIter.next().getString("username");
                     Item userItem = userTable.getItem("username", phoneUser);
+                    // Return true if user has a verified account already
                     return !userItem.hasAttribute("verificationCode");
                 }
             }
+            // Phone has no linked account
             return false;
         } catch (Exception e) {
             context.getLogger().e("Phone validation error", e, null);
@@ -84,14 +89,19 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
                                           @NotNull Table userTable,
                                           @NotNull VerificationRequest user) {
         try {
+            // Query global secondary index on login entries by email
             for (Item next : userTable.getIndex("email-index")
                     .query("email", user.getEmail().get())) {
+                // Check if emails are equal
                 if (next.getString("email").equalsIgnoreCase(user.getEmail().get())) {
+                    // Retrieve user with email
                     String emailUser = next.getString("username");
                     Item userItem = userTable.getItem("username", emailUser);
+                    // Return true if user has a verified account already
                     return !userItem.hasAttribute("verificationCode");
                 }
             }
+            // Email has no linked account
             return false;
         } catch (Exception e) {
             context.getLogger().e("Email validation error: ", e, null);
@@ -99,18 +109,20 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
         }
     }
 
-    private static boolean hasUsernameErrors(@NotNull Table userTable, @NotNull VerificationRequest user) {
-        Item outcome = userTable.getItem("username", user.getUsername().get());
-        if (outcome != null) {
-            return !outcome.hasAttribute("verificationCode");
-        } else {
+    private static boolean hasUsernameErrors(@NotNull Table userTable, @NotNull VerificationRequest req) {
+        // Check if user exists
+        Item user = userTable.getItem("username", req.getUsername().get());
+        if (user != null) // Return true if user has a verified account already
+            return !user.hasAttribute("verificationCode");
+        else // User has no verified account
             return false;
-        }
     }
 
     @NotNull
     private static String generateVerificationCode() {
+        // Get a integer representing a 6-digit verification code
         int intCode = (int) (Math.random() * 999999);
+        // Prepend zeros to code if it is not a 6-digit number
         String code = Integer.toString(intCode);
         return "0".repeat(6 - code.length()) + code;
     }

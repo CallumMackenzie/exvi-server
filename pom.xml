@@ -212,12 +212,12 @@
             </build>
         </profile>
         <profile>
-            <id>sign-up-lambda</id>
+            <id>main-lambda</id>
             <properties>
                 <build.scope>provided</build.scope>
             </properties>
             <build>
-                <finalName>sign-up-lambda</finalName>
+                <finalName>main-lambda</finalName>
                 <plugins>
                     <plugin>
                         <artifactId>maven-jar-plugin</artifactId>
@@ -231,123 +231,7 @@
                                 </goals>
                                 <configuration>
                                     <includes>
-                                        <include>com/camackenzie/exvi/server/lambdas/SignUpAction.class</include>
-                                    </includes>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>verification-lambda</id>
-            <properties>
-                <build.scope>provided</build.scope>
-            </properties>
-            <build>
-                <finalName>verification-lambda</finalName>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-jar-plugin</artifactId>
-                        <version>2.3.1</version>
-                        <executions>
-                            <execution>
-                                <id>default-jar</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <includes>
-                                        <include>com/camackenzie/exvi/server/lambdas/VerificationAction.class</include>
-                                    </includes>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>retrieve-salt-lambda</id>
-            <properties>
-                <build.scope>provided</build.scope>
-            </properties>
-            <build>
-                <finalName>retrieve-salt-lambda</finalName>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-jar-plugin</artifactId>
-                        <version>2.3.1</version>
-                        <executions>
-                            <execution>
-                                <id>default-jar</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <includes>
-                                        <include>com/camackenzie/exvi/server/lambdas/RetrieveSaltAction.class</include>
-                                    </includes>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>login-lambda</id>
-            <properties>
-                <build.scope>provided</build.scope>
-            </properties>
-            <build>
-                <finalName>login-lambda</finalName>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-jar-plugin</artifactId>
-                        <version>2.3.1</version>
-                        <executions>
-                            <execution>
-                                <id>default-jar</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <includes>
-                                        <include>com/camackenzie/exvi/server/lambdas/LoginAction.class</include>
-                                    </includes>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>user-data-lambda</id>
-            <properties>
-                <build.scope>provided</build.scope>
-            </properties>
-            <build>
-                <finalName>user-data-lambda</finalName>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-jar-plugin</artifactId>
-                        <version>2.3.1</version>
-                        <executions>
-                            <execution>
-                                <id>default-jar</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <includes>
-                                        <include>com/camackenzie/exvi/server/lambdas/UserDataRequestAction.class
+                                        <include>com/camackenzie/exvi/server/lambdas/*.class
                                         </include>
                                     </includes>
                                 </configuration>

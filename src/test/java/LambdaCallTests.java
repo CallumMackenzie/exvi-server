@@ -3,9 +3,7 @@ import com.camackenzie.exvi.core.api.*;
 import com.camackenzie.exvi.core.model.ActualWorkout;
 import com.camackenzie.exvi.core.model.ExviSerializer;
 import com.camackenzie.exvi.core.util.Identifiable;
-import com.camackenzie.exvi.server.lambdas.LoginAction;
-import com.camackenzie.exvi.server.lambdas.RetrieveSaltAction;
-import com.camackenzie.exvi.server.lambdas.UserDataRequestAction;
+import com.camackenzie.exvi.server.lambdas.MainAction;
 import com.camackenzie.exvi.server.test.TestContext;
 import com.camackenzie.exvi.server.util.*;
 import org.jetbrains.annotations.NotNull;
@@ -97,7 +95,7 @@ public class LambdaCallTests {
 
     @Test
     public void testLoginAction() {
-        var loginAction = new UserDataRequestAction();
+        var loginAction = new MainAction();
 
         APIResult<String> output = RequestTester.testAPIRequest(loginAction, new LoginRequest(
                 "", ""
@@ -111,7 +109,7 @@ public class LambdaCallTests {
 
     @Test
     public void testRetrieveSaltAction() {
-        var action = new UserDataRequestAction();
+        var action = new MainAction();
 
         APIResult<String> output = RequestTester.testAPIRequest(action, new RetrieveSaltRequest(
                 ""

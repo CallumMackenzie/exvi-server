@@ -18,10 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.StandardCharsets;
 
-/**
- * @author callum
- */
-@SuppressWarnings("unused")
+// Action to retrieve the salt for a user's password
 public class RetrieveSaltAction implements LambdaAction<RetrieveSaltRequest, AccountSaltResult> {
     @Override
     public AccountSaltResult enact(@NotNull RequestBodyHandler context, @NotNull RetrieveSaltRequest in) {
@@ -33,6 +30,7 @@ public class RetrieveSaltAction implements LambdaAction<RetrieveSaltRequest, Acc
         Table accountTable = database.getTable("exvi-user-login");
         Item item = accountTable.getItem("username", in.getUsername().get());
 
+        // Return salt if possible
         if (item == null) throw new ApiException(400, "User not found");
         else if (!item.hasAttribute("salt")) throw new ApiException(400, "No valid user login entry");
         else // Encode and return salt

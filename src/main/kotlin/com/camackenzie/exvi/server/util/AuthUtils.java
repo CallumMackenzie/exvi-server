@@ -16,17 +16,21 @@ import java.nio.charset.StandardCharsets;
  */
 public class AuthUtils {
 
-    public static String generateAccessKey(@NotNull DocumentDatabase database, @NotNull String username) {
-        String accessKey = CryptographyUtils.generateSalt(256);
+    private static final int MAX_ACCESS_KEYS = 4;
+
+    public static String getAccessKey(@NotNull DocumentDatabase database, @NotNull String username) {
+        // Get user data
         UserLoginEntry entry = database.getObjectFromTable("exvi-user-login",
                 "username",
                 username,
                 UserLoginEntry.serializer);
 
-        if (entry.getAccessKeys().length >= 4) {
-            return entry.getAccessKeys()[0];
-        }
+        // Return random access key if there are more than MAX_ACCESS_KEYS
+        if (entry.getAccessKeys().length >= MAX_ACCESS_KEYS)
+            return entry.getAccessKeys()[(int) (Math.random() * entry.getAccessKeys().length)];
 
+        // Generate and store new access key
+        String accessKey = CryptographyUtils.generateSalt(256);
         entry.addAccessKey(accessKey);
         database.deleteObjectFromTable("exvi-user-login", "username", username);
         database.putObjectInTable("exvi-user-login", UserLoginEntry.serializer, entry);

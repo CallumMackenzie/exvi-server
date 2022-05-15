@@ -18,19 +18,24 @@ import java.util.Map;
  * @author callum
  */
 @SuppressWarnings("unused")
-public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest, GenericDataResult> {
+// High level entry point for requests
+public class MainAction extends RequestBodyHandler<GenericDataRequest, GenericDataResult> {
 
-    public UserDataRequestAction() {
+    public MainAction() {
+        // Set up polymorphic request serialization
         super(GenericDataRequest.Companion.serializer(), GenericDataResult.Companion.serializer());
     }
 
+    // Map request classes to their respective actions
     private final Map<Class, LambdaAction> actionMap = new HashMap<>() {{
-        put(WorkoutListRequest.class, new WorkoutListRequestAction());
         put(WorkoutPutRequest.class, new WorkoutPutRequestAction());
-        put(ActiveWorkoutPutRequest.class, new ActiveWorkoutPutRequestAction());
-        put(DeleteWorkoutsRequest.class, new DeleteWorkoutsAction());
+        put(ActiveWorkoutPutRequest.class, new WorkoutPutRequestAction());
+
         put(GetBodyStatsRequest.class, new MutateBodyStatsAction());
         put(SetBodyStatsRequest.class, new MutateBodyStatsAction());
+
+        put(WorkoutListRequest.class, new WorkoutListRequestAction());
+        put(DeleteWorkoutsRequest.class, new DeleteWorkoutsAction());
         put(CompatibleVersionRequest.class, new VerifyVersionAction());
         put(VerificationRequest.class, new VerificationAction());
         put(AccountCreationRequest.class, new SignUpAction());
@@ -40,10 +45,15 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
 
     @Override
     @NotNull
+    @SuppressWarnings("unchecked")
+    // Respond to incoming requests
     protected GenericDataResult handleBodyRequest(@NotNull GenericDataRequest in) {
+        // Get action for request type
         final LambdaAction action = actionMap.get(in.getClass());
+        // Assert action is not null
         if (action == null) throw new ApiException(400, "Could not recognize requester");
-        return action.enact(this, in);
+        // Return action output
+        return action.enact(this, in); // Giving up some safety for type flexibility here
     }
 
 }

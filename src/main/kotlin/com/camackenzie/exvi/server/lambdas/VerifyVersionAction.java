@@ -6,6 +6,7 @@ import com.camackenzie.exvi.server.util.LambdaAction;
 import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import org.jetbrains.annotations.NotNull;
 
+// Action to verify client version compatibility
 public class VerifyVersionAction implements LambdaAction<CompatibleVersionRequest, BooleanResult> {
 
     private static final int LATEST_COMPATIBLE_VERSION = 5;

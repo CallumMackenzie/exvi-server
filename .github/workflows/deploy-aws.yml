@@ -32,31 +32,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-        ############################# Build and deploy individual lambdas
-        #############################
-      - name: Deploy data lambda
-        run: mvn -B package --file pom.xml -P user-data-lambda
-      - uses: appleboy/lambda-action@v0.1.5
+      - name: Build lambda
+        run: mvn -B package --file pom.xml -P main-lambda
+      - name: Deploy lambda
+        uses: appleboy/lambda-action@v0.1.5
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_region: ${{ secrets.AWS_REGION }}
           function_name: ExviUserData
-          zip_file: target/user-data-lambda.jar
-        #############################
-        #############################
+          zip_file: target/main-lambda.jar
 
-      - name: Build dependencies only with Maven
+      - name: Build dependencies only
         run: mvn -B package --file pom.xml -P fat-jar-no-lambdas
 
-      - name: Set up output zip structure
+      - name: Set up output dependency zip structure
         run: |
           mkdir zip
           mkdir zip/java
           mkdir zip/java/lib
           mv -f target/*.jar zip/java/lib/
 
-      - name: Zip output
+      - name: Zip dependency output
         uses: vimtor/action-zip@v1
         with:
           files: zip
@@ -72,17 +69,13 @@ jobs:
           layer_name: ExviServer
           zip_file: exvi-deps.zip
 
-        ############################# Update individual lambda dependencies
-        #############################
-      - name: Update user data lambda deps
+      - name: Update lambda dependencies
         uses: callummackenzie/latest-lambda-layer-action@v0.11
         with:
           aws_region: ${{ secrets.AWS_REGION }}
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           function_name: ExviUserData
-        #############################
-        #############################
 
       - name: Trim lambda layers
         uses: callummackenzie/trim-lambda-layers-action@v0.2
