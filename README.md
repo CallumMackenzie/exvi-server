@@ -19,6 +19,7 @@ The server portion of my high school capstone project.
 - Kotlin/Java
   - Kotlin multiplatform dependencies & interoperability
 - Maven
+- JitPack
 
 ## Related Repositories
 - https://github.com/CallumMackenzie/exvi-client

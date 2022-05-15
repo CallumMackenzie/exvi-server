@@ -43,7 +43,6 @@ public class UserDataRequestAction extends RequestBodyHandler<GenericDataRequest
     protected GenericDataResult handleBodyRequest(@NotNull GenericDataRequest in) {
         final LambdaAction action = actionMap.get(in.getClass());
         if (action == null) throw new ApiException(400, "Could not recognize requester");
-
         return action.enact(this, in);
     }
 
