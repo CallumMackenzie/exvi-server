@@ -47,8 +47,8 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
 
     @Override
     protected void handleRequestWrapped(@NotNull BufferedReader bf,
-                                     @NotNull PrintWriter pw,
-                                     @NotNull AWSResourceManager resourceManager) {
+                                        @NotNull PrintWriter pw,
+                                        @NotNull AWSResourceManager resourceManager) {
         APIResult<String> strResponse;
         try {
             // Get raw request as string
@@ -76,8 +76,8 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             if (requestBody == null) {
                 throw new ApiException(400, "Cannot parse request body");
             }
-            getLogger().i("Request body is valid", null, "OBJECT_HANDLER");
-            getLogger().v("Body: " + rawRequest, null, "OBJECT_HANDLER");
+//            getLogger().i("Request body is valid", null, "OBJECT_HANDLER");
+//            getLogger().v("Body: " + rawRequest, null, "OBJECT_HANDLER");
 
             // Pass the headers to a new api request object with the proper body format
             // Get request headers if they are present
@@ -96,7 +96,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             strResponse = new APIResult<>(response.getStatusCode(),
                     ExviSerializer.toJson(this.outSerializer, response.getBody()),
                     response.getHeaders());
-            getLogger().i("Response formed", null, "OBJECT_HANDLER");
+//            getLogger().i("Response formed", null, "OBJECT_HANDLER");
         } catch (ApiException e) {
             getLogger().w("Returning API exception", e, "OBJECT_HANDLER");
             strResponse = new APIResult<>(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
@@ -106,8 +106,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
         }
 
         // Encode & write response
-        getLogger().v("Response (code " + strResponse.getStatusCode() + "): " + strResponse.getBody(),
-                null, "OBJECT_HANDLER");
+//        getLogger().v("Response (code " + strResponse.getStatusCode() + "): " + strResponse.getBody(), null, "OBJECT_HANDLER");
         strResponse.setBody(CryptographyUtils.encodeString(strResponse.getBody()));
         pw.write(APIResultKt.toJson(strResponse));
     }

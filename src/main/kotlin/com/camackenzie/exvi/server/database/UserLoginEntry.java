@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.Objects;
 
 import static com.camackenzie.exvi.core.model.ExviSerializer.Builtin.element;
+import static com.camackenzie.exvi.core.util.LoggingKt.getExviLogger;
 import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSerialDescriptor;
 
 /**
@@ -125,7 +126,7 @@ public class UserLoginEntry implements Identifiable {
             if (authData == null) {
                 throw new ApiException(400, "User does not exist");
             }
-        }
+        } else getExviLogger().i("Cache hit", null, "USER_LOGIN_ENTRY");
         return authData;
     }
 
