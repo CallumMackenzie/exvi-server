@@ -118,7 +118,7 @@ public class UserDataEntry {
                 database.putObjectInTable("exvi-user-data", UserDataEntry.serializer, entry);
             } else // Use previous database data
                 entry = UserDataEntry.registeredUser(database, user);
-        } else getExviLogger().i("Cache hit", null, "USER_LOGIN_ENTRY");
+        } else getExviLogger().i("Cache hit", null, "USER_DATA_ENTRY");
         ++entry.accesses;
         userCache.cache(entry);
         return entry;
