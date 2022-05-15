@@ -5,7 +5,6 @@
  */
 package com.camackenzie.exvi.server.lambdas;
 
-import com.amazonaws.services.dynamodbv2.document.Table;
 import com.camackenzie.exvi.core.api.AccountAccessKeyResult;
 import com.camackenzie.exvi.core.api.LoginRequest;
 import com.camackenzie.exvi.server.database.UserLoginEntry;
@@ -22,7 +21,6 @@ public class LoginAction implements LambdaAction<LoginRequest, AccountAccessKeyR
 
         // Retrieve resources
         DocumentDatabase database = context.getResourceManager().getDatabase();
-        Table userTable = database.getTable("exvi-user-login");
         UserLoginEntry entry = database.getObjectFromTable("exvi-user-login", "username",
                 in.getUsername().get(), UserLoginEntry.serializer);
 

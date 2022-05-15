@@ -80,7 +80,7 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
             // Phone has no linked account
             return false;
         } catch (Exception e) {
-            context.getLogger().e("Phone validation error", e, null);
+            context.getLogger().e("Phone validation error", e, "VERIFICATION");
             return true;
         }
     }
@@ -153,7 +153,7 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
                     textBody.toString());
             return true;
         } catch (Exception ex) {
-            context.getLogger().e("Verification code email was not sent.", ex, null);
+            context.getLogger().e("Verification code email was not sent.", ex, "VERIFICATION");
         }
         return false;
     }
@@ -168,13 +168,13 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
                 .append(code)
                 .append(".");
         try {
-            SMSClient smsc = context.getResourceManager().getSMSClient();
-            smsc.sendText(user.getPhone().get(), textContent.toString());
+            SMSClient client = context.getResourceManager().getSMSClient();
+            client.sendText(user.getPhone().get(), textContent.toString());
             return true;
         } catch (SnsException e) {
-            context.getLogger().e("SNS error", e, null);
+            context.getLogger().e("SNS error", e, "VERIFICATION");
         } catch (Exception e) {
-            context.getLogger().e("SNS client warning", e, null);
+            context.getLogger().e("SNS client warning", e, "VERIFICATION");
         }
         return false;
     }
