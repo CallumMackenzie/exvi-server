@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.CallumMackenzie.exvi-core:exvi-core-jvm:d44934fd7d">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/CallumMackenzie/exvi-core/exvi-core-jvm/d44934fd7d/exvi-core-jvm-d44934fd7d.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/CallumMackenzie/exvi-core/exvi-core-jvm/d44934fd7d/exvi-core-jvm-d44934fd7d-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/CallumMackenzie/exvi-core/exvi-core-jvm/d44934fd7d/exvi-core-jvm-d44934fd7d-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
