@@ -17,7 +17,7 @@
         <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <exvi.core.version>d44934fd7d</exvi.core.version>
+        <exvi.core.version>75b9926fe2</exvi.core.version>
     </properties>
 
     <repositories>
