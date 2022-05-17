@@ -32,6 +32,7 @@ import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSe
  */
 public class UserLoginEntry implements Identifiable {
 
+    private static final String LOG_TAG = "USER_LOGIN_ENTRY";
     private static final SortedCache<UserLoginEntry> userCache
             = new SortedCache<>(Comparator.comparing(a -> a.accesses), 5);
 
@@ -126,7 +127,7 @@ public class UserLoginEntry implements Identifiable {
             if (authData == null) {
                 throw new ApiException(400, "User does not exist");
             }
-        } else getExviLogger().i("Cache hit", null, "USER_LOGIN_ENTRY");
+        } else getExviLogger().i("Cache hit", null, LOG_TAG);
         return authData;
     }
 

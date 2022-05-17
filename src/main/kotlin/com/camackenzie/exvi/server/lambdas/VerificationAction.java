@@ -20,6 +20,8 @@ import software.amazon.awssdk.services.sns.model.SnsException;
 // Action to send verification messages to users for account creation
 public class VerificationAction implements LambdaAction<VerificationRequest, NoneResult> {
 
+    private static final String LOG_TAG = "VERIFICATION";
+
     @Override
     public NoneResult enact(@NotNull RequestBodyHandler context, @NotNull VerificationRequest in) {
         // Preconditions
@@ -80,7 +82,7 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
             // Phone has no linked account
             return false;
         } catch (Exception e) {
-            context.getLogger().e("Phone validation error", e, "VERIFICATION");
+            context.getLogger().e("Phone validation error", e, LOG_TAG);
             return true;
         }
     }
@@ -104,7 +106,7 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
             // Email has no linked account
             return false;
         } catch (Exception e) {
-            context.getLogger().e("Email validation error: ", e, null);
+            context.getLogger().e("Email validation error: ", e, LOG_TAG);
             return true;
         }
     }
@@ -153,7 +155,7 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
                     textBody.toString());
             return true;
         } catch (Exception ex) {
-            context.getLogger().e("Verification code email was not sent.", ex, "VERIFICATION");
+            context.getLogger().e("Verification code email was not sent.", ex, LOG_TAG);
         }
         return false;
     }
@@ -172,9 +174,9 @@ public class VerificationAction implements LambdaAction<VerificationRequest, Non
             client.sendText(user.getPhone().get(), textContent.toString());
             return true;
         } catch (SnsException e) {
-            context.getLogger().e("SNS error", e, "VERIFICATION");
+            context.getLogger().e("SNS error", e, LOG_TAG);
         } catch (Exception e) {
-            context.getLogger().e("SNS client warning", e, "VERIFICATION");
+            context.getLogger().e("SNS client warning", e, LOG_TAG);
         }
         return false;
     }

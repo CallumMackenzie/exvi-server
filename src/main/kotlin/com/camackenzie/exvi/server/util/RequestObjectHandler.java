@@ -33,6 +33,8 @@ import static kotlinx.serialization.json.JsonElementKt.getJsonPrimitive;
 public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT extends SelfSerializable>
         extends RequestStreamHandlerWrapper {
 
+    private static final String LOG_TAG = "OBJECT_HANDLER";
+
     @NotNull
     private final KSerializer<IN> inSerializer;
 
@@ -73,12 +75,7 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             }
 
             // Ensure a valid request body has been parsed
-            if (requestBody == null) {
-                throw new ApiException(400, "Cannot parse request body");
-            }
-//            getLogger().i("Request body is valid", null, "OBJECT_HANDLER");
-//            getLogger().v("Body: " + rawRequest, null, "OBJECT_HANDLER");
-
+            if (requestBody == null) throw new ApiException(400, "Cannot parse request body");
             // Pass the headers to a new api request object with the proper body format
             // Get request headers if they are present
             final var headersJsonElement = requestObject.get("headers");
@@ -96,17 +93,15 @@ public abstract class RequestObjectHandler<IN extends SelfSerializable, OUT exte
             strResponse = new APIResult<>(response.getStatusCode(),
                     ExviSerializer.toJson(this.outSerializer, response.getBody()),
                     response.getHeaders());
-//            getLogger().i("Response formed", null, "OBJECT_HANDLER");
         } catch (ApiException e) {
-            getLogger().w("Returning API exception", e, "OBJECT_HANDLER");
+            getLogger().w("Returning API exception", e, LOG_TAG);
             strResponse = new APIResult<>(e.getCode(), e.getMessage(), APIRequest.jsonHeaders());
         } catch (Throwable e) {
-            getLogger().e("Fatal uncaught exception", e, "OBJECT_HANDLER");
+            getLogger().e("Fatal uncaught exception", e, LOG_TAG);
             strResponse = new APIResult<>(500, "Internal server error", APIRequest.jsonHeaders());
         }
 
         // Encode & write response
-//        getLogger().v("Response (code " + strResponse.getStatusCode() + "): " + strResponse.getBody(), null, "OBJECT_HANDLER");
         strResponse.setBody(CryptographyUtils.encodeString(strResponse.getBody()));
         pw.write(APIResultKt.toJson(strResponse));
     }

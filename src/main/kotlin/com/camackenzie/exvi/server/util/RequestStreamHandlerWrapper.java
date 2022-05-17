@@ -6,7 +6,6 @@
 package com.camackenzie.exvi.server.util;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.camackenzie.exvi.core.model.TimeUnit;
 import com.camackenzie.exvi.core.model.UnitValue;
@@ -17,21 +16,14 @@ import kotlin.text.Charsets;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.camackenzie.exvi.core.util.LoggingKt.getExviLogger;
-import static com.camackenzie.exvi.core.model.TimeUnitKt.formatToElapsedTime;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.camackenzie.exvi.core.model.TimeUnitKt.formatToElapsedTime;
+import static com.camackenzie.exvi.core.util.LoggingKt.getExviLogger;
 
 /**
  * @author callum
@@ -39,6 +31,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 public abstract class RequestStreamHandlerWrapper implements RequestStreamHandler {
 
+    private static final String LOG_TAG = "ROOT_HANDLER";
     private AWSResourceManager resourceManager;
 
     @Override
@@ -51,9 +44,6 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
 
             // Set up resource manager
             resourceManager = AWSResourceManager.get(ctx);
-
-            // Get lambda logger
-            var lambdaLogger = ctx.getLogger();
 
             // Set up logging for AWS
             getExviLogger().base(new Antilog() {
@@ -83,7 +73,7 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
                                     .collect(Collectors.joining("\n\t\t")));
 
                     // Log the completed log
-                    lambdaLogger.log(msg.toString());
+                    ctx.getLogger().log(msg.toString());
                 }
             });
 
@@ -96,13 +86,13 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
 
             // Check for writer error
             if (writer.checkError()) {
-                getLogger().e("Writer error", null, "ROOT_HANDLER");
+                getLogger().e("Writer error", null, LOG_TAG);
             }
             // Release reader & writer resources
             reader.close();
             writer.close();
         } catch (Throwable t) {
-            getLogger().e("Uncaught fatal response", t, "ROOT_HANDLER");
+            getLogger().e("Uncaught fatal response", t, LOG_TAG);
         } finally {
             getLogger().takeLogarithm();
         }
@@ -119,7 +109,7 @@ public abstract class RequestStreamHandlerWrapper implements RequestStreamHandle
     }
 
     protected abstract void handleRequestWrapped(@NotNull BufferedReader bf,
-                                              @NotNull PrintWriter pw,
-                                              @NotNull AWSResourceManager resourceManager) throws IOException;
+                                                 @NotNull PrintWriter pw,
+                                                 @NotNull AWSResourceManager resourceManager) throws IOException;
 
 }

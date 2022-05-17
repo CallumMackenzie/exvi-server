@@ -29,6 +29,13 @@ public class SortedCache<T> {
         return null;
     }
 
+    public T removeFirst(Predicate<T> matcher) {
+        for (int i = 0; i < cache.size(); ++i)
+            if (matcher.test(cache.get(i)))
+                return cache.remove(i);
+        return null;
+    }
+
     public void cache(T entry) {
         // Remove least used cached users
         if (cache.size() > maxSize)

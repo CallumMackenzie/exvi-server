@@ -44,6 +44,7 @@ import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSe
 @SuppressWarnings("unused")
 public class UserDataEntry {
 
+    private static final String LOG_TAG = "USER_DATA_ENTRY";
     private static final SortedCache<UserDataEntry> userCache
             = new SortedCache<>(Comparator.comparing(a -> a.accesses), 5);
 
@@ -149,6 +150,12 @@ public class UserDataEntry {
                 .withConsistentRead(true);
         Item item = database.getTable("exvi-user-data")
                 .getItem(get);
+        // Ensure user item exists, if not, remove user from cache
+        if (item == null)
+            if (userCache.removeFirst(user -> user.username.equalsIgnoreCase(username)) != null)
+                getExviLogger().i("Removed user \"" + username + "\" from cache", null, LOG_TAG);
+            else
+                getExviLogger().w("Attempted to remove non-cached user " + username + " from cache", null, LOG_TAG);
         return item.getJSON(attr);
     }
 
