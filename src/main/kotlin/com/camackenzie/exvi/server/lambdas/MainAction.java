@@ -41,6 +41,7 @@ public class MainAction extends RequestBodyHandler<GenericDataRequest, GenericDa
         put(AccountCreationRequest.class, new SignUpAction());
         put(LoginRequest.class, new LoginAction());
         put(RetrieveSaltRequest.class, new RetrieveSaltAction());
+        put(GetFriendedUsersRequest.class, new GetFriendsAction());
     }};
 
     @Override

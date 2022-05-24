@@ -10,10 +10,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
-import com.camackenzie.exvi.core.model.ActualActiveWorkout;
-import com.camackenzie.exvi.core.model.ActualBodyStats;
-import com.camackenzie.exvi.core.model.ActualWorkout;
-import com.camackenzie.exvi.core.model.ExviSerializer;
+import com.camackenzie.exvi.core.model.*;
 import com.camackenzie.exvi.core.util.EncodedStringCache;
 import com.camackenzie.exvi.core.util.Identifiable;
 import com.camackenzie.exvi.core.util.RawIdentifiable;
@@ -53,6 +50,7 @@ public class UserDataEntry {
     private ActualWorkout[] workouts;
     private ActualActiveWorkout[] activeWorkouts;
     private ActualBodyStats bodyStats;
+    private FriendedUser[] friends;
 
     @NotNull
     @Transient
@@ -78,12 +76,14 @@ public class UserDataEntry {
                           @NotNull String username,
                           ActualWorkout[] workouts,
                           ActualActiveWorkout[] activeWorkouts,
-                          ActualBodyStats bodyStats) {
+                          ActualBodyStats bodyStats,
+                          FriendedUser[] friendedUsers) {
         this.username = username;
         this.bodyStats = bodyStats;
         this.workouts = workouts;
         this.activeWorkouts = activeWorkouts;
         this.database = database;
+        this.friends = friendedUsers;
     }
 
     /////////////////////////
@@ -95,13 +95,14 @@ public class UserDataEntry {
                                             @NotNull String username) {
         return new UserDataEntry(database, username, new ActualWorkout[0],
                 new ActualActiveWorkout[0],
-                ActualBodyStats.average());
+                ActualBodyStats.average(),
+                new FriendedUser[0]);
     }
 
     @NotNull
     private static UserDataEntry registeredUser(@NotNull DocumentDatabase database,
                                                 @NotNull String username) {
-        return new UserDataEntry(database, username, null, null, null);
+        return new UserDataEntry(database, username, null, null, null, null);
     }
 
     @NotNull
@@ -151,11 +152,13 @@ public class UserDataEntry {
         Item item = database.getTable("exvi-user-data")
                 .getItem(get);
         // Ensure user item exists, if not, remove user from cache
-        if (item == null)
+        if (item == null) {
             if (userCache.removeFirst(user -> user.username.equalsIgnoreCase(username)) != null)
                 getExviLogger().i("Removed user \"" + username + "\" from cache", null, LOG_TAG);
             else
                 getExviLogger().w("Attempted to remove non-cached user " + username + " from cache", null, LOG_TAG);
+            return null;
+        }
         return item.getJSON(attr);
     }
 
@@ -315,6 +318,37 @@ public class UserDataEntry {
                     return Unit.INSTANCE;
                 });
         if (!toAppend.isEmpty()) addActiveWorkoutsRaw(toAppend);
+    }
+
+    /////////////////////////
+    // Friend methods
+    /////////////////////////
+
+    public String getFriendsJSON() {
+        return getUserJSON("friends");
+    }
+
+    public FriendedUser[] getFriends() {
+        return friends = ExviSerializer.fromJson(Serializers.friendedUserArray, getFriendsJSON());
+    }
+
+    public void addFriendsRaw(@NotNull List<FriendedUser> toFriend) {
+        appendToDatabaseList("friends", ExviSerializer.toJson(Serializers.friendedUserList, toFriend));
+    }
+
+    public void addFriends(@NotNull FriendedUser[] friends) {
+        if (friends.length == 0) return;
+        List<FriendedUser> toAppend = new ArrayList<>();
+        Identifiable.intersectIndexed(List.of(friends), List.of(getFriends()),
+                (addedFriend, addedIdx, userFriend, userIdx) -> {
+                    updateDatabaseMapRaw("friends[" + userIdx + "]",
+                            ExviSerializer.toJson(Serializers.friendedUser, addedFriend));
+                    return Unit.INSTANCE;
+                }, (addedFriend, index) -> {
+                    toAppend.add(addedFriend);
+                    return Unit.INSTANCE;
+                });
+        if (!toAppend.isEmpty()) addFriendsRaw(toAppend);
     }
 
     /////////////////////////

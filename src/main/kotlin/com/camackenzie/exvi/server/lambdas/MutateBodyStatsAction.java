@@ -9,20 +9,18 @@ import com.camackenzie.exvi.server.util.RequestBodyHandler;
 import org.jetbrains.annotations.NotNull;
 
 // Action to get/set user body stats
-public class MutateBodyStatsAction implements LambdaAction<GenericDataRequest, GenericDataResult> {
+public class MutateBodyStatsAction<IN extends GenericDataRequest & ValidatedUserRequest> implements LambdaAction<IN, GenericDataResult> {
     @Override
-    public GenericDataResult enact(@NotNull RequestBodyHandler context, @NotNull GenericDataRequest in) {
+    public GenericDataResult enact(@NotNull RequestBodyHandler context, @NotNull IN in) {
         // Retrieve resources
         DocumentDatabase database = context.getResourceManager().getDatabase();
+        var user = UserDataEntry.ensureUserValidity(database, in.getUsername(), in.getAccessKey());
 
         // Determine request behaviour
         if (in instanceof GetBodyStatsRequest) {
-            var request = (GetBodyStatsRequest) in;
-            var user = UserDataEntry.ensureUserValidity(database, request.getUsername(), request.getAccessKey());
             return new GetBodyStatsResponse(user.getBodyStats());
         } else if (in instanceof SetBodyStatsRequest) {
             var request = (SetBodyStatsRequest) in;
-            var user = UserDataEntry.ensureUserValidity(database, request.getUsername(), request.getAccessKey());
             user.setBodyStats(request.getBodyStats());
             return new NoneResult();
         }

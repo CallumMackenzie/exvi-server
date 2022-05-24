@@ -1,9 +1,6 @@
 package com.camackenzie.exvi.server.util;
 
-import com.camackenzie.exvi.core.model.ActualActiveWorkout;
-import com.camackenzie.exvi.core.model.ActualBodyStats;
-import com.camackenzie.exvi.core.model.ActualWorkout;
-import com.camackenzie.exvi.core.model.ExviSerializer;
+import com.camackenzie.exvi.core.model.*;
 import kotlinx.serialization.KSerializer;
 
 import java.util.List;
@@ -27,6 +24,11 @@ public class Serializers {
     public static final KSerializer<List<ActualActiveWorkout>> activeWorkoutList = ListSerializer(activeWorkout);
 
     public static final KSerializer<ActualBodyStats> bodyStats = ActualBodyStats.Companion.serializer();
+
+    public static final KSerializer<FriendedUser> friendedUser = FriendedUser.Companion.serializer();
+    public static final KSerializer<FriendedUser[]> friendedUserArray
+            = ArraySerializer(getKotlinClass(FriendedUser.class), friendedUser);
+    public static final KSerializer<List<FriendedUser>> friendedUserList = ListSerializer(friendedUser);
 
     public static final KSerializer<String> string = ExviSerializer.Builtin.getString();
     public static final KSerializer<String[]> stringArray = ArraySerializer(getKotlinClass(String.class), string);
