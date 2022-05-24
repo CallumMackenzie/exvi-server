@@ -332,8 +332,12 @@ public class UserDataEntry {
         return friends = ExviSerializer.fromJson(Serializers.friendedUserArray, getFriendsJSON());
     }
 
-    public void addFriendsRaw(@NotNull List<FriendedUser> toFriend) {
+    private void addFriendsRaw(@NotNull List<FriendedUser> toFriend) {
         appendToDatabaseList("friends", ExviSerializer.toJson(Serializers.friendedUserList, toFriend));
+    }
+
+    private void setFriends(@NotNull List<FriendedUser> toKeep) {
+        updateDatabaseListRaw("friends", ExviSerializer.toJson(Serializers.friendedUserList, toKeep));
     }
 
     public void addFriends(@NotNull FriendedUser[] friends) {
@@ -349,6 +353,18 @@ public class UserDataEntry {
                     return Unit.INSTANCE;
                 });
         if (!toAppend.isEmpty()) addFriendsRaw(toAppend);
+    }
+
+    public void removeFriends(@NotNull FriendedUser[] friends) {
+        if (friends.length == 0) return;
+        List<FriendedUser> keepFriends = new ArrayList<>();
+        Identifiable.intersectIndexed(List.of(getFriends()), List.of(friends),
+                (userFriend, userIdx, removedFriend, removedIdx) -> Unit.INSTANCE,
+                (userFriend, index) -> {
+                    keepFriends.add(userFriend);
+                    return Unit.INSTANCE;
+                });
+        if (!keepFriends.isEmpty()) setFriends(keepFriends);
     }
 
     /////////////////////////

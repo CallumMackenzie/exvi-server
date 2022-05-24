@@ -18,7 +18,7 @@ import software.amazon.awssdk.services.sns.model.SnsException;
  * @author callum
  */
 // Action to send verification messages to users for account creation
-public class VerificationAction implements LambdaAction<VerificationRequest, NoneResult> {
+public class UserVerificationAction implements LambdaAction<VerificationRequest, NoneResult> {
 
     private static final String LOG_TAG = "VERIFICATION";
 
