@@ -51,6 +51,8 @@ public class UserDataEntry {
     private static final SortedCache<UserDataEntry> userCache
             = new SortedCache<>(Comparator.comparing(a -> a.accesses), 5);
 
+    // Ensure elements to be serialized are added to the serial descriptor and serializer
+
     @NotNull
     public final String username;
     private ActualWorkout[] workouts;
@@ -67,7 +69,7 @@ public class UserDataEntry {
     private transient int accesses;
 
     private static final SerialDescriptor descriptor = buildClassSerialDescriptor(
-            "com.camackenzie.exvi.server.database.UserDataEntry",
+            "UserDataEntry",
             new SerialDescriptor[0],
             bt -> {
                 element(bt, USERNAME_JSON_KEY, Serializers.string.getDescriptor());
