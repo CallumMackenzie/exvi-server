@@ -324,8 +324,14 @@ public class UserDataEntry {
     // Friend methods
     /////////////////////////
 
+    @NotNull
     public String getFriendsJSON() {
-        return getUserJSON("friends");
+        var json = getUserJSON("friends");
+        if (json == null) {
+            json = ExviSerializer.toJson(Serializers.friendedUserArray, new FriendedUser[0]);
+            updateDatabaseListRaw("friends", json);
+        }
+        return json;
     }
 
     public FriendedUser[] getFriends() {
