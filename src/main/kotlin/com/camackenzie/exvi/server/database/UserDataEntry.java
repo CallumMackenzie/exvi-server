@@ -41,7 +41,13 @@ import static kotlinx.serialization.descriptors.SerialDescriptorsKt.buildClassSe
 @SuppressWarnings("unused")
 public class UserDataEntry {
 
-    private static final String LOG_TAG = "USER_DATA_ENTRY";
+    private static final String LOG_TAG = "USER_DATA_ENTRY",
+            DATA_TABLE_NAME = "exvi-user-data",
+            USERNAME_JSON_KEY = "username", // Must be the same name as the database primary key
+            WORKOUTS_JSON_KEY = "workouts",
+            ACTIVE_WORKOUTS_JSON_KEY = "activeWorkouts",
+            BODY_STATS_JSON_KEY = "bodyStats",
+            FRIENDS_JSON_KEY = "friends";
     private static final SortedCache<UserDataEntry> userCache
             = new SortedCache<>(Comparator.comparing(a -> a.accesses), 5);
 
@@ -64,10 +70,11 @@ public class UserDataEntry {
             "com.camackenzie.exvi.server.database.UserDataEntry",
             new SerialDescriptor[0],
             bt -> {
-                element(bt, "username", Serializers.string.getDescriptor());
-                element(bt, "workouts", Serializers.workoutArray.getDescriptor());
-                element(bt, "activeWorkouts", Serializers.activeWorkoutArray.getDescriptor());
-                element(bt, "bodyStats", Serializers.bodyStats.getDescriptor());
+                element(bt, USERNAME_JSON_KEY, Serializers.string.getDescriptor());
+                element(bt, WORKOUTS_JSON_KEY, Serializers.workoutArray.getDescriptor());
+                element(bt, ACTIVE_WORKOUTS_JSON_KEY, Serializers.activeWorkoutArray.getDescriptor());
+                element(bt, BODY_STATS_JSON_KEY, Serializers.bodyStats.getDescriptor());
+                element(bt, FRIENDS_JSON_KEY, Serializers.friendedUserArray.getDescriptor());
                 return Unit.INSTANCE;
             }
     );
@@ -113,14 +120,14 @@ public class UserDataEntry {
         UserDataEntry entry = userCache.matchFirst(it -> it.username.equalsIgnoreCase(user));
         if (entry == null) {
             // Check for database user data
-            Item item = database.getTable("exvi-user-data").getItem("username", user);
+            Item item = database.getTable(DATA_TABLE_NAME).getItem(USERNAME_JSON_KEY, user);
             // Recreate user data object if needed
             if (item == null) {
                 entry = UserDataEntry.defaultData(database, user);
-                database.putObjectInTable("exvi-user-data", UserDataEntry.serializer, entry);
+                database.putObjectInTable(DATA_TABLE_NAME, UserDataEntry.serializer, entry);
             } else // Use previous database data
                 entry = UserDataEntry.registeredUser(database, user);
-        } else getExviLogger().i("Cache hit", null, "USER_DATA_ENTRY");
+        } else getExviLogger().i("Cache hit", null, LOG_TAG);
         ++entry.accesses;
         userCache.cache(entry);
         return entry;
@@ -146,10 +153,10 @@ public class UserDataEntry {
 
     private String getUserJSON(@NotNull String projectionExpr, @NotNull String attr) {
         GetItemSpec get = new GetItemSpec()
-                .withPrimaryKey("username", username)
+                .withPrimaryKey(USERNAME_JSON_KEY, username)
                 .withProjectionExpression(projectionExpr)
                 .withConsistentRead(true);
-        Item item = database.getTable("exvi-user-data")
+        Item item = database.getTable(DATA_TABLE_NAME)
                 .getItem(get);
         // Ensure user item exists, if not, remove user from cache
         if (item == null) {
@@ -164,9 +171,9 @@ public class UserDataEntry {
 
     private void updateDatabaseRaw(@NotNull String key, @NotNull Function<UpdateItemSpec, UpdateItemSpec> spec) {
         UpdateItemSpec update = spec.apply(new UpdateItemSpec()
-                .withPrimaryKey("username", username)
+                .withPrimaryKey(USERNAME_JSON_KEY, username)
                 .withReturnValues(ReturnValue.UPDATED_NEW));
-        database.getTable("exvi-user-data").updateItem(update);
+        database.getTable(DATA_TABLE_NAME).updateItem(update);
     }
 
     private void updateDatabaseMapRaw(@NotNull String key, String json) {
@@ -192,7 +199,7 @@ public class UserDataEntry {
     /////////////////////////
 
     public String getBodyStatsJSON() {
-        return getUserJSON("bodyStats");
+        return getUserJSON(BODY_STATS_JSON_KEY);
     }
 
     public ActualBodyStats getBodyStats() {
@@ -201,7 +208,7 @@ public class UserDataEntry {
 
     public void setBodyStats(@NotNull ActualBodyStats bs) {
         this.bodyStats = bs;
-        updateDatabaseMapRaw("bodyStats", ExviSerializer.toJson(Serializers.bodyStats, bs));
+        updateDatabaseMapRaw(BODY_STATS_JSON_KEY, ExviSerializer.toJson(Serializers.bodyStats, bs));
     }
 
     /////////////////////////
@@ -209,7 +216,7 @@ public class UserDataEntry {
     /////////////////////////
 
     public String getWorkoutsJSON() {
-        return getUserJSON("workouts");
+        return getUserJSON(WORKOUTS_JSON_KEY);
     }
 
     public ActualWorkout[] getWorkouts() {
@@ -217,7 +224,7 @@ public class UserDataEntry {
     }
 
     public void setWorkouts(@NotNull List<ActualWorkout> workoutList) {
-        updateDatabaseListRaw("workouts", ExviSerializer.toJson(Serializers.workoutList, workoutList));
+        updateDatabaseListRaw(WORKOUTS_JSON_KEY, ExviSerializer.toJson(Serializers.workoutList, workoutList));
     }
 
     /**
@@ -227,7 +234,7 @@ public class UserDataEntry {
      * @param workoutList the workouts to add
      */
     private void addWorkoutsRaw(@NotNull List<ActualWorkout> workoutList) {
-        appendToDatabaseList("workouts", ExviSerializer.toJson(Serializers.workoutList, workoutList));
+        appendToDatabaseList(WORKOUTS_JSON_KEY, ExviSerializer.toJson(Serializers.workoutList, workoutList));
     }
 
     public void removeWorkouts(@NotNull Identifiable[] ids) {
@@ -255,7 +262,7 @@ public class UserDataEntry {
         List<ActualWorkout> toAdd = new ArrayList<>();
         Identifiable.intersectIndexed(List.of(workoutsToAdd), List.of(getWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
-                    updateDatabaseMapRaw("workouts[" + userIndex + "]",
+                    updateDatabaseMapRaw(WORKOUTS_JSON_KEY + "[" + userIndex + "]",
                             ExviSerializer.toJson(Serializers.workout, addedWk));
                     return Unit.INSTANCE;
                 }, (addedWk, index) -> {
@@ -269,8 +276,14 @@ public class UserDataEntry {
     // Active workout methods
     /////////////////////////
 
+    @NotNull
     public String getActiveWorkoutsJSON() {
-        return getUserJSON("activeWorkouts");
+        var json = getUserJSON(ACTIVE_WORKOUTS_JSON_KEY);
+        if (json == null) {
+            json = ExviSerializer.toJson(Serializers.activeWorkoutArray, new ActualActiveWorkout[0]);
+            updateDatabaseListRaw(ACTIVE_WORKOUTS_JSON_KEY, json);
+        }
+        return json;
     }
 
     public ActualActiveWorkout[] getActiveWorkouts() {
@@ -278,11 +291,11 @@ public class UserDataEntry {
     }
 
     public void setActiveWorkouts(@NotNull List<ActualActiveWorkout> workoutList) {
-        updateDatabaseListRaw("activeWorkouts", ExviSerializer.toJson(Serializers.activeWorkoutList, workoutList));
+        updateDatabaseListRaw(ACTIVE_WORKOUTS_JSON_KEY, ExviSerializer.toJson(Serializers.activeWorkoutList, workoutList));
     }
 
     private void addActiveWorkoutsRaw(@NotNull List<ActualActiveWorkout> workoutList) {
-        appendToDatabaseList("activeWorkouts", ExviSerializer.toJson(Serializers.activeWorkoutList, workoutList));
+        appendToDatabaseList(ACTIVE_WORKOUTS_JSON_KEY, ExviSerializer.toJson(Serializers.activeWorkoutList, workoutList));
     }
 
     public void removeActiveWorkouts(@NotNull Identifiable[] ids) {
@@ -310,7 +323,7 @@ public class UserDataEntry {
         List<ActualActiveWorkout> toAppend = new ArrayList<>();
         Identifiable.intersectIndexed(List.of(workouts), List.of(getActiveWorkouts()),
                 (addedWk, addedIndex, userWk, userIndex) -> {
-                    updateDatabaseMapRaw("activeWorkouts[" + userIndex + "]",
+                    updateDatabaseMapRaw(ACTIVE_WORKOUTS_JSON_KEY + "[" + userIndex + "]",
                             ExviSerializer.toJson(Serializers.activeWorkout, addedWk));
                     return Unit.INSTANCE;
                 }, (addedWorkout, index) -> {
@@ -326,10 +339,10 @@ public class UserDataEntry {
 
     @NotNull
     public String getFriendsJSON() {
-        var json = getUserJSON("friends");
+        var json = getUserJSON(FRIENDS_JSON_KEY);
         if (json == null) {
             json = ExviSerializer.toJson(Serializers.friendedUserArray, new FriendedUser[0]);
-            updateDatabaseListRaw("friends", json);
+            updateDatabaseListRaw(FRIENDS_JSON_KEY, json);
         }
         return json;
     }
@@ -339,11 +352,11 @@ public class UserDataEntry {
     }
 
     private void addFriendsRaw(@NotNull List<FriendedUser> toFriend) {
-        appendToDatabaseList("friends", ExviSerializer.toJson(Serializers.friendedUserList, toFriend));
+        appendToDatabaseList(FRIENDS_JSON_KEY, ExviSerializer.toJson(Serializers.friendedUserList, toFriend));
     }
 
     private void setFriends(@NotNull List<FriendedUser> toKeep) {
-        updateDatabaseListRaw("friends", ExviSerializer.toJson(Serializers.friendedUserList, toKeep));
+        updateDatabaseListRaw(FRIENDS_JSON_KEY, ExviSerializer.toJson(Serializers.friendedUserList, toKeep));
     }
 
     public void addFriends(@NotNull FriendedUser[] friends) {
@@ -351,7 +364,7 @@ public class UserDataEntry {
         List<FriendedUser> toAppend = new ArrayList<>();
         Identifiable.intersectIndexed(List.of(friends), List.of(getFriends()),
                 (addedFriend, addedIdx, userFriend, userIdx) -> {
-                    updateDatabaseMapRaw("friends[" + userIdx + "]",
+                    updateDatabaseMapRaw(FRIENDS_JSON_KEY + "[" + userIdx + "]",
                             ExviSerializer.toJson(Serializers.friendedUser, addedFriend));
                     return Unit.INSTANCE;
                 }, (addedFriend, index) -> {
@@ -392,6 +405,7 @@ public class UserDataEntry {
             struct.encodeSerializableElement(descriptor, 1, Serializers.workoutArray, userDataEntry.workouts);
             struct.encodeSerializableElement(descriptor, 2, Serializers.activeWorkoutArray, userDataEntry.activeWorkouts);
             struct.encodeSerializableElement(descriptor, 3, Serializers.bodyStats, userDataEntry.bodyStats);
+            struct.encodeSerializableElement(descriptor, 4, Serializers.friendedUserArray, userDataEntry.friends);
             struct.endStructure(descriptor);
         }
     };
