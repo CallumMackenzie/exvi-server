@@ -365,11 +365,10 @@ public class UserDataEntry {
         if (friends.length == 0) return;
         List<FriendedUser> toAppend = new ArrayList<>();
         Identifiable.intersectIndexed(List.of(friends), List.of(getFriends()),
-                (addedFriend, addedIdx, userFriend, userIdx) -> {
-                    updateDatabaseMapRaw(FRIENDS_JSON_KEY + "[" + userIdx + "]",
-                            ExviSerializer.toJson(Serializers.friendedUser, addedFriend));
-                    return Unit.INSTANCE;
-                }, (addedFriend, index) -> {
+                // User is already friended
+                (addedFriend, addedIdx, userFriend, userIdx) -> Unit.INSTANCE,
+                // User is not friended
+                (addedFriend, index) -> {
                     toAppend.add(addedFriend);
                     return Unit.INSTANCE;
                 });
