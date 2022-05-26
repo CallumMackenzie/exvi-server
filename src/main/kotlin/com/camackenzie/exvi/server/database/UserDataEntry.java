@@ -392,7 +392,7 @@ public class UserDataEntry {
                     keepFriends.add(userFriend);
                     return Unit.INSTANCE;
                 });
-        if (!keepFriends.isEmpty()) setFriends(keepFriends);
+        setFriends(keepFriends);
     }
 
     /////////////////////////
