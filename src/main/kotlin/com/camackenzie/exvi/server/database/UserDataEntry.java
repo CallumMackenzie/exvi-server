@@ -366,6 +366,9 @@ public class UserDataEntry {
         List<FriendedUser> toAppend = new ArrayList<>();
         Identifiable.intersectIndexed(List.of(friends), List.of(getFriends()),
                 (addedFriend, addedIdx, userFriend, userIdx) -> {
+                    getExviLogger().v("Intersected friend: \nDATABASE:"
+                            + ExviSerializer.toJson(Serializers.friendedUser, userFriend)
+                            + "\nINCOMING: " + ExviSerializer.toJson(Serializers.friendedUser, addedFriend), null, LOG_TAG);
                     if (userFriend.getAcceptedRequest()) // Is accepted
                         throw new ApiException(400, "User is already a friend");
                     else if (userFriend.getIncomingRequest()) { // Is incoming

@@ -15,10 +15,14 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class FriendUserAction implements LambdaAction<FriendUserRequest, NoneResult> {
+    private static final String LOG_TAG = "FRIEND_USER_ACTION";
+
     @Override
     public NoneResult enact(@NotNull RequestBodyHandler context, @NotNull FriendUserRequest in) {
         // Preconditions
-
+        if (in.getUsers().length == 0) throw new ApiException(400, "No users provided to friend");
+        if (in.getUsername().get().isEmpty()) throw new ApiException(400, "Requester username is blank");
+        if (in.getAccessKey().get().isEmpty()) throw new ApiException(400, "Requester access key is blank");
 
         // Retrieve resources
         var database = context.getResourceManager().getDatabase();
@@ -31,6 +35,7 @@ public class FriendUserAction implements LambdaAction<FriendUserRequest, NoneRes
                         UserLoginEntry.ensureUserExists(database, it.get());
                         return new FriendedUser(it, false, false);
                     } catch (ApiException e) {
+                        context.getLogger().e("Could not register user for friending", e, LOG_TAG);
                         return null;
                     }
                 })
