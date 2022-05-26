@@ -369,9 +369,10 @@ public class UserDataEntry {
                     getExviLogger().v("Intersected friend: \nDATABASE:"
                             + ExviSerializer.toJson(Serializers.friendedUser, userFriend)
                             + "\nINCOMING: " + ExviSerializer.toJson(Serializers.friendedUser, addedFriend), null, LOG_TAG);
-                    if (userFriend.getAcceptedRequest()) // Is accepted
+
+                    if (userFriend.getAcceptedRequest()) // Is accepted in database
                         throw new ApiException(400, "User is already a friend");
-                    else if (userFriend.getIncomingRequest()) { // Is incoming
+                    else if (userFriend.getIncomingRequest() || addedFriend.getIncomingRequest()) { // Is incoming in database or in request
                         var newFriend = new FriendedUser(userFriend.getUsername(), true, false);
                         updateDatabaseMapRaw(FRIENDS_JSON_KEY + "[" + userIdx + "]",
                                 ExviSerializer.toJson(Serializers.friendedUser, newFriend));
@@ -380,8 +381,9 @@ public class UserDataEntry {
                         throw new ApiException(400, "Friend request already sent");
                 }, (addedFriend, index) -> {
                     // Ensure user does not friend themselves
-                    if (!addedFriend.getUsername().get().equals(this.username))
-                        toAppend.add(addedFriend);
+                    if (addedFriend.getUsername().get().equals(this.username))
+                        throw new ApiException(400, "You can't friend yourself");
+                    else toAppend.add(addedFriend);
                     return Unit.INSTANCE;
                 });
         if (!toAppend.isEmpty()) addFriendsRaw(toAppend);
