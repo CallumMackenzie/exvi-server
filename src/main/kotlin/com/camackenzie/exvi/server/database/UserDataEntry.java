@@ -375,7 +375,9 @@ public class UserDataEntry {
                     } else // Not incoming and not accepted
                         throw new ApiException(400, "Friend request already sent");
                 }, (addedFriend, index) -> {
-                    toAppend.add(addedFriend);
+                    // Ensure user does not friend themselves
+                    if (!addedFriend.getUsername().get().equals(this.username))
+                        toAppend.add(addedFriend);
                     return Unit.INSTANCE;
                 });
         if (!toAppend.isEmpty()) addFriendsRaw(toAppend);
