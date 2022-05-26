@@ -17,6 +17,9 @@ import java.util.Objects;
 public class FriendUserAction implements LambdaAction<FriendUserRequest, NoneResult> {
     @Override
     public NoneResult enact(@NotNull RequestBodyHandler context, @NotNull FriendUserRequest in) {
+        // Preconditions
+
+
         // Retrieve resources
         var database = context.getResourceManager().getDatabase();
         var user = UserDataEntry.ensureUserValidity(database, in.getUsername(), in.getAccessKey());

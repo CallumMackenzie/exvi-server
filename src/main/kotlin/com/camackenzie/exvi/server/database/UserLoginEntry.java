@@ -111,12 +111,14 @@ public class UserLoginEntry implements Identifiable {
 
     public static void ensureUserExists(@NotNull DocumentDatabase database,
                                         @NotNull String user) {
+        // This will throw if user is invalid
         getUser(database, user);
     }
 
     @NotNull
     public static UserLoginEntry getUser(@NotNull DocumentDatabase database,
                                          @NotNull String user) {
+        if (user.isEmpty()) throw new ApiException(400, "User does not exist");
         // Checked for cached user data
         UserLoginEntry authData = userCache.matchFirst(u -> u.username.equalsIgnoreCase(user));
         // Retrieve user data from database if it is not cached
@@ -124,9 +126,8 @@ public class UserLoginEntry implements Identifiable {
             authData = database.getObjectFromTable("exvi-user-login",
                     "username", user, UserLoginEntry.serializer);
             // If no user data found in database
-            if (authData == null) {
+            if (authData == null)
                 throw new ApiException(400, "User does not exist");
-            }
         } else getExviLogger().i("Cache hit", null, LOG_TAG);
         return authData;
     }
