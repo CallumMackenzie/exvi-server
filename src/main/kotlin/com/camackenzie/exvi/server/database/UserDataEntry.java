@@ -369,8 +369,9 @@ public class UserDataEntry {
                     if (userFriend.getAcceptedRequest()) // Is accepted
                         throw new ApiException(400, "User is already a friend");
                     else if (userFriend.getIncomingRequest()) { // Is incoming
+                        var newFriend = new FriendedUser(userFriend.getUsername(), true, false);
                         updateDatabaseMapRaw(FRIENDS_JSON_KEY + "[" + userIdx + "]",
-                                ExviSerializer.toJson(Serializers.friendedUser, addedFriend));
+                                ExviSerializer.toJson(Serializers.friendedUser, newFriend));
                         return Unit.INSTANCE;
                     } else // Not incoming and not accepted
                         throw new ApiException(400, "Friend request already sent");
