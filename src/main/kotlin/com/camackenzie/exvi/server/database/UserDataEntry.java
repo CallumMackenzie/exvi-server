@@ -366,11 +366,15 @@ public class UserDataEntry {
         List<FriendedUser> toAppend = new ArrayList<>();
         Identifiable.intersectIndexed(List.of(friends), List.of(getFriends()),
                 (addedFriend, addedIdx, userFriend, userIdx) -> {
-                    // User is already friended
-                    throw new ApiException(400, "User is already a friend");
-                },
-                // User is not friended
-                (addedFriend, index) -> {
+                    if (userFriend.getAcceptedRequest()) // Is accepted
+                        throw new ApiException(400, "User is already a friend");
+                    else if (userFriend.getIncomingRequest()) { // Is incoming
+                        updateDatabaseMapRaw(FRIENDS_JSON_KEY + "[" + userIdx + "]",
+                                ExviSerializer.toJson(Serializers.friendedUser, addedFriend));
+                        return Unit.INSTANCE;
+                    } else // Not incoming and not accepted
+                        throw new ApiException(400, "Friend request already sent");
+                }, (addedFriend, index) -> {
                     toAppend.add(addedFriend);
                     return Unit.INSTANCE;
                 });
