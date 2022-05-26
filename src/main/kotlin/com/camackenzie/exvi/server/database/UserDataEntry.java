@@ -365,8 +365,10 @@ public class UserDataEntry {
         if (friends.length == 0) return;
         List<FriendedUser> toAppend = new ArrayList<>();
         Identifiable.intersectIndexed(List.of(friends), List.of(getFriends()),
-                // User is already friended
-                (addedFriend, addedIdx, userFriend, userIdx) -> Unit.INSTANCE,
+                (addedFriend, addedIdx, userFriend, userIdx) -> {
+                    // User is already friended
+                    throw new ApiException(400, "User is already a friend");
+                },
                 // User is not friended
                 (addedFriend, index) -> {
                     toAppend.add(addedFriend);
