@@ -401,6 +401,21 @@ public class UserDataEntry {
         setFriends(keepFriends);
     }
 
+    public boolean isFriendsWith(UserDataEntry other) {
+        var friendsFriends = other.getFriends();
+        boolean localFriends = false, remoteFriends = false;
+        for (var friend : this.getFriends())
+            if (friend.getAcceptedRequest() && friend.getUsername().get().equals(other.username)) {
+                localFriends = true;
+                break;
+            }
+        if (!localFriends) return false;
+        for (var friend : other.getFriends())
+            if (friend.getAcceptedRequest() && friend.getUsername().get().equals(username))
+                return true;
+        return false;
+    }
+
     /////////////////////////
     // Serializer
     /////////////////////////
