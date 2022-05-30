@@ -16,19 +16,25 @@ import java.util.Objects;
 public class GetFriendWorkoutsAction implements LambdaAction<GetFriendWorkouts, RemoteWorkoutResponse> {
     @Override
     public RemoteWorkoutResponse enact(@NotNull RequestBodyHandler context, @NotNull GetFriendWorkouts req) {
+        // Retrieve resources
         var database = context.getResourceManager().getDatabase();
         var user = UserDataEntry.ensureUserValidity(database, req.getUsername(), req.getAccessKey());
         var friend = UserDataEntry.ensureUserHasData(database, req.getFriend());
 
+        // Ensure users are friends
         if (!user.isFriendsWith(friend)) throw new ApiException(400, "User is not a friend");
 
+        // Get user's public workouts
         var remoteWorkouts = Arrays.stream(friend.getWorkouts())
+                // Remove private workouts
                 .map(it -> it.getPublic() ? it : null)
                 .filter(Objects::nonNull)
+                // Map workouts to remote ones
                 .map(it -> new RemoteWorkout(new EncodedStringCache(it.getName()),
                         it.getId(),
                         req.getFriend()))
                 .toArray(RemoteWorkout[]::new);
+        // Return result
         return new RemoteWorkoutResponse(remoteWorkouts);
     }
 }
