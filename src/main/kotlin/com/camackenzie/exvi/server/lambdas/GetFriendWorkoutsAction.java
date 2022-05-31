@@ -27,8 +27,7 @@ public class GetFriendWorkoutsAction implements LambdaAction<GetFriendWorkoutsRe
         // Get user's public workouts
         var remoteWorkouts = Arrays.stream(friend.getWorkouts())
                 // Remove private workouts
-                .map(it -> it.getPublic() ? it : null)
-                .filter(Objects::nonNull)
+                .filter(ActualWorkout::getPublic)
                 .toArray(ActualWorkout[]::new);
         // Return result
         return new WorkoutListResult(remoteWorkouts);
