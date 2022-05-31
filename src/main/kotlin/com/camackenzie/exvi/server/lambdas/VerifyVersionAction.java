@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 // Action to verify client version compatibility
 public class VerifyVersionAction implements LambdaAction<CompatibleVersionRequest, BooleanResult> {
 
-    private static final int LATEST_COMPATIBLE_VERSION = 7;
+    private static final int LATEST_COMPATIBLE_VERSION = 8;
 
     @Override
     public BooleanResult enact(@NotNull RequestBodyHandler context, @NotNull CompatibleVersionRequest request) {
